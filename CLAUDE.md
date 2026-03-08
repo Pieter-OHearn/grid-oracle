@@ -95,6 +95,21 @@ See `.env.example` for all required variables. Never hardcode credentials.
 - All ingestion scripts support upsert — re-running should never create duplicates
 - Never add `Co-Authored-By` trailers to commit messages
 
+## Before committing
+
+Run these checks and fix any failures before every commit:
+
+```bash
+# Lint and format (pipeline)
+ruff check pipeline/
+ruff format --check pipeline/
+
+# Tests (pipeline)
+pytest pipeline/tests/ -v
+```
+
+All three must pass cleanly. If `ruff format --check` fails, run `ruff format pipeline/` to auto-fix, then re-stage the reformatted files before committing.
+
 ## Data sources
 - FastF1 library for historical race and qualifying data
 - OpenWeatherMap API for weather forecasts
