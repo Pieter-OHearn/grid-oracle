@@ -53,7 +53,7 @@ def upsert_qualifying_result(
                 (race_id, driver_id, constructor_id, q1_time, q2_time, q3_time, grid_position)
             VALUES
                 (:race_id, :driver_id, :constructor_id,
-                 :q1_time::interval, :q2_time::interval, :q3_time::interval,
+                 CAST(:q1_time AS interval), CAST(:q2_time AS interval), CAST(:q3_time AS interval),
                  :grid_position)
             ON CONFLICT (race_id, driver_id) DO UPDATE
                 SET constructor_id = EXCLUDED.constructor_id,
