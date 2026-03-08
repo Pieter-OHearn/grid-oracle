@@ -3,16 +3,8 @@ name: Backend CI
 on:
   push:
     branches: [main]
-    paths:
-      - "api/**"
-      - "pipeline/**"
-      - "pyproject.toml"
   pull_request:
     branches: [main]
-    paths:
-      - "api/**"
-      - "pipeline/**"
-      - "pyproject.toml"
 
 jobs:
   lint:

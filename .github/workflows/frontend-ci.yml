@@ -3,14 +3,8 @@ name: Frontend CI
 on:
   push:
     branches: [main]
-    paths:
-      - "dashboard/**"
-      - "!dashboard/design/**"
   pull_request:
     branches: [main]
-    paths:
-      - "dashboard/**"
-      - "!dashboard/design/**"
 
 jobs:
   lint-and-build:
