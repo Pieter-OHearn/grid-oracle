@@ -31,7 +31,7 @@ def upsert_circuit(conn, session: fastf1.core.Session) -> int:
             """
             INSERT INTO circuits (name, country, city, circuit_type, total_laps, length_km)
             VALUES (:name, :country, :city, 'unknown', 0, 0)
-            ON CONFLICT ON CONSTRAINT circuits_name_unique DO NOTHING
+            ON CONFLICT (name) DO NOTHING
             RETURNING id
             """
         ),
@@ -122,7 +122,7 @@ def upsert_constructor(conn, name: str, nationality: str) -> int:
             """
             INSERT INTO constructors (name, nationality, color_hex)
             VALUES (:name, :nationality, :color)
-            ON CONFLICT ON CONSTRAINT constructors_name_unique DO NOTHING
+            ON CONFLICT (name) DO NOTHING
             RETURNING id
             """
         ),
