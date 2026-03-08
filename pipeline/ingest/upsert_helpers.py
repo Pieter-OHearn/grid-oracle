@@ -4,7 +4,6 @@ import logging
 import os
 
 import fastf1
-import pandas as pd
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 
@@ -93,21 +92,19 @@ def upsert_race(
     ).scalar_one()
 
 
-def upsert_driver(conn, code: str, full_name: str, nationality: str, dob) -> int:
-    """Insert or update a driver; dob may be None if not available."""
+def upsert_driver(conn, code: str, full_name: str, nationality: str) -> int:
     row = conn.execute(
         text(
             """
-            INSERT INTO drivers (code, full_name, nationality, date_of_birth)
-            VALUES (:code, :full_name, :nationality, :dob)
+            INSERT INTO drivers (code, full_name, nationality)
+            VALUES (:code, :full_name, :nationality)
             ON CONFLICT (code) DO UPDATE
-                SET full_name     = EXCLUDED.full_name,
-                    nationality   = EXCLUDED.nationality,
-                    date_of_birth = EXCLUDED.date_of_birth
+                SET full_name   = EXCLUDED.full_name,
+                    nationality = EXCLUDED.nationality
             RETURNING id
             """
         ),
-        {"code": code, "full_name": full_name, "nationality": nationality, "dob": dob},
+        {"code": code, "full_name": full_name, "nationality": nationality},
     ).fetchone()
     if row:
         return row[0]
@@ -149,15 +146,3 @@ def upsert_driver_contract(conn, driver_id: int, constructor_id: int, season: in
     )
 
 
-def resolve_dob(code: str, raw_dob) -> None:
-    """Return a valid DOB value, or None with a warning if missing."""
-    try:
-        if pd.isna(raw_dob):
-            logger.warning("Driver %s has no date_of_birth — storing NULL", code)
-            return None
-    except (TypeError, ValueError):
-        pass
-    if raw_dob is None:
-        logger.warning("Driver %s has no date_of_birth — storing NULL", code)
-        return None
-    return raw_dob

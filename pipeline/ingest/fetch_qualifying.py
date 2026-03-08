@@ -10,7 +10,6 @@ from sqlalchemy.engine import Engine
 
 from pipeline.ingest.upsert_helpers import (
     get_engine,
-    resolve_dob,
     upsert_circuit,
     upsert_constructor,
     upsert_driver,
@@ -114,12 +113,10 @@ def ingest_season(season: int, engine: Engine) -> None:
 
                 full_name = str(row.get("FullName", driver_code))
                 nationality = str(row.get("CountryCode", ""))
-                dob = resolve_dob(driver_code, row.get("DateOfBirth"))
-
                 constructor_name = str(row.get("TeamName", "Unknown"))
                 constructor_nationality = str(row.get("TeamNationality", ""))
 
-                driver_id = upsert_driver(conn, driver_code, full_name, nationality, dob)
+                driver_id = upsert_driver(conn, driver_code, full_name, nationality)
                 constructor_id = upsert_constructor(conn, constructor_name, constructor_nationality)
                 upsert_driver_contract(conn, driver_id, constructor_id, season)
 

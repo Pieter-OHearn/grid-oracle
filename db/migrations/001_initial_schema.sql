@@ -23,11 +23,10 @@ CREATE TABLE IF NOT EXISTS races (
 );
 
 CREATE TABLE IF NOT EXISTS drivers (
-    id              SERIAL PRIMARY KEY,
-    code            CHAR(3)  NOT NULL UNIQUE,
-    full_name       TEXT     NOT NULL,
-    nationality     TEXT     NOT NULL,
-    date_of_birth   DATE
+    id           SERIAL PRIMARY KEY,
+    code         CHAR(3) NOT NULL UNIQUE,
+    full_name    TEXT    NOT NULL,
+    nationality  TEXT    NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS constructors (
