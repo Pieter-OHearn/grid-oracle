@@ -1,5 +1,6 @@
 from fastapi import FastAPI
-from api.database import engine, Base
+
+from api.database import Base, engine
 
 Base.metadata.create_all(bind=engine)
 
