@@ -3,7 +3,6 @@
 from unittest.mock import MagicMock
 
 import numpy as np
-import pytest
 
 from pipeline.ingest.fetch_results import upsert_race_result
 

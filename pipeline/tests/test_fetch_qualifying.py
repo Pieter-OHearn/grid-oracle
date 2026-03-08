@@ -1,7 +1,6 @@
 """Unit tests for pipeline.ingest.fetch_qualifying."""
 
 import pandas as pd
-import pytest
 
 from pipeline.ingest.fetch_qualifying import _interval_or_none, upsert_qualifying_result
 from unittest.mock import MagicMock

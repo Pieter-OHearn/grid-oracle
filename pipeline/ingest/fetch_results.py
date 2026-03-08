@@ -5,6 +5,7 @@ import logging
 
 import fastf1
 import pandas as pd
+from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
 from pipeline.ingest.upsert_helpers import (
@@ -34,8 +35,6 @@ def upsert_race_result(
     fastest_lap: bool,
     is_wet_race: bool,
 ) -> None:
-    from sqlalchemy import text
-
     conn.execute(
         text(
             """
