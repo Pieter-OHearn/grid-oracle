@@ -93,6 +93,7 @@ See `.env.example` for all required variables. Never hardcode credentials.
 - SQL: all migrations are numbered sequentially e.g. `001_initial_schema.sql`
 - API routes return Pydantic models, never raw dicts
 - All ingestion scripts support upsert — re-running should never create duplicates
+- Never add `Co-Authored-By` trailers to commit messages
 
 ## Data sources
 - FastF1 library for historical race and qualifying data
