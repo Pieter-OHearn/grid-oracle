@@ -19,7 +19,8 @@ from pipeline.ingest.upsert_helpers import (
 )
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
-logging.getLogger("fastf1").setLevel(logging.CRITICAL)
+for _noisy in ("fastf1", "req", "core", "logger", "_api"):
+    logging.getLogger(_noisy).setLevel(logging.CRITICAL)
 logger = logging.getLogger(__name__)
 
 
