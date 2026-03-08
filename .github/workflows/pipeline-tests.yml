@@ -1,0 +1,36 @@
+name: Pipeline Tests
+
+on:
+  push:
+    paths:
+      - "pipeline/**"
+      - ".github/workflows/pipeline-tests.yml"
+  pull_request:
+    paths:
+      - "pipeline/**"
+      - ".github/workflows/pipeline-tests.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: pipeline/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r pipeline/requirements.txt
+
+      - name: Lint
+        run: |
+          ruff check pipeline/
+          ruff format --check pipeline/
+
+      - name: Test
+        run: python -m pytest pipeline/tests/ -v

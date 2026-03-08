@@ -3,7 +3,7 @@
 
 CREATE TABLE IF NOT EXISTS circuits (
     id            SERIAL PRIMARY KEY,
-    name          TEXT    NOT NULL,
+    name          TEXT    NOT NULL UNIQUE,
     country       TEXT    NOT NULL,
     city          TEXT    NOT NULL,
     circuit_type  TEXT    NOT NULL,
@@ -12,26 +12,26 @@ CREATE TABLE IF NOT EXISTS circuits (
 );
 
 CREATE TABLE IF NOT EXISTS races (
-    id          SERIAL PRIMARY KEY,
-    season      INTEGER NOT NULL,
-    round       INTEGER NOT NULL,
-    name        TEXT    NOT NULL,
-    circuit_id  INTEGER NOT NULL REFERENCES circuits (id),
-    date        DATE    NOT NULL,
-    is_completed BOOLEAN NOT NULL DEFAULT FALSE
+    id           SERIAL PRIMARY KEY,
+    season       INTEGER NOT NULL,
+    round        INTEGER NOT NULL,
+    name         TEXT    NOT NULL,
+    circuit_id   INTEGER NOT NULL REFERENCES circuits (id),
+    date         DATE    NOT NULL,
+    is_completed BOOLEAN NOT NULL DEFAULT FALSE,
+    UNIQUE (season, round)
 );
 
 CREATE TABLE IF NOT EXISTS drivers (
-    id              SERIAL PRIMARY KEY,
-    code            CHAR(3)  NOT NULL UNIQUE,
-    full_name       TEXT     NOT NULL,
-    nationality     TEXT     NOT NULL,
-    date_of_birth   DATE     NOT NULL
+    id           SERIAL PRIMARY KEY,
+    code         CHAR(3) NOT NULL UNIQUE,
+    full_name    TEXT    NOT NULL,
+    nationality  TEXT    NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS constructors (
     id           SERIAL PRIMARY KEY,
-    name         TEXT NOT NULL,
+    name         TEXT NOT NULL UNIQUE,
     nationality  TEXT NOT NULL,
     color_hex    CHAR(7) NOT NULL
 );
@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS qualifying_results (
 
 CREATE TABLE IF NOT EXISTS weather_snapshots (
     id                SERIAL PRIMARY KEY,
-    race_id           INTEGER   NOT NULL REFERENCES races (id),
+    race_id           INTEGER     NOT NULL REFERENCES races (id),
     captured_at       TIMESTAMPTZ NOT NULL,
     rain_probability  NUMERIC(5, 2),
     temp_celsius      NUMERIC(5, 2),
@@ -121,18 +121,18 @@ CREATE TABLE IF NOT EXISTS evaluation_metrics (
 );
 
 -- Indexes on commonly queried foreign keys and filter columns
-CREATE INDEX IF NOT EXISTS idx_races_season          ON races (season);
-CREATE INDEX IF NOT EXISTS idx_races_circuit_id      ON races (circuit_id);
-CREATE INDEX IF NOT EXISTS idx_driver_contracts_season ON driver_contracts (season);
-CREATE INDEX IF NOT EXISTS idx_driver_contracts_driver ON driver_contracts (driver_id);
-CREATE INDEX IF NOT EXISTS idx_race_results_race_id  ON race_results (race_id);
-CREATE INDEX IF NOT EXISTS idx_race_results_driver_id ON race_results (driver_id);
-CREATE INDEX IF NOT EXISTS idx_qualifying_results_race_id   ON qualifying_results (race_id);
-CREATE INDEX IF NOT EXISTS idx_qualifying_results_driver_id ON qualifying_results (driver_id);
-CREATE INDEX IF NOT EXISTS idx_weather_snapshots_race_id ON weather_snapshots (race_id);
-CREATE INDEX IF NOT EXISTS idx_features_race_id      ON features (race_id);
-CREATE INDEX IF NOT EXISTS idx_features_driver_id    ON features (driver_id);
-CREATE INDEX IF NOT EXISTS idx_predictions_race_id   ON predictions (race_id);
-CREATE INDEX IF NOT EXISTS idx_predictions_driver_id ON predictions (driver_id);
-CREATE INDEX IF NOT EXISTS idx_predictions_model_version_id ON predictions (model_version_id);
-CREATE INDEX IF NOT EXISTS idx_evaluation_metrics_race_id ON evaluation_metrics (race_id);
+CREATE INDEX IF NOT EXISTS idx_races_season                    ON races (season);
+CREATE INDEX IF NOT EXISTS idx_races_circuit_id               ON races (circuit_id);
+CREATE INDEX IF NOT EXISTS idx_driver_contracts_season        ON driver_contracts (season);
+CREATE INDEX IF NOT EXISTS idx_driver_contracts_driver        ON driver_contracts (driver_id);
+CREATE INDEX IF NOT EXISTS idx_race_results_race_id           ON race_results (race_id);
+CREATE INDEX IF NOT EXISTS idx_race_results_driver_id         ON race_results (driver_id);
+CREATE INDEX IF NOT EXISTS idx_qualifying_results_race_id     ON qualifying_results (race_id);
+CREATE INDEX IF NOT EXISTS idx_qualifying_results_driver_id   ON qualifying_results (driver_id);
+CREATE INDEX IF NOT EXISTS idx_weather_snapshots_race_id      ON weather_snapshots (race_id);
+CREATE INDEX IF NOT EXISTS idx_features_race_id               ON features (race_id);
+CREATE INDEX IF NOT EXISTS idx_features_driver_id             ON features (driver_id);
+CREATE INDEX IF NOT EXISTS idx_predictions_race_id            ON predictions (race_id);
+CREATE INDEX IF NOT EXISTS idx_predictions_driver_id          ON predictions (driver_id);
+CREATE INDEX IF NOT EXISTS idx_predictions_model_version_id   ON predictions (model_version_id);
+CREATE INDEX IF NOT EXISTS idx_evaluation_metrics_race_id     ON evaluation_metrics (race_id);
