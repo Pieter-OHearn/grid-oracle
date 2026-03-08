@@ -105,7 +105,7 @@ ruff check pipeline/
 ruff format --check pipeline/
 
 # Tests (pipeline)
-pytest pipeline/tests/ -v
+python -m pytest pipeline/tests/ -v
 ```
 
 All three must pass cleanly. If `ruff format --check` fails, run `ruff format pipeline/` to auto-fix, then re-stage the reformatted files before committing.

@@ -40,9 +40,7 @@ def upsert_circuit(conn, session: fastf1.core.Session) -> int:
     ).fetchone()
     if row:
         return row[0]
-    return conn.execute(
-        text("SELECT id FROM circuits WHERE name = :name"), {"name": name}
-    ).scalar_one()
+    return conn.execute(text("SELECT id FROM circuits WHERE name = :name"), {"name": name}).scalar_one()
 
 
 def upsert_race(
@@ -110,9 +108,7 @@ def upsert_driver(conn, code: str, full_name: str, nationality: str) -> int:
     ).fetchone()
     if row:
         return row[0]
-    return conn.execute(
-        text("SELECT id FROM drivers WHERE code = :code"), {"code": code}
-    ).scalar_one()
+    return conn.execute(text("SELECT id FROM drivers WHERE code = :code"), {"code": code}).scalar_one()
 
 
 def upsert_constructor(conn, name: str, nationality: str) -> int:
@@ -130,9 +126,7 @@ def upsert_constructor(conn, name: str, nationality: str) -> int:
     ).fetchone()
     if row:
         return row[0]
-    return conn.execute(
-        text("SELECT id FROM constructors WHERE name = :name"), {"name": name}
-    ).scalar_one()
+    return conn.execute(text("SELECT id FROM constructors WHERE name = :name"), {"name": name}).scalar_one()
 
 
 def upsert_driver_contract(conn, driver_id: int, constructor_id: int, season: int) -> None:
@@ -147,5 +141,3 @@ def upsert_driver_contract(conn, driver_id: int, constructor_id: int, season: in
         ),
         {"driver_id": driver_id, "constructor_id": constructor_id, "season": season},
     )
-
-

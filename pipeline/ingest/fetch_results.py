@@ -72,6 +72,7 @@ def upsert_race_result(
 # Main ingestion logic
 # ---------------------------------------------------------------------------
 
+
 def ingest_season(season: int, engine: Engine) -> None:
     schedule = fastf1.get_event_schedule(season, include_testing=False)
     logger.info("Season %d — %d race events found", season, len(schedule))

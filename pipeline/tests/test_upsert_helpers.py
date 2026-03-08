@@ -1,8 +1,6 @@
 """Unit tests for pipeline.ingest.upsert_helpers."""
 
-from unittest.mock import MagicMock, call
-
-import pytest
+from unittest.mock import MagicMock
 
 from pipeline.ingest.upsert_helpers import (
     upsert_circuit,
@@ -35,6 +33,7 @@ def _session(name="Bahrain Grand Prix", country="Bahrain", city="Sakhir"):
 # upsert_circuit
 # ---------------------------------------------------------------------------
 
+
 def test_upsert_circuit_returns_id_on_insert():
     conn = _conn(returning_id=5)
     result = upsert_circuit(conn, _session())
@@ -54,6 +53,7 @@ def test_upsert_circuit_falls_back_to_select_on_conflict():
 # upsert_driver
 # ---------------------------------------------------------------------------
 
+
 def test_upsert_driver_returns_id_on_insert():
     conn = _conn(returning_id=7)
     assert upsert_driver(conn, "VER", "Max Verstappen", "NED") == 7
@@ -69,7 +69,7 @@ def test_upsert_driver_falls_back_to_select():
 def test_upsert_driver_passes_correct_params():
     conn = _conn(returning_id=1)
     upsert_driver(conn, "HAM", "Lewis Hamilton", "GBR")
-    _, kwargs = conn.execute.call_args
+    _, _kwargs = conn.execute.call_args
     # params are passed as the second positional arg
     params = conn.execute.call_args[0][1]
     assert params["code"] == "HAM"
@@ -80,6 +80,7 @@ def test_upsert_driver_passes_correct_params():
 # ---------------------------------------------------------------------------
 # upsert_constructor
 # ---------------------------------------------------------------------------
+
 
 def test_upsert_constructor_returns_id_on_insert():
     conn = _conn(returning_id=2)
@@ -96,6 +97,7 @@ def test_upsert_constructor_falls_back_to_select():
 # ---------------------------------------------------------------------------
 # upsert_race
 # ---------------------------------------------------------------------------
+
 
 def test_upsert_race_mark_completed_true():
     conn = _conn(returning_id=10)
@@ -123,6 +125,7 @@ def test_upsert_race_falls_back_to_select():
 # ---------------------------------------------------------------------------
 # upsert_driver_contract
 # ---------------------------------------------------------------------------
+
 
 def test_upsert_driver_contract_executes():
     conn = MagicMock()

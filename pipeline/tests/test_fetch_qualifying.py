@@ -1,14 +1,15 @@
 """Unit tests for pipeline.ingest.fetch_qualifying."""
 
+from unittest.mock import MagicMock
+
 import pandas as pd
 
 from pipeline.ingest.fetch_qualifying import _interval_or_none, upsert_qualifying_result
-from unittest.mock import MagicMock
-
 
 # ---------------------------------------------------------------------------
 # _interval_or_none
 # ---------------------------------------------------------------------------
+
 
 def test_interval_or_none_with_none():
     assert _interval_or_none(None) is None
@@ -32,6 +33,7 @@ def test_interval_or_none_with_zero():
 # ---------------------------------------------------------------------------
 # upsert_qualifying_result
 # ---------------------------------------------------------------------------
+
 
 def test_upsert_qualifying_result_executes():
     conn = MagicMock()

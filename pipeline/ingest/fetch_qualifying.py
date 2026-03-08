@@ -78,6 +78,7 @@ def upsert_qualifying_result(
 # Main ingestion logic
 # ---------------------------------------------------------------------------
 
+
 def ingest_season(season: int, engine: Engine) -> None:
     schedule = fastf1.get_event_schedule(season, include_testing=False)
     logger.info("Season %d — %d race events found", season, len(schedule))
@@ -136,9 +137,7 @@ def ingest_season(season: int, engine: Engine) -> None:
                     grid_position,
                 )
 
-        logger.info(
-            "Round %d — %s: ingested %d qualifying results", round_num, event_name, len(results)
-        )
+        logger.info("Round %d — %s: ingested %d qualifying results", round_num, event_name, len(results))
 
     logger.info("Season %d qualifying ingestion complete.", season)
 
