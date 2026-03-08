@@ -1,0 +1,40 @@
+@import './fonts.css';
+@import './tailwind.css';
+@import './theme.css';
+
+/* GridOracle global overrides */
+html, body, #root {
+  height: 100%;
+  background: #08080e;
+}
+
+/* Custom scrollbar for sidebar */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 3px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #2a2a40;
+  border-radius: 2px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: #3a3a55;
+}
+
+/* Main scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: #0a0a14;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e1e30;
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #2a2a40;
+}

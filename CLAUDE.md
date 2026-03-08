@@ -31,6 +31,31 @@ When asked to work on a ticket, follow these steps in order:
    - Link to the original GitHub issue
 7. Move the ticket to the `Ready for Review` column on the kanban board
 
+## Frontend design reference
+
+The `dashboard/design/` directory contains a Figma "Make Code" export of the approved
+UI designs. These files are **visual references only** — do NOT copy their file
+structure or use the code as-is. The design uses large monolithic page components;
+your implementation must be properly componentised with small, reusable files.
+
+Key reference files:
+- `dashboard/design/src/app/components/Layout.tsx` — Sidebar + header layout
+- `dashboard/design/src/app/pages/PredictionPage.tsx` — Prediction view
+- `dashboard/design/src/app/pages/ResultsPage.tsx` — Results comparison view
+- `dashboard/design/src/app/pages/DashboardPage.tsx` — Season accuracy dashboard
+- `dashboard/design/src/styles/` — Colour palette, fonts, scrollbar styles
+- `dashboard/design/src/app/data/mockData.ts` — Data types and mock data structure
+
+Design system summary:
+- Dark theme: backgrounds `#08080e`, `#0c0c16`, `#0f0f1a`; borders `#1e1e30`
+- Accent colour: `#e10600` (F1 red)
+- Fonts: Barlow Condensed (headings/labels), Barlow (body), JetBrains Mono (data)
+- Icons: lucide-react; Animations: framer-motion; Charts: recharts
+
+When implementing dashboard tickets (012–015), read the corresponding design file
+to match the visual design, then build with properly separated components where no
+single component file exceeds ~150 lines.
+
 ## Tech stack
 - Database: PostgreSQL 16
 - Backend: FastAPI + SQLAlchemy + Pydantic
