@@ -1,0 +1,36 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "api/**"
+      - "pipeline/**"
+      - "pyproject.toml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "api/**"
+      - "pipeline/**"
+      - "pyproject.toml"
+
+jobs:
+  lint:
+    name: Ruff lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install ruff
+        run: pip install ruff
+
+      - name: Run ruff check
+        run: ruff check api/ pipeline/
+
+      - name: Run ruff format check
+        run: ruff format --check api/ pipeline/
