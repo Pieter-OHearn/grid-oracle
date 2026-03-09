@@ -4,7 +4,7 @@ import logging
 import os
 
 import fastf1
-from sqlalchemy import create_engine, text
+from sqlalchemy import Connection, create_engine, text
 from sqlalchemy.engine import Engine
 
 logger = logging.getLogger(__name__)
@@ -18,12 +18,14 @@ def get_engine() -> Engine:
     return create_engine(db_url)
 
 
-def upsert_circuit_from_event(conn, name: str, country: str, city: str) -> int:
+def upsert_circuit_from_event(conn: Connection, name: str, country: str, city: str) -> int:
     """Insert circuit if absent using event schedule data; return its id.
 
     Unlike upsert_circuit(), this does not require a loaded FastF1 Session —
     only the event name, country, and city from the schedule DataFrame.
     """
+    # FastF1 doesn't expose circuit_type / total_laps / length_km directly;
+    # use sensible defaults so the row can be enriched later.
     row = conn.execute(
         text(
             """

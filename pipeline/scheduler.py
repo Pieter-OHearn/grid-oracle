@@ -9,6 +9,7 @@ from datetime import datetime, timedelta, timezone
 from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.triggers.date import DateTrigger
 from sqlalchemy import text
+from sqlalchemy.engine import Engine
 
 from pipeline.ingest.calendar_sync import sync_season_calendar
 from pipeline.ingest.fetch_qualifying import ingest_event as ingest_qualifying_event
@@ -18,7 +19,7 @@ from pipeline.ingest.upsert_helpers import get_engine
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 for _noisy in ("fastf1", "req", "core", "logger", "_api", "apscheduler"):
-    logging.getLogger(_noisy).setLevel(logging.WARNING)
+    logging.getLogger(_noisy).setLevel(logging.CRITICAL)
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
@@ -108,7 +109,7 @@ def _make_job_id(job_type: str, season: int, round_num: int) -> str:
 # ---------------------------------------------------------------------------
 
 
-def _run_job(job_type: str, season: int, round_num: int, race_id: int, engine) -> None:
+def _run_job(job_type: str, season: int, round_num: int, race_id: int, engine: Engine) -> None:
     logger.info(
         "Job [%s] starting — season %d round %d (race_id=%d)",
         job_type,
@@ -136,7 +137,7 @@ def _run_job(job_type: str, season: int, round_num: int, race_id: int, engine) -
 # ---------------------------------------------------------------------------
 
 
-def _should_catch_up(job_type: str, event: dict, engine) -> bool:
+def _should_catch_up(job_type: str, event: dict, engine: Engine) -> bool:
     """Determine whether a missed job should be caught up."""
     race_id = event["race_id"]
     session_times = event["session_times"]
@@ -171,6 +172,8 @@ def _should_catch_up(job_type: str, event: dict, engine) -> bool:
                     text("SELECT is_completed FROM races WHERE id = :rid"),
                     {"rid": race_id},
                 ).scalar()
+                if is_completed is None:
+                    return False
                 return not is_completed
             return False
 
@@ -182,6 +185,8 @@ def _should_catch_up(job_type: str, event: dict, engine) -> bool:
                     text("SELECT is_completed FROM races WHERE id = :rid"),
                     {"rid": race_id},
                 ).scalar()
+                if is_completed is None:
+                    return False
                 return not is_completed
             return False
 
@@ -196,7 +201,7 @@ def _should_catch_up(job_type: str, event: dict, engine) -> bool:
 def _schedule_events(
     scheduler: BlockingScheduler,
     events: list[dict],
-    engine,
+    engine: Engine,
 ) -> None:
     """Register one-off jobs for each event based on actual session times."""
     now = datetime.now(timezone.utc)
@@ -241,7 +246,7 @@ def _list_jobs(scheduler: BlockingScheduler) -> None:
 # ---------------------------------------------------------------------------
 
 
-def _manual_trigger(job_type: str, season: int, round_num: int, engine) -> None:
+def _manual_trigger(job_type: str, season: int, round_num: int, engine: Engine) -> None:
     """Run a single job immediately for a given event."""
     events = sync_season_calendar(season, engine)
     event = next((e for e in events if e["round"] == round_num), None)
@@ -283,6 +288,8 @@ def main() -> None:
     logger.info("Pipeline scheduler starting for season %d", args.season)
 
     events = sync_season_calendar(args.season, engine)
+    if not events:
+        logger.warning("No events found for season %d — calendar may not be available yet", args.season)
 
     scheduler = BlockingScheduler(timezone=timezone.utc)
     _schedule_events(scheduler, events, engine)

@@ -104,6 +104,7 @@ def ingest_event(season: int, round_num: int, engine: Engine) -> bool:
 
     with engine.begin() as conn:
         circuit_id = upsert_circuit(conn, session)
+        # mark_completed=False: qualifying must not downgrade an existing TRUE value
         race_id = upsert_race(conn, season, round_num, event_name, circuit_id, race_date, mark_completed=False)
 
         for _, row in results.iterrows():
