@@ -78,7 +78,7 @@ def attach_targets(features_df: pd.DataFrame, engine: Engine) -> pd.DataFrame:
 def prepare_features(df: pd.DataFrame) -> pd.DataFrame:
     """Encode categorical columns and convert booleans for XGBoost."""
     df = df.copy()
-    df["circuit_type"] = df["circuit_type"].astype("category").cat.codes
+    df["circuit_type"] = df["circuit_type"].astype("category")
     df["is_wet_race_forecast"] = df["is_wet_race_forecast"].astype(int)
     return df
 
@@ -143,14 +143,17 @@ def insert_model_version(
     name: str,
     training_races_count: int,
     mae: float,
+    train_seasons: list[int],
+    test_seasons: list[int],
 ) -> int:
     """Insert a row into model_versions and return the new id."""
     with engine.begin() as conn:
         row = conn.execute(
             text(
                 """
-                INSERT INTO model_versions (name, trained_at, training_races_count, notes)
-                VALUES (:name, :trained_at, :count, :notes)
+                INSERT INTO model_versions
+                    (name, trained_at, training_races_count, mae, notes)
+                VALUES (:name, :trained_at, :count, :mae, :notes)
                 RETURNING id
                 """
             ),
@@ -158,9 +161,12 @@ def insert_model_version(
                 "name": name,
                 "trained_at": datetime.now(timezone.utc),
                 "count": training_races_count,
-                "notes": f"MAE={mae:.4f}; train=2022-2023, test=2024",
+                "mae": float(mae),
+                "notes": f"MAE={mae:.4f}; train={train_seasons}, test={test_seasons}",
             },
         ).fetchone()
+    if row is None:
+        raise RuntimeError("INSERT INTO model_versions returned no row")
     model_version_id = row[0]
     logger.info("Inserted model_versions row id=%d", model_version_id)
     return model_version_id
@@ -178,16 +184,26 @@ def run(
     features_df = load_feature_parquets(data_dir)
     df = attach_targets(features_df, engine)
 
+    train_seasons = [2022, 2023]
+    test_seasons = [2024]
+
     model, mae, training_races_count = train_model(
         df,
-        train_seasons=[2022, 2023],
-        test_seasons=[2024],
+        train_seasons=train_seasons,
+        test_seasons=test_seasons,
     )
 
     save_model(model, artifact_path)
-    insert_model_version(engine, name="xgb_v1", training_races_count=training_races_count, mae=mae)
 
-    print(f"Mean absolute position error: {mae:.4f}")
+    model_version_id = insert_model_version(
+        engine,
+        name="xgb_v1",
+        training_races_count=training_races_count,
+        mae=mae,
+        train_seasons=train_seasons,
+        test_seasons=test_seasons,
+    )
+    logger.info("Training complete — model_version_id=%d", model_version_id)
 
 
 def main() -> None:

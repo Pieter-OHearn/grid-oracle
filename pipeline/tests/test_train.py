@@ -8,6 +8,7 @@ import pytest
 
 from pipeline.ml.train import (
     attach_targets,
+    insert_model_version,
     load_feature_parquets,
     prepare_features,
     save_model,
@@ -106,7 +107,7 @@ def test_prepare_features():
         }
     )
     result = prepare_features(df)
-    assert result["circuit_type"].dtype.name == "int8"
+    assert result["circuit_type"].dtype.name == "category"
     assert result["is_wet_race_forecast"].dtype in (np.int64, np.int32, int)
     assert list(result["is_wet_race_forecast"]) == [1, 0, 1]
 
@@ -125,7 +126,7 @@ def test_train_model():
 
     assert model is not None
     assert mae >= 0
-    assert race_count > 0
+    assert race_count == 2
 
 
 def test_train_model_no_train_data():
@@ -156,3 +157,45 @@ def test_save_model(tmp_path):
     save_model(model, out)
     assert out.exists()
     assert out.stat().st_size > 0
+
+
+# ---------------------------------------------------------------------------
+# insert_model_version
+# ---------------------------------------------------------------------------
+
+
+def test_insert_model_version():
+    mock_conn = MagicMock()
+    mock_conn.execute.return_value.fetchone.return_value = (42,)
+    mock_engine = MagicMock()
+    mock_engine.begin.return_value.__enter__ = MagicMock(return_value=mock_conn)
+    mock_engine.begin.return_value.__exit__ = MagicMock(return_value=False)
+
+    result = insert_model_version(
+        mock_engine,
+        name="xgb_v1",
+        training_races_count=10,
+        mae=1.5,
+        train_seasons=[2022, 2023],
+        test_seasons=[2024],
+    )
+    assert result == 42
+    mock_conn.execute.assert_called_once()
+
+
+def test_insert_model_version_no_row():
+    mock_conn = MagicMock()
+    mock_conn.execute.return_value.fetchone.return_value = None
+    mock_engine = MagicMock()
+    mock_engine.begin.return_value.__enter__ = MagicMock(return_value=mock_conn)
+    mock_engine.begin.return_value.__exit__ = MagicMock(return_value=False)
+
+    with pytest.raises(RuntimeError, match="returned no row"):
+        insert_model_version(
+            mock_engine,
+            name="xgb_v1",
+            training_races_count=10,
+            mae=1.5,
+            train_seasons=[2022],
+            test_seasons=[2024],
+        )
