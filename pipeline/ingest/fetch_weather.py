@@ -15,6 +15,28 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 logger = logging.getLogger(__name__)
 
 OPENWEATHER_FORECAST_URL = "https://api.openweathermap.org/data/2.5/forecast"
+OPENWEATHER_GEOCODE_URL = "https://api.openweathermap.org/geo/1.0/direct"
+
+
+# ---------------------------------------------------------------------------
+# Geocoding
+# ---------------------------------------------------------------------------
+
+
+def geocode_circuit(city: str, country: str, api_key: str) -> tuple[float, float]:
+    """Resolve a city + country to (lat, lon) via OpenWeatherMap geocoding API."""
+    resp = requests.get(
+        OPENWEATHER_GEOCODE_URL,
+        params={"q": f"{city},{country}", "limit": 1, "appid": api_key},
+        timeout=30,
+    )
+    resp.raise_for_status()
+    results = resp.json()
+
+    if not results:
+        raise ValueError(f"Geocoding returned no results for '{city}, {country}'")
+
+    return float(results[0]["lat"]), float(results[0]["lon"])
 
 
 # ---------------------------------------------------------------------------
@@ -22,12 +44,12 @@ OPENWEATHER_FORECAST_URL = "https://api.openweathermap.org/data/2.5/forecast"
 # ---------------------------------------------------------------------------
 
 
-def get_circuit_coordinates(conn, race_id: int) -> tuple[float, float]:
-    """Look up latitude and longitude for the circuit of a given race."""
+def get_race_circuit_info(conn, race_id: int) -> dict:
+    """Look up circuit details for a given race, including coordinates and city/country."""
     row = conn.execute(
         text(
             """
-            SELECT c.latitude, c.longitude
+            SELECT c.id, c.latitude, c.longitude, c.city, c.country
             FROM races r
             JOIN circuits c ON r.circuit_id = c.id
             WHERE r.id = :race_id
@@ -39,12 +61,27 @@ def get_circuit_coordinates(conn, race_id: int) -> tuple[float, float]:
     if row is None:
         raise ValueError(f"Race with id {race_id} not found")
 
-    lat, lon = row[0], row[1]
-    if lat is None or lon is None:
-        raise ValueError(
-            f"Circuit for race {race_id} has no coordinates. Populate latitude/longitude in the circuits table first."
-        )
-    return float(lat), float(lon)
+    return {
+        "circuit_id": row[0],
+        "latitude": float(row[1]) if row[1] is not None else None,
+        "longitude": float(row[2]) if row[2] is not None else None,
+        "city": row[3],
+        "country": row[4],
+    }
+
+
+def update_circuit_coordinates(conn, circuit_id: int, lat: float, lon: float) -> None:
+    """Store geocoded coordinates on the circuit row for future lookups."""
+    conn.execute(
+        text(
+            """
+            UPDATE circuits
+            SET latitude = :lat, longitude = :lon
+            WHERE id = :circuit_id
+            """
+        ),
+        {"circuit_id": circuit_id, "lat": lat, "lon": lon},
+    )
 
 
 def insert_weather_snapshot(conn, race_id: int, snapshot: dict) -> None:
@@ -125,6 +162,29 @@ def parse_forecast(data: dict) -> dict:
 # ---------------------------------------------------------------------------
 
 
+def resolve_coordinates(circuit_info: dict, api_key: str, conn) -> tuple[float, float]:
+    """Return (lat, lon) for a circuit, geocoding and persisting if missing."""
+    lat, lon = circuit_info["latitude"], circuit_info["longitude"]
+
+    if lat is not None and lon is not None:
+        return lat, lon
+
+    city = circuit_info["city"]
+    country = circuit_info["country"]
+    logger.info(
+        "Circuit %d has no coordinates — geocoding '%s, %s'…",
+        circuit_info["circuit_id"],
+        city,
+        country,
+    )
+
+    lat, lon = geocode_circuit(city, country, api_key)
+    update_circuit_coordinates(conn, circuit_info["circuit_id"], lat, lon)
+    logger.info("Circuit %d coordinates saved: (%.4f, %.4f)", circuit_info["circuit_id"], lat, lon)
+
+    return lat, lon
+
+
 def fetch_and_store_weather(race_id: int, engine: Engine) -> None:
     """Look up circuit coordinates, fetch forecast, and store a snapshot."""
     api_key = os.environ.get("OPENWEATHER_API_KEY")
@@ -132,7 +192,8 @@ def fetch_and_store_weather(race_id: int, engine: Engine) -> None:
         raise RuntimeError("OPENWEATHER_API_KEY environment variable is not set")
 
     with engine.begin() as conn:
-        lat, lon = get_circuit_coordinates(conn, race_id)
+        circuit_info = get_race_circuit_info(conn, race_id)
+        lat, lon = resolve_coordinates(circuit_info, api_key, conn)
 
     logger.info("Race %d — circuit at (%.4f, %.4f), fetching forecast…", race_id, lat, lon)
 
