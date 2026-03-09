@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from pipeline.ingest.upsert_helpers import (
     upsert_circuit,
+    upsert_circuit_from_event,
     upsert_constructor,
     upsert_driver,
     upsert_driver_contract,
@@ -46,6 +47,25 @@ def test_upsert_circuit_falls_back_to_select_on_conflict():
     conn.execute.return_value.fetchone.return_value = None
     conn.execute.return_value.scalar_one.return_value = 3
     result = upsert_circuit(conn, _session())
+    assert result == 3
+
+
+# ---------------------------------------------------------------------------
+# upsert_circuit_from_event
+# ---------------------------------------------------------------------------
+
+
+def test_upsert_circuit_from_event_returns_id_on_insert():
+    conn = _conn(returning_id=5)
+    result = upsert_circuit_from_event(conn, "Bahrain Grand Prix", "Bahrain", "Sakhir")
+    assert result == 5
+
+
+def test_upsert_circuit_from_event_falls_back_to_select():
+    conn = MagicMock()
+    conn.execute.return_value.fetchone.return_value = None
+    conn.execute.return_value.scalar_one.return_value = 3
+    result = upsert_circuit_from_event(conn, "Bahrain Grand Prix", "Bahrain", "Sakhir")
     assert result == 3
 
 
