@@ -82,15 +82,18 @@ def _driver_avg_position_last_n(conn: Connection, driver_id: int, race_date: obj
     val = conn.execute(
         text(
             """
-            SELECT AVG(rr.finish_position)
-            FROM race_results rr
-            JOIN races r ON r.id = rr.race_id
-            WHERE rr.driver_id = :did
-              AND rr.finish_position IS NOT NULL
-              AND r.date < :race_date
-              AND r.is_completed = TRUE
-            ORDER BY r.date DESC
-            LIMIT :n
+            SELECT AVG(sub.finish_position)
+            FROM (
+                SELECT rr.finish_position
+                FROM race_results rr
+                JOIN races r ON r.id = rr.race_id
+                WHERE rr.driver_id = :did
+                  AND rr.finish_position IS NOT NULL
+                  AND r.date < :race_date
+                  AND r.is_completed = TRUE
+                ORDER BY r.date DESC
+                LIMIT :n
+            ) sub
             """
         ),
         {"did": driver_id, "race_date": race_date, "n": n},
@@ -150,15 +153,18 @@ def _constructor_avg_position_last_n(
     val = conn.execute(
         text(
             """
-            SELECT AVG(rr.finish_position)
-            FROM race_results rr
-            JOIN races r ON r.id = rr.race_id
-            WHERE rr.constructor_id = :cid
-              AND rr.finish_position IS NOT NULL
-              AND r.date < :race_date
-              AND r.is_completed = TRUE
-            ORDER BY r.date DESC
-            LIMIT :n
+            SELECT AVG(sub.finish_position)
+            FROM (
+                SELECT rr.finish_position
+                FROM race_results rr
+                JOIN races r ON r.id = rr.race_id
+                WHERE rr.constructor_id = :cid
+                  AND rr.finish_position IS NOT NULL
+                  AND r.date < :race_date
+                  AND r.is_completed = TRUE
+                ORDER BY r.date DESC
+                LIMIT :n
+            ) sub
             """
         ),
         {"cid": constructor_id, "race_date": race_date, "n": n},
