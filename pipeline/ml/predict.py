@@ -12,11 +12,10 @@ from sqlalchemy.engine import Engine
 from xgboost import XGBRegressor
 
 from pipeline.ingest.upsert_helpers import get_engine
+from pipeline.ml.features import ARTIFACTS_DIR, prepare_features
 from pipeline.ml.train import FEATURE_COLS
 
 logger = logging.getLogger(__name__)
-
-ARTIFACTS_DIR = Path(__file__).resolve().parent / "artifacts"
 
 
 def load_model(path: Path) -> XGBRegressor:
@@ -32,53 +31,58 @@ def load_model(path: Path) -> XGBRegressor:
 def load_features(engine: Engine, race_id: int) -> pd.DataFrame:
     """Load feature rows from the features table for a given race.
 
+    Fetches features and qualifying results separately, then merges them in
+    Python so that any drivers missing from qualifying_results are detected
+    and logged rather than silently dropped.
+
     Returns a DataFrame with one row per driver, containing the
     feature columns expected by the model.
     """
     with engine.connect() as conn:
-        df = pd.read_sql(
-            text(
-                """
-                SELECT f.driver_id, f.feature_data,
-                       qr.constructor_id
-                FROM features f
-                JOIN qualifying_results qr
-                  ON qr.race_id = f.race_id AND qr.driver_id = f.driver_id
-                WHERE f.race_id = :race_id
-                """
-            ),
+        features_raw = pd.read_sql(
+            text("SELECT driver_id, feature_data FROM features WHERE race_id = :race_id"),
             conn,
             params={"race_id": race_id},
         )
-    if df.empty:
+        qualifying_raw = pd.read_sql(
+            text("SELECT driver_id, constructor_id FROM qualifying_results WHERE race_id = :race_id"),
+            conn,
+            params={"race_id": race_id},
+        )
+
+    if features_raw.empty:
         raise ValueError(f"No features found for race_id={race_id}")
 
     # Expand the JSONB feature_data column into separate columns.
-    feature_records = pd.json_normalize(df["feature_data"])
-    result = pd.concat(
-        [df[["driver_id", "constructor_id"]].reset_index(drop=True), feature_records],
+    feature_records = pd.json_normalize(features_raw["feature_data"])
+    expanded = pd.concat(
+        [features_raw[["driver_id"]].reset_index(drop=True), feature_records],
         axis=1,
     )
+
+    result = expanded.merge(qualifying_raw, on="driver_id", how="inner")
+
+    dropped = len(expanded) - len(result)
+    if dropped > 0:
+        logger.warning(
+            "%d driver(s) dropped for race_id=%d: present in features but missing from qualifying_results",
+            dropped,
+            race_id,
+        )
+
     logger.info("Loaded features for %d drivers (race_id=%d)", len(result), race_id)
     return result
-
-
-def prepare_prediction_features(df: pd.DataFrame) -> pd.DataFrame:
-    """Prepare feature columns for model prediction (same encoding as training)."""
-    df = df.copy()
-    df["circuit_type"] = df["circuit_type"].astype("category")
-    df["is_wet_race_forecast"] = df["is_wet_race_forecast"].astype(int)
-    return df
 
 
 def normalise_positions(raw_predictions: np.ndarray) -> list[int]:
     """Convert raw model outputs to unique integer positions 1..N.
 
     Ranks the raw predictions (lower = better position) and assigns
-    integer positions with no ties.
+    integer positions with no ties. Using kind="stable" ensures
+    tie-breaking is deterministic.
     """
     # argsort of argsort gives the rank (0-indexed)
-    order = raw_predictions.argsort().argsort()
+    order = raw_predictions.argsort(kind="stable").argsort(kind="stable")
     return [int(rank) + 1 for rank in order]
 
 
@@ -98,13 +102,13 @@ def store_predictions(
         {
             "race_id": race_id,
             "model_version_id": model_version_id,
-            "driver_id": int(row["driver_id"]),
-            "constructor_id": int(row["constructor_id"]),
-            "predicted_position": int(row["predicted_position"]),
+            "driver_id": int(rec["driver_id"]),
+            "constructor_id": int(rec["constructor_id"]),
+            "predicted_position": int(rec["predicted_position"]),
             "confidence_score": None,
             "created_at": now,
         }
-        for _, row in predictions.iterrows()
+        for rec in predictions.to_dict("records")
     ]
 
     with engine.begin() as conn:
@@ -150,11 +154,16 @@ def run(
 
     model = load_model(model_path)
     features_df = load_features(engine, race_id)
-    prepared = prepare_prediction_features(features_df)
+    prepared = prepare_features(features_df)
+
+    missing = [c for c in FEATURE_COLS if c not in prepared.columns]
+    if missing:
+        raise ValueError(f"Feature columns missing from loaded data: {missing}")
 
     raw_preds = model.predict(prepared[FEATURE_COLS])
     positions = normalise_positions(raw_preds)
 
+    features_df = features_df.reset_index(drop=True)
     features_df["predicted_position"] = positions
 
     result = features_df[["driver_id", "constructor_id", "predicted_position"]]

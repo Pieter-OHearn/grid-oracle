@@ -7,11 +7,11 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from pipeline.ml.features import prepare_features
 from pipeline.ml.predict import (
     load_features,
     load_model,
     normalise_positions,
-    prepare_prediction_features,
     run,
     store_predictions,
 )
@@ -93,15 +93,23 @@ def test_load_features_empty():
 def test_load_features_success():
     fd1 = _make_feature_data()
     fd2 = _make_feature_data()
-    db_df = pd.DataFrame(
+    features_db_df = pd.DataFrame(
         {
             "driver_id": [1, 2],
-            "constructor_id": [10, 20],
             "feature_data": [fd1, fd2],
         }
     )
+    qualifying_db_df = pd.DataFrame(
+        {
+            "driver_id": [1, 2],
+            "constructor_id": [10, 20],
+        }
+    )
     engine = MagicMock()
-    with patch("pipeline.ml.predict.pd.read_sql", return_value=db_df):
+    with patch(
+        "pipeline.ml.predict.pd.read_sql",
+        side_effect=[features_db_df, qualifying_db_df],
+    ):
         result = load_features(engine, race_id=1)
 
     assert len(result) == 2
@@ -111,14 +119,45 @@ def test_load_features_success():
         assert col in result.columns, f"Missing feature column: {col}"
 
 
+def test_load_features_warns_on_missing_qualifying(caplog):
+    """load_features logs a warning when a driver has features but no qualifying result."""
+    import logging
+
+    fd1 = _make_feature_data()
+    fd2 = _make_feature_data()
+    features_db_df = pd.DataFrame(
+        {
+            "driver_id": [1, 2],
+            "feature_data": [fd1, fd2],
+        }
+    )
+    # Only driver 1 has a qualifying result; driver 2 will be dropped.
+    qualifying_db_df = pd.DataFrame(
+        {
+            "driver_id": [1],
+            "constructor_id": [10],
+        }
+    )
+    engine = MagicMock()
+    with patch(
+        "pipeline.ml.predict.pd.read_sql",
+        side_effect=[features_db_df, qualifying_db_df],
+    ):
+        with caplog.at_level(logging.WARNING, logger="pipeline.ml.predict"):
+            result = load_features(engine, race_id=1)
+
+    assert len(result) == 1
+    assert any("dropped" in record.message for record in caplog.records)
+
+
 # ---------------------------------------------------------------------------
-# prepare_prediction_features
+# prepare_features
 # ---------------------------------------------------------------------------
 
 
-def test_prepare_prediction_features():
+def test_prepare_features():
     df = _make_features_df(3)
-    result = prepare_prediction_features(df)
+    result = prepare_features(df)
     assert result["circuit_type"].dtype.name == "category"
     assert result["is_wet_race_forecast"].dtype in (np.int64, np.int32, int)
 
@@ -152,6 +191,14 @@ def test_normalise_positions_close_values():
     raw = np.array([5.001, 5.002, 5.003])
     positions = normalise_positions(raw)
     assert sorted(positions) == [1, 2, 3]
+
+
+def test_normalise_positions_stability():
+    """Identical inputs produce identical positions across repeated calls."""
+    raw = np.array([5.0, 5.0, 3.0])
+    assert normalise_positions(raw) == normalise_positions(raw)
+    # The element with the lowest value (3.0, index 2) should always be position 1.
+    assert normalise_positions(raw)[2] == 1
 
 
 # ---------------------------------------------------------------------------
@@ -216,3 +263,33 @@ def test_run_end_to_end(tmp_path):
     assert set(result.columns) == {"driver_id", "constructor_id", "predicted_position"}
     positions = sorted(result["predicted_position"].tolist())
     assert positions == [1, 2, 3, 4, 5]  # unique 1..N
+
+
+def test_run_raises_on_missing_feature_columns(tmp_path):
+    """run() raises ValueError when loaded features are missing expected columns."""
+    from xgboost import XGBRegressor
+
+    n_features = len(FEATURE_COLS)
+    X = np.random.RandomState(42).rand(40, n_features)
+    y = np.random.RandomState(42).randint(1, 21, size=40).astype(float)
+    model = XGBRegressor(n_estimators=10, random_state=42, enable_categorical=False)
+    model.fit(X, y)
+    model_path = tmp_path / "model.json"
+    model.save_model(str(model_path))
+
+    # Drop one required column to trigger the guard.
+    incomplete_df = _make_features_df(3).drop(columns=["grid_position"])
+
+    mock_conn = MagicMock()
+    mock_engine = MagicMock()
+    mock_engine.begin.return_value.__enter__ = MagicMock(return_value=mock_conn)
+    mock_engine.begin.return_value.__exit__ = MagicMock(return_value=False)
+
+    with patch("pipeline.ml.predict.load_features", return_value=incomplete_df):
+        with pytest.raises(ValueError, match="Feature columns missing from loaded data"):
+            run(
+                race_id=1,
+                model_version_id=1,
+                model_path=model_path,
+                engine=mock_engine,
+            )
