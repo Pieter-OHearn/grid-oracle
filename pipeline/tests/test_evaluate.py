@@ -73,7 +73,7 @@ def test_compute_metrics_perfect_predictions():
     assert metrics["mean_position_error"] == 0.0
 
 
-def test_compute_metrics_no_correct():
+def test_compute_metrics_mostly_wrong():
     df = _make_comparison_df([5, 4, 3, 2, 1], [1, 2, 3, 4, 5])
     metrics = compute_metrics(df)
 

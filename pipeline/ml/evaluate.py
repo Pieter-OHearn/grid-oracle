@@ -33,7 +33,10 @@ def load_comparison(engine: Engine, race_id: int, model_version_id: int) -> pd.D
         JOIN race_results rr
           ON rr.race_id = p.race_id
          AND rr.driver_id = p.driver_id
-        WHERE p.race_id = :race_id
+        JOIN races r
+          ON r.id = p.race_id
+        WHERE r.is_completed = TRUE
+          AND p.race_id = :race_id
           AND p.model_version_id = :model_version_id
         """
     )
@@ -52,11 +55,11 @@ def load_comparison(engine: Engine, race_id: int, model_version_id: int) -> pd.D
     return df
 
 
-def compute_metrics(df: pd.DataFrame) -> dict:
+def compute_metrics(df: pd.DataFrame) -> dict[str, float]:
     """Compute evaluation metrics from a prediction-vs-result DataFrame.
 
     DNF drivers (``finish_position`` is NULL) are excluded from position-based
-    accuracy metrics but included in the total driver count for logging.
+    accuracy metrics.
 
     Returns a dict with keys:
         exact_position_accuracy, top3_accuracy, mean_position_error
@@ -100,7 +103,7 @@ def store_metrics(
     engine: Engine,
     race_id: int,
     model_version_id: int,
-    metrics: dict,
+    metrics: dict[str, float],
 ) -> None:
     """Insert evaluation metrics into the evaluation_metrics table.
 
@@ -145,7 +148,7 @@ def store_metrics(
 def log_summary(
     race_id: int,
     model_version_id: int,
-    metrics: dict,
+    metrics: dict[str, float],
     total_drivers: int,
     classified_drivers: int,
 ) -> None:
@@ -168,7 +171,7 @@ def run(
     race_id: int,
     model_version_id: int,
     engine: Engine | None = None,
-) -> dict:
+) -> dict[str, float]:
     """End-to-end evaluation pipeline for a single race.
 
     Returns the computed metrics dict.
