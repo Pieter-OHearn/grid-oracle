@@ -11,10 +11,10 @@ from sqlalchemy.engine import Engine
 from xgboost import XGBRegressor
 
 from pipeline.ingest.upsert_helpers import get_engine
+from pipeline.ml.features import ARTIFACTS_DIR, prepare_features
 
 logger = logging.getLogger(__name__)
 
-ARTIFACTS_DIR = Path(__file__).resolve().parent / "artifacts"
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
 FEATURE_COLS = [
@@ -75,12 +75,9 @@ def attach_targets(features_df: pd.DataFrame, engine: Engine) -> pd.DataFrame:
     return merged
 
 
-def prepare_features(df: pd.DataFrame) -> pd.DataFrame:
-    """Encode categorical columns and convert booleans for XGBoost."""
-    df = df.copy()
-    df["circuit_type"] = df["circuit_type"].astype("category")
-    df["is_wet_race_forecast"] = df["is_wet_race_forecast"].astype(int)
-    return df
+# prepare_features is imported from pipeline.ml.features above and re-exported
+# here so that existing callers (e.g. test_train.py) can still import it from
+# this module without change.
 
 
 def train_model(
