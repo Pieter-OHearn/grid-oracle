@@ -1,17 +1,10 @@
 import { motion } from 'framer-motion';
-import type { PredictionEntry, ActualResult } from '../../types';
+import type { Row } from '../../types';
 import { DRIVERS, CONSTRUCTOR_COLORS, CONSTRUCTOR_SHORT } from '../../data';
 import { DeltaIndicator } from '../common/DeltaIndicator';
 import { getDeltaBg, getDeltaBorder } from '../../utils/results';
 
 const MEDAL_COLORS = ['#FFD700', '#C0C0C0', '#CD7F32'];
-
-interface Row {
-  result: ActualResult;
-  prediction: PredictionEntry | undefined;
-  predictedPos: number | null;
-  delta: number | null;
-}
 
 interface Props {
   rows: Row[];
