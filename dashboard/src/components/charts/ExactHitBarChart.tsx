@@ -10,13 +10,18 @@ import {
 } from 'recharts';
 import { Zap } from 'lucide-react';
 import { SEASON_CHART_DATA } from '../../data';
+import type { SeasonChartPoint } from '../../types';
 
-const chartData = SEASON_CHART_DATA.map((d) => ({
-  ...d,
-  fill: d.exactHit >= 25 ? '#22c55e' : d.exactHit >= 15 ? '#eab308' : '#ef4444',
-}));
+interface Props {
+  data?: SeasonChartPoint[];
+}
 
-export function ExactHitBarChart() {
+export function ExactHitBarChart({ data }: Props) {
+  const chartData = (data ?? SEASON_CHART_DATA).map((d) => ({
+    ...d,
+    fill: d.exactHit >= 25 ? '#22c55e' : d.exactHit >= 15 ? '#eab308' : '#ef4444',
+  }));
+
   return (
     <div className="bg-[#0f0f1a] border border-[#1e1e30] rounded-xl p-5 mb-4">
       <div className="flex items-center gap-2 mb-5">

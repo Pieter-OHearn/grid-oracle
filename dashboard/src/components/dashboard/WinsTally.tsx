@@ -7,6 +7,8 @@ interface Props {
 }
 
 export function WinsTally({ winnerCounts }: Props) {
+  const entries = Object.entries(winnerCounts).sort((a, b) => b[1] - a[1]);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -27,10 +29,13 @@ export function WinsTally({ winnerCounts }: Props) {
           Race Wins So Far
         </h2>
       </div>
-      <div className="flex flex-wrap gap-3">
-        {Object.entries(winnerCounts)
-          .sort((a, b) => b[1] - a[1])
-          .map(([driverId, wins]) => {
+      {entries.length === 0 ? (
+        <p className="text-[#3a3a52] text-xs" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+          No winner data available
+        </p>
+      ) : (
+        <div className="flex flex-wrap gap-3">
+          {entries.map(([driverId, wins]) => {
             const driver = DRIVERS[driverId];
             if (!driver) return null;
             const teamColor = CONSTRUCTOR_COLORS[driver.constructor] ?? '#6b7280';
@@ -65,7 +70,8 @@ export function WinsTally({ winnerCounts }: Props) {
               </div>
             );
           })}
-      </div>
+        </div>
+      )}
     </motion.div>
   );
 }

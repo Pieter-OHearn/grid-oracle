@@ -34,6 +34,15 @@ export interface ApiComparisonItem {
   fastest_lap: boolean;
 }
 
+export interface ApiAccuracyItem {
+  race_id: number;
+  race_name: string;
+  evaluated_at: string;
+  top3_accuracy: number | null;
+  exact_position_accuracy: number | null;
+  mean_position_error: number | null;
+}
+
 async function request<T>(path: string): Promise<T> {
   const response = await fetch(`${BASE_URL}${path}`);
   if (!response.ok) {
@@ -47,4 +56,5 @@ export const api = {
   getPredictions: (raceId: number) => request<ApiPredictionItem[]>(`/races/${raceId}/predictions`),
   getResults: (raceId: number) => request<ApiResultItem[]>(`/races/${raceId}/results`),
   getComparison: (raceId: number) => request<ApiComparisonItem[]>(`/races/${raceId}/comparison`),
+  getSeasonAccuracy: (season: number) => request<ApiAccuracyItem[]>(`/seasons/${season}/accuracy`),
 };

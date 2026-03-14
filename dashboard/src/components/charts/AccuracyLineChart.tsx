@@ -13,9 +13,16 @@ import {
 import { TrendingUp } from 'lucide-react';
 import { ChartTooltip } from './ChartTooltip';
 import { SEASON_CHART_DATA } from '../../data';
+import type { SeasonChartPoint } from '../../types';
 
-export function AccuracyLineChart() {
+interface Props {
+  data?: SeasonChartPoint[];
+}
+
+export function AccuracyLineChart({ data }: Props) {
   const [activeMetric, setActiveMetric] = useState<'accuracy' | 'error'>('accuracy');
+  const chartData = data ?? SEASON_CHART_DATA;
+  const hasTop10 = chartData.some((d) => d.top10 > 0);
 
   return (
     <div className="bg-[#0f0f1a] border border-[#1e1e30] rounded-xl p-5 mb-4">
@@ -54,10 +61,7 @@ export function AccuracyLineChart() {
       <div className="h-52">
         {activeMetric === 'accuracy' ? (
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart
-              data={SEASON_CHART_DATA}
-              margin={{ top: 5, right: 10, bottom: 5, left: -20 }}
-            >
+            <LineChart data={chartData} margin={{ top: 5, right: 10, bottom: 5, left: -20 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#1e1e30" vertical={false} />
               <XAxis
                 dataKey="race"
@@ -98,15 +102,17 @@ export function AccuracyLineChart() {
                 dot={{ fill: '#FFD700', r: 3, strokeWidth: 0 }}
                 activeDot={{ r: 5, fill: '#FFD700' }}
               />
-              <Line
-                type="monotone"
-                dataKey="top10"
-                name="Top 10 Accuracy"
-                stroke="#3b82f6"
-                strokeWidth={2}
-                dot={{ fill: '#3b82f6', r: 3, strokeWidth: 0 }}
-                activeDot={{ r: 5, fill: '#3b82f6' }}
-              />
+              {hasTop10 && (
+                <Line
+                  type="monotone"
+                  dataKey="top10"
+                  name="Top 10 Accuracy"
+                  stroke="#3b82f6"
+                  strokeWidth={2}
+                  dot={{ fill: '#3b82f6', r: 3, strokeWidth: 0 }}
+                  activeDot={{ r: 5, fill: '#3b82f6' }}
+                />
+              )}
               <Line
                 type="monotone"
                 dataKey="exactHit"
@@ -121,10 +127,7 @@ export function AccuracyLineChart() {
           </ResponsiveContainer>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart
-              data={SEASON_CHART_DATA}
-              margin={{ top: 5, right: 10, bottom: 5, left: -20 }}
-            >
+            <LineChart data={chartData} margin={{ top: 5, right: 10, bottom: 5, left: -20 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#1e1e30" vertical={false} />
               <XAxis
                 dataKey="race"
