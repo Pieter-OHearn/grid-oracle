@@ -4,6 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
 from api.database import Base, get_db
 from api.main import app
@@ -19,7 +20,11 @@ from api.models.orm import (
 )
 
 DATABASE_URL = "sqlite:///:memory:"
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+engine = create_engine(
+    DATABASE_URL,
+    connect_args={"check_same_thread": False},
+    poolclass=StaticPool,
+)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
@@ -90,7 +95,7 @@ def seed_data(db):
 
     model_version = ModelVersion(
         name="xgb_v1",
-        trained_at=datetime.datetime(2024, 3, 1, 12, 0, tzinfo=datetime.timezone.utc),
+        trained_at=datetime.datetime(2024, 3, 1, 12, 0, tzinfo=datetime.UTC),
         training_races_count=10,
     )
     db.add(model_version)
@@ -103,7 +108,7 @@ def seed_data(db):
         constructor_id=constructor.id,
         predicted_position=1,
         confidence_score=0.9500,
-        created_at=datetime.datetime(2024, 3, 1, 12, 0, tzinfo=datetime.timezone.utc),
+        created_at=datetime.datetime(2024, 3, 1, 12, 0, tzinfo=datetime.UTC),
     )
     pred2 = Prediction(
         race_id=race.id,
@@ -112,7 +117,7 @@ def seed_data(db):
         constructor_id=constructor.id,
         predicted_position=2,
         confidence_score=0.7000,
-        created_at=datetime.datetime(2024, 3, 1, 12, 0, tzinfo=datetime.timezone.utc),
+        created_at=datetime.datetime(2024, 3, 1, 12, 0, tzinfo=datetime.UTC),
     )
     db.add_all([pred1, pred2])
 
@@ -137,7 +142,7 @@ def seed_data(db):
     metrics = EvaluationMetrics(
         race_id=race.id,
         model_version_id=model_version.id,
-        evaluated_at=datetime.datetime(2024, 3, 3, 10, 0, tzinfo=datetime.timezone.utc),
+        evaluated_at=datetime.datetime(2024, 3, 3, 10, 0, tzinfo=datetime.UTC),
         top3_accuracy=1.0000,
         exact_position_accuracy=1.0000,
         mean_position_error=0.0000,
@@ -149,6 +154,7 @@ def seed_data(db):
 
 
 # --- /races/{season} ---
+
 
 def test_list_races_returns_200(client, seed_data):
     response = client.get(f"/races/{seed_data['season']}")
@@ -171,6 +177,7 @@ def test_list_races_empty_season(client, seed_data):
 
 
 # --- /races/{race_id}/predictions ---
+
 
 def test_get_predictions_returns_200(client, seed_data):
     response = client.get(f"/races/{seed_data['race_id']}/predictions")
@@ -218,6 +225,7 @@ def test_get_predictions_404_no_predictions(client, db, seed_data):
 
 # --- /races/{race_id}/results ---
 
+
 def test_get_results_returns_200(client, seed_data):
     response = client.get(f"/races/{seed_data['race_id']}/results")
     assert response.status_code == 200
@@ -257,6 +265,7 @@ def test_get_results_404_no_results(client, db, seed_data):
 
 # --- /races/{race_id}/comparison ---
 
+
 def test_get_comparison_returns_200(client, seed_data):
     response = client.get(f"/races/{seed_data['race_id']}/comparison")
     assert response.status_code == 200
@@ -279,12 +288,36 @@ def test_get_comparison_delta_values(client, seed_data):
     assert all(d == 0 for d in deltas)
 
 
+def test_get_comparison_nonzero_delta(client, db, seed_data):
+    # Swap actual finish positions so predictions are wrong
+    results = (
+        db.query(RaceResult)
+        .filter(RaceResult.race_id == seed_data["race_id"])
+        .order_by(RaceResult.finish_position)
+        .all()
+    )
+    results[0].finish_position, results[1].finish_position = (
+        results[1].finish_position,
+        results[0].finish_position,
+    )
+    db.commit()
+
+    response = client.get(f"/races/{seed_data['race_id']}/comparison")
+    data = response.json()
+    deltas = {item["driver"]: item["position_delta"] for item in data}
+    # VER predicted 1st, finished 2nd → delta = 1 - 2 = -1
+    assert deltas["Max Verstappen"] == -1
+    # PER predicted 2nd, finished 1st → delta = 2 - 1 = 1
+    assert deltas["Sergio Perez"] == 1
+
+
 def test_get_comparison_404_unknown_race(client, seed_data):
     response = client.get("/races/99999/comparison")
     assert response.status_code == 404
 
 
 # --- /seasons/{season}/accuracy ---
+
 
 def test_get_season_accuracy_returns_200(client, seed_data):
     response = client.get(f"/seasons/{seed_data['season']}/accuracy")

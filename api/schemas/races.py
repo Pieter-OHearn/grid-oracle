@@ -1,12 +1,9 @@
 import datetime
-from typing import Optional
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 
 class RaceListItem(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
     id: int
     name: str
     circuit: str
@@ -15,40 +12,33 @@ class RaceListItem(BaseModel):
 
 
 class PredictionItem(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
     driver: str
     constructor: str
     predicted_position: int
-    confidence_score: Optional[float]
+    confidence_score: float | None = None
 
 
 class ResultItem(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
     driver: str
     constructor: str
-    finish_position: Optional[int]
-    grid_position: Optional[int]
+    finish_position: int | None = None
+    grid_position: int | None = None
     status: str
 
 
 class ComparisonItem(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
     driver: str
     constructor: str
     predicted_position: int
-    finish_position: Optional[int]
-    position_delta: Optional[int]
+    finish_position: int | None = None
+    # predicted_position - finish_position; positive = predicted too high
+    position_delta: int | None = None
 
 
 class AccuracyItem(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
     race_id: int
     race_name: str
     evaluated_at: datetime.datetime
-    top3_accuracy: Optional[float]
-    exact_position_accuracy: Optional[float]
-    mean_position_error: Optional[float]
+    top3_accuracy: float | None = None
+    exact_position_accuracy: float | None = None
+    mean_position_error: float | None = None
