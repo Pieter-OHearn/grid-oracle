@@ -1,6 +1,7 @@
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
-function getDeltaColor(delta: number): string {
+function getDeltaColor(delta: number | null): string {
+  if (delta === null) return '#5a5a78';
   if (delta === 0) return '#22c55e';
   if (Math.abs(delta) <= 2) return '#eab308';
   if (Math.abs(delta) <= 4) return '#f97316';
@@ -8,14 +9,16 @@ function getDeltaColor(delta: number): string {
 }
 
 interface Props {
-  delta: number;
+  delta: number | null;
 }
 
 export function DeltaIndicator({ delta }: Props) {
   const color = getDeltaColor(delta);
   return (
     <div className="flex flex-col items-center justify-center gap-0.5">
-      {delta === 0 ? (
+      {delta === null ? (
+        <Minus size={14} style={{ color }} />
+      ) : delta === 0 ? (
         <Minus size={14} style={{ color }} />
       ) : delta > 0 ? (
         <TrendingDown size={14} style={{ color }} />
@@ -30,7 +33,7 @@ export function DeltaIndicator({ delta }: Props) {
           fontWeight: 600,
         }}
       >
-        {delta === 0 ? '=' : delta > 0 ? `+${delta}` : `${delta}`}
+        {delta === null ? '—' : delta === 0 ? '=' : delta > 0 ? `+${delta}` : `${delta}`}
       </span>
     </div>
   );

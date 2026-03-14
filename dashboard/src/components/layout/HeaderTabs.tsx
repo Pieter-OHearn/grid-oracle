@@ -20,7 +20,9 @@ export function HeaderTabs({ race }: Props) {
         end
         className={({ isActive }) =>
           `px-3 py-1.5 rounded text-xs transition-all duration-150 ${
-            isActive ? 'bg-[#e10600] text-white' : 'text-[#6b7280] hover:text-white hover:bg-[#1e1e30]'
+            isActive
+              ? 'bg-[#e10600] text-white'
+              : 'text-[#6b7280] hover:text-white hover:bg-[#1e1e30]'
           }`
         }
         style={tabStyle}
@@ -32,7 +34,9 @@ export function HeaderTabs({ race }: Props) {
           to={`/race/${race.id}/results`}
           className={({ isActive }) =>
             `px-3 py-1.5 rounded text-xs transition-all duration-150 ${
-              isActive ? 'bg-[#e10600] text-white' : 'text-[#6b7280] hover:text-white hover:bg-[#1e1e30]'
+              isActive
+                ? 'bg-[#e10600] text-white'
+                : 'text-[#6b7280] hover:text-white hover:bg-[#1e1e30]'
             }`
           }
           style={tabStyle}

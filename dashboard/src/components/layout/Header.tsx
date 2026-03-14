@@ -42,7 +42,9 @@ export function Header({ sidebarOpen, onToggleSidebar, onRaceSelect }: Props) {
             <ChevronLeft size={16} />
           </button>
           <button
-            onClick={() => selectedIdx < RACES.length - 1 && onRaceSelect(RACES[selectedIdx + 1].id)}
+            onClick={() =>
+              selectedIdx < RACES.length - 1 && onRaceSelect(RACES[selectedIdx + 1].id)
+            }
             disabled={selectedIdx >= RACES.length - 1}
             className="p-1.5 rounded hover:bg-[#1e1e30] text-[#6b7280] hover:text-white disabled:opacity-30 transition-colors"
           >

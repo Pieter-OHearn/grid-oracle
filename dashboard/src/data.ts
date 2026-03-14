@@ -1,126 +1,481 @@
 // GridOracle — Mock Data for 2025 F1 Season
+import type { Driver, Race, PredictionEntry, ActualResult, AccuracyMetrics } from './types';
 
 export const CONSTRUCTOR_COLORS: Record<string, string> = {
   'Red Bull': '#3671C6',
-  'Ferrari': '#E8002D',
-  'Mercedes': '#27F4D2',
-  'McLaren': '#FF8000',
+  Ferrari: '#E8002D',
+  Mercedes: '#27F4D2',
+  McLaren: '#FF8000',
   'Aston Martin': '#229971',
-  'Alpine': '#FF87BC',
-  'Williams': '#64C4FF',
+  Alpine: '#FF87BC',
+  Williams: '#64C4FF',
   'Racing Bulls': '#6692FF',
-  'Haas': '#B6BABD',
+  Haas: '#B6BABD',
   'Kick Sauber': '#52E252',
 };
 
 export const CONSTRUCTOR_SHORT: Record<string, string> = {
   'Red Bull': 'RBR',
-  'Ferrari': 'FER',
-  'Mercedes': 'MER',
-  'McLaren': 'MCL',
+  Ferrari: 'FER',
+  Mercedes: 'MER',
+  McLaren: 'MCL',
   'Aston Martin': 'AMR',
-  'Alpine': 'ALP',
-  'Williams': 'WIL',
+  Alpine: 'ALP',
+  Williams: 'WIL',
   'Racing Bulls': 'RB',
-  'Haas': 'HAA',
+  Haas: 'HAA',
   'Kick Sauber': 'SAU',
 };
 
-export interface Driver {
-  id: string;
-  name: string;
-  shortName: string;
-  number: number;
-  constructor: string;
-  nationality: string;
-  flag: string;
-}
-
 export const DRIVERS: Record<string, Driver> = {
-  VER: { id: 'VER', name: 'Max Verstappen', shortName: 'VER', number: 1, constructor: 'Red Bull', nationality: 'Netherlands', flag: '🇳🇱' },
-  LAW: { id: 'LAW', name: 'Liam Lawson', shortName: 'LAW', number: 30, constructor: 'Red Bull', nationality: 'New Zealand', flag: '🇳🇿' },
-  LEC: { id: 'LEC', name: 'Charles Leclerc', shortName: 'LEC', number: 16, constructor: 'Ferrari', nationality: 'Monaco', flag: '🇲🇨' },
-  HAM: { id: 'HAM', name: 'Lewis Hamilton', shortName: 'HAM', number: 44, constructor: 'Ferrari', nationality: 'Great Britain', flag: '🇬🇧' },
-  RUS: { id: 'RUS', name: 'George Russell', shortName: 'RUS', number: 63, constructor: 'Mercedes', nationality: 'Great Britain', flag: '🇬🇧' },
-  ANT: { id: 'ANT', name: 'Kimi Antonelli', shortName: 'ANT', number: 12, constructor: 'Mercedes', nationality: 'Italy', flag: '🇮🇹' },
-  NOR: { id: 'NOR', name: 'Lando Norris', shortName: 'NOR', number: 4, constructor: 'McLaren', nationality: 'Great Britain', flag: '🇬🇧' },
-  PIA: { id: 'PIA', name: 'Oscar Piastri', shortName: 'PIA', number: 81, constructor: 'McLaren', nationality: 'Australia', flag: '🇦🇺' },
-  ALO: { id: 'ALO', name: 'Fernando Alonso', shortName: 'ALO', number: 14, constructor: 'Aston Martin', nationality: 'Spain', flag: '🇪🇸' },
-  STR: { id: 'STR', name: 'Lance Stroll', shortName: 'STR', number: 18, constructor: 'Aston Martin', nationality: 'Canada', flag: '🇨🇦' },
-  GAS: { id: 'GAS', name: 'Pierre Gasly', shortName: 'GAS', number: 10, constructor: 'Alpine', nationality: 'France', flag: '🇫🇷' },
-  DOO: { id: 'DOO', name: 'Jack Doohan', shortName: 'DOO', number: 7, constructor: 'Alpine', nationality: 'Australia', flag: '🇦🇺' },
-  ALB: { id: 'ALB', name: 'Alex Albon', shortName: 'ALB', number: 23, constructor: 'Williams', nationality: 'Thailand', flag: '🇹🇭' },
-  SAI: { id: 'SAI', name: 'Carlos Sainz', shortName: 'SAI', number: 55, constructor: 'Williams', nationality: 'Spain', flag: '🇪🇸' },
-  TSU: { id: 'TSU', name: 'Yuki Tsunoda', shortName: 'TSU', number: 22, constructor: 'Racing Bulls', nationality: 'Japan', flag: '🇯🇵' },
-  HAD: { id: 'HAD', name: 'Isack Hadjar', shortName: 'HAD', number: 6, constructor: 'Racing Bulls', nationality: 'France', flag: '🇫🇷' },
-  OCO: { id: 'OCO', name: 'Esteban Ocon', shortName: 'OCO', number: 31, constructor: 'Haas', nationality: 'France', flag: '🇫🇷' },
-  BEA: { id: 'BEA', name: 'Oliver Bearman', shortName: 'BEA', number: 87, constructor: 'Haas', nationality: 'Great Britain', flag: '🇬🇧' },
-  HUL: { id: 'HUL', name: 'Nico Hülkenberg', shortName: 'HUL', number: 27, constructor: 'Kick Sauber', nationality: 'Germany', flag: '🇩🇪' },
-  BOR: { id: 'BOR', name: 'Gabriel Bortoleto', shortName: 'BOR', number: 5, constructor: 'Kick Sauber', nationality: 'Brazil', flag: '🇧🇷' },
+  VER: {
+    id: 'VER',
+    name: 'Max Verstappen',
+    shortName: 'VER',
+    number: 1,
+    constructor: 'Red Bull',
+    nationality: 'Netherlands',
+    flag: '🇳🇱',
+  },
+  LAW: {
+    id: 'LAW',
+    name: 'Liam Lawson',
+    shortName: 'LAW',
+    number: 30,
+    constructor: 'Red Bull',
+    nationality: 'New Zealand',
+    flag: '🇳🇿',
+  },
+  LEC: {
+    id: 'LEC',
+    name: 'Charles Leclerc',
+    shortName: 'LEC',
+    number: 16,
+    constructor: 'Ferrari',
+    nationality: 'Monaco',
+    flag: '🇲🇨',
+  },
+  HAM: {
+    id: 'HAM',
+    name: 'Lewis Hamilton',
+    shortName: 'HAM',
+    number: 44,
+    constructor: 'Ferrari',
+    nationality: 'Great Britain',
+    flag: '🇬🇧',
+  },
+  RUS: {
+    id: 'RUS',
+    name: 'George Russell',
+    shortName: 'RUS',
+    number: 63,
+    constructor: 'Mercedes',
+    nationality: 'Great Britain',
+    flag: '🇬🇧',
+  },
+  ANT: {
+    id: 'ANT',
+    name: 'Kimi Antonelli',
+    shortName: 'ANT',
+    number: 12,
+    constructor: 'Mercedes',
+    nationality: 'Italy',
+    flag: '🇮🇹',
+  },
+  NOR: {
+    id: 'NOR',
+    name: 'Lando Norris',
+    shortName: 'NOR',
+    number: 4,
+    constructor: 'McLaren',
+    nationality: 'Great Britain',
+    flag: '🇬🇧',
+  },
+  PIA: {
+    id: 'PIA',
+    name: 'Oscar Piastri',
+    shortName: 'PIA',
+    number: 81,
+    constructor: 'McLaren',
+    nationality: 'Australia',
+    flag: '🇦🇺',
+  },
+  ALO: {
+    id: 'ALO',
+    name: 'Fernando Alonso',
+    shortName: 'ALO',
+    number: 14,
+    constructor: 'Aston Martin',
+    nationality: 'Spain',
+    flag: '🇪🇸',
+  },
+  STR: {
+    id: 'STR',
+    name: 'Lance Stroll',
+    shortName: 'STR',
+    number: 18,
+    constructor: 'Aston Martin',
+    nationality: 'Canada',
+    flag: '🇨🇦',
+  },
+  GAS: {
+    id: 'GAS',
+    name: 'Pierre Gasly',
+    shortName: 'GAS',
+    number: 10,
+    constructor: 'Alpine',
+    nationality: 'France',
+    flag: '🇫🇷',
+  },
+  DOO: {
+    id: 'DOO',
+    name: 'Jack Doohan',
+    shortName: 'DOO',
+    number: 7,
+    constructor: 'Alpine',
+    nationality: 'Australia',
+    flag: '🇦🇺',
+  },
+  ALB: {
+    id: 'ALB',
+    name: 'Alex Albon',
+    shortName: 'ALB',
+    number: 23,
+    constructor: 'Williams',
+    nationality: 'Thailand',
+    flag: '🇹🇭',
+  },
+  SAI: {
+    id: 'SAI',
+    name: 'Carlos Sainz',
+    shortName: 'SAI',
+    number: 55,
+    constructor: 'Williams',
+    nationality: 'Spain',
+    flag: '🇪🇸',
+  },
+  TSU: {
+    id: 'TSU',
+    name: 'Yuki Tsunoda',
+    shortName: 'TSU',
+    number: 22,
+    constructor: 'Racing Bulls',
+    nationality: 'Japan',
+    flag: '🇯🇵',
+  },
+  HAD: {
+    id: 'HAD',
+    name: 'Isack Hadjar',
+    shortName: 'HAD',
+    number: 6,
+    constructor: 'Racing Bulls',
+    nationality: 'France',
+    flag: '🇫🇷',
+  },
+  OCO: {
+    id: 'OCO',
+    name: 'Esteban Ocon',
+    shortName: 'OCO',
+    number: 31,
+    constructor: 'Haas',
+    nationality: 'France',
+    flag: '🇫🇷',
+  },
+  BEA: {
+    id: 'BEA',
+    name: 'Oliver Bearman',
+    shortName: 'BEA',
+    number: 87,
+    constructor: 'Haas',
+    nationality: 'Great Britain',
+    flag: '🇬🇧',
+  },
+  HUL: {
+    id: 'HUL',
+    name: 'Nico Hülkenberg',
+    shortName: 'HUL',
+    number: 27,
+    constructor: 'Kick Sauber',
+    nationality: 'Germany',
+    flag: '🇩🇪',
+  },
+  BOR: {
+    id: 'BOR',
+    name: 'Gabriel Bortoleto',
+    shortName: 'BOR',
+    number: 5,
+    constructor: 'Kick Sauber',
+    nationality: 'Brazil',
+    flag: '🇧🇷',
+  },
 };
 
-export interface Race {
-  id: string;
-  round: number;
-  name: string;
-  shortName: string;
-  circuit: string;
-  country: string;
-  countryFlag: string;
-  date: string;
-  status: 'completed' | 'upcoming' | 'next';
-}
-
 export const RACES: Race[] = [
-  { id: 'aus-2025', round: 1, name: 'Australian Grand Prix', shortName: 'AUS', circuit: 'Albert Park', country: 'Australia', countryFlag: '🇦🇺', date: '2025-03-16', status: 'completed' },
-  { id: 'chn-2025', round: 2, name: 'Chinese Grand Prix', shortName: 'CHN', circuit: 'Shanghai International', country: 'China', countryFlag: '🇨🇳', date: '2025-03-23', status: 'completed' },
-  { id: 'jpn-2025', round: 3, name: 'Japanese Grand Prix', shortName: 'JPN', circuit: 'Suzuka Circuit', country: 'Japan', countryFlag: '🇯🇵', date: '2025-04-06', status: 'completed' },
-  { id: 'bhr-2025', round: 4, name: 'Bahrain Grand Prix', shortName: 'BHR', circuit: 'Bahrain International', country: 'Bahrain', countryFlag: '🇧🇭', date: '2025-04-13', status: 'completed' },
-  { id: 'sau-2025', round: 5, name: 'Saudi Arabian Grand Prix', shortName: 'KSA', circuit: 'Jeddah Corniche', country: 'Saudi Arabia', countryFlag: '🇸🇦', date: '2025-04-20', status: 'completed' },
-  { id: 'mia-2025', round: 6, name: 'Miami Grand Prix', shortName: 'MIA', circuit: 'Miami International Autodrome', country: 'United States', countryFlag: '🇺🇸', date: '2025-05-04', status: 'completed' },
-  { id: 'ita-2025', round: 7, name: 'Emilia Romagna Grand Prix', shortName: 'IMO', circuit: 'Autodromo Enzo e Dino Ferrari', country: 'Italy', countryFlag: '🇮🇹', date: '2025-05-18', status: 'completed' },
-  { id: 'mon-2025', round: 8, name: 'Monaco Grand Prix', shortName: 'MON', circuit: 'Circuit de Monaco', country: 'Monaco', countryFlag: '🇲🇨', date: '2025-05-25', status: 'completed' },
-  { id: 'esp-2025', round: 9, name: 'Spanish Grand Prix', shortName: 'ESP', circuit: 'Circuit de Barcelona-Catalunya', country: 'Spain', countryFlag: '🇪🇸', date: '2025-06-01', status: 'next' },
-  { id: 'can-2025', round: 10, name: 'Canadian Grand Prix', shortName: 'CAN', circuit: 'Circuit Gilles Villeneuve', country: 'Canada', countryFlag: '🇨🇦', date: '2025-06-15', status: 'upcoming' },
-  { id: 'aut-2025', round: 11, name: 'Austrian Grand Prix', shortName: 'AUT', circuit: 'Red Bull Ring', country: 'Austria', countryFlag: '🇦🇹', date: '2025-06-29', status: 'upcoming' },
-  { id: 'gbr-2025', round: 12, name: 'British Grand Prix', shortName: 'GBR', circuit: 'Silverstone Circuit', country: 'Great Britain', countryFlag: '🇬🇧', date: '2025-07-06', status: 'upcoming' },
-  { id: 'bel-2025', round: 13, name: 'Belgian Grand Prix', shortName: 'BEL', circuit: 'Circuit de Spa-Francorchamps', country: 'Belgium', countryFlag: '🇧🇪', date: '2025-07-27', status: 'upcoming' },
-  { id: 'hun-2025', round: 14, name: 'Hungarian Grand Prix', shortName: 'HUN', circuit: 'Hungaroring', country: 'Hungary', countryFlag: '🇭🇺', date: '2025-08-03', status: 'upcoming' },
-  { id: 'ndl-2025', round: 15, name: 'Dutch Grand Prix', shortName: 'NED', circuit: 'Circuit Zandvoort', country: 'Netherlands', countryFlag: '🇳🇱', date: '2025-08-31', status: 'upcoming' },
-  { id: 'ita2-2025', round: 16, name: 'Italian Grand Prix', shortName: 'ITA', circuit: 'Autodromo Nazionale Monza', country: 'Italy', countryFlag: '🇮🇹', date: '2025-09-07', status: 'upcoming' },
-  { id: 'aze-2025', round: 17, name: 'Azerbaijan Grand Prix', shortName: 'AZE', circuit: 'Baku City Circuit', country: 'Azerbaijan', countryFlag: '🇦🇿', date: '2025-09-21', status: 'upcoming' },
-  { id: 'sgp-2025', round: 18, name: 'Singapore Grand Prix', shortName: 'SGP', circuit: 'Marina Bay Street Circuit', country: 'Singapore', countryFlag: '🇸🇬', date: '2025-10-05', status: 'upcoming' },
-  { id: 'usa-2025', round: 19, name: 'United States Grand Prix', shortName: 'USA', circuit: 'Circuit of the Americas', country: 'United States', countryFlag: '🇺🇸', date: '2025-10-19', status: 'upcoming' },
-  { id: 'mex-2025', round: 20, name: 'Mexico City Grand Prix', shortName: 'MEX', circuit: 'Autodromo Hermanos Rodriguez', country: 'Mexico', countryFlag: '🇲🇽', date: '2025-10-26', status: 'upcoming' },
-  { id: 'bra-2025', round: 21, name: 'São Paulo Grand Prix', shortName: 'BRA', circuit: 'Autodromo Jose Carlos Pace', country: 'Brazil', countryFlag: '🇧🇷', date: '2025-11-09', status: 'upcoming' },
-  { id: 'lv-2025', round: 22, name: 'Las Vegas Grand Prix', shortName: 'LV', circuit: 'Las Vegas Strip Circuit', country: 'United States', countryFlag: '🇺🇸', date: '2025-11-22', status: 'upcoming' },
-  { id: 'qat-2025', round: 23, name: 'Qatar Grand Prix', shortName: 'QAT', circuit: 'Losail International Circuit', country: 'Qatar', countryFlag: '🇶🇦', date: '2025-11-30', status: 'upcoming' },
-  { id: 'adh-2025', round: 24, name: 'Abu Dhabi Grand Prix', shortName: 'ABU', circuit: 'Yas Marina Circuit', country: 'Abu Dhabi', countryFlag: '🇦🇪', date: '2025-12-07', status: 'upcoming' },
+  {
+    id: 'aus-2025',
+    round: 1,
+    name: 'Australian Grand Prix',
+    shortName: 'AUS',
+    circuit: 'Albert Park',
+    country: 'Australia',
+    countryFlag: '🇦🇺',
+    date: '2025-03-16',
+    status: 'completed',
+  },
+  {
+    id: 'chn-2025',
+    round: 2,
+    name: 'Chinese Grand Prix',
+    shortName: 'CHN',
+    circuit: 'Shanghai International',
+    country: 'China',
+    countryFlag: '🇨🇳',
+    date: '2025-03-23',
+    status: 'completed',
+  },
+  {
+    id: 'jpn-2025',
+    round: 3,
+    name: 'Japanese Grand Prix',
+    shortName: 'JPN',
+    circuit: 'Suzuka Circuit',
+    country: 'Japan',
+    countryFlag: '🇯🇵',
+    date: '2025-04-06',
+    status: 'completed',
+  },
+  {
+    id: 'bhr-2025',
+    round: 4,
+    name: 'Bahrain Grand Prix',
+    shortName: 'BHR',
+    circuit: 'Bahrain International',
+    country: 'Bahrain',
+    countryFlag: '🇧🇭',
+    date: '2025-04-13',
+    status: 'completed',
+  },
+  {
+    id: 'sau-2025',
+    round: 5,
+    name: 'Saudi Arabian Grand Prix',
+    shortName: 'KSA',
+    circuit: 'Jeddah Corniche',
+    country: 'Saudi Arabia',
+    countryFlag: '🇸🇦',
+    date: '2025-04-20',
+    status: 'completed',
+  },
+  {
+    id: 'mia-2025',
+    round: 6,
+    name: 'Miami Grand Prix',
+    shortName: 'MIA',
+    circuit: 'Miami International Autodrome',
+    country: 'United States',
+    countryFlag: '🇺🇸',
+    date: '2025-05-04',
+    status: 'completed',
+  },
+  {
+    id: 'ita-2025',
+    round: 7,
+    name: 'Emilia Romagna Grand Prix',
+    shortName: 'IMO',
+    circuit: 'Autodromo Enzo e Dino Ferrari',
+    country: 'Italy',
+    countryFlag: '🇮🇹',
+    date: '2025-05-18',
+    status: 'completed',
+  },
+  {
+    id: 'mon-2025',
+    round: 8,
+    name: 'Monaco Grand Prix',
+    shortName: 'MON',
+    circuit: 'Circuit de Monaco',
+    country: 'Monaco',
+    countryFlag: '🇲🇨',
+    date: '2025-05-25',
+    status: 'completed',
+  },
+  {
+    id: 'esp-2025',
+    round: 9,
+    name: 'Spanish Grand Prix',
+    shortName: 'ESP',
+    circuit: 'Circuit de Barcelona-Catalunya',
+    country: 'Spain',
+    countryFlag: '🇪🇸',
+    date: '2025-06-01',
+    status: 'next',
+  },
+  {
+    id: 'can-2025',
+    round: 10,
+    name: 'Canadian Grand Prix',
+    shortName: 'CAN',
+    circuit: 'Circuit Gilles Villeneuve',
+    country: 'Canada',
+    countryFlag: '🇨🇦',
+    date: '2025-06-15',
+    status: 'upcoming',
+  },
+  {
+    id: 'aut-2025',
+    round: 11,
+    name: 'Austrian Grand Prix',
+    shortName: 'AUT',
+    circuit: 'Red Bull Ring',
+    country: 'Austria',
+    countryFlag: '🇦🇹',
+    date: '2025-06-29',
+    status: 'upcoming',
+  },
+  {
+    id: 'gbr-2025',
+    round: 12,
+    name: 'British Grand Prix',
+    shortName: 'GBR',
+    circuit: 'Silverstone Circuit',
+    country: 'Great Britain',
+    countryFlag: '🇬🇧',
+    date: '2025-07-06',
+    status: 'upcoming',
+  },
+  {
+    id: 'bel-2025',
+    round: 13,
+    name: 'Belgian Grand Prix',
+    shortName: 'BEL',
+    circuit: 'Circuit de Spa-Francorchamps',
+    country: 'Belgium',
+    countryFlag: '🇧🇪',
+    date: '2025-07-27',
+    status: 'upcoming',
+  },
+  {
+    id: 'hun-2025',
+    round: 14,
+    name: 'Hungarian Grand Prix',
+    shortName: 'HUN',
+    circuit: 'Hungaroring',
+    country: 'Hungary',
+    countryFlag: '🇭🇺',
+    date: '2025-08-03',
+    status: 'upcoming',
+  },
+  {
+    id: 'ndl-2025',
+    round: 15,
+    name: 'Dutch Grand Prix',
+    shortName: 'NED',
+    circuit: 'Circuit Zandvoort',
+    country: 'Netherlands',
+    countryFlag: '🇳🇱',
+    date: '2025-08-31',
+    status: 'upcoming',
+  },
+  {
+    id: 'ita2-2025',
+    round: 16,
+    name: 'Italian Grand Prix',
+    shortName: 'ITA',
+    circuit: 'Autodromo Nazionale Monza',
+    country: 'Italy',
+    countryFlag: '🇮🇹',
+    date: '2025-09-07',
+    status: 'upcoming',
+  },
+  {
+    id: 'aze-2025',
+    round: 17,
+    name: 'Azerbaijan Grand Prix',
+    shortName: 'AZE',
+    circuit: 'Baku City Circuit',
+    country: 'Azerbaijan',
+    countryFlag: '🇦🇿',
+    date: '2025-09-21',
+    status: 'upcoming',
+  },
+  {
+    id: 'sgp-2025',
+    round: 18,
+    name: 'Singapore Grand Prix',
+    shortName: 'SGP',
+    circuit: 'Marina Bay Street Circuit',
+    country: 'Singapore',
+    countryFlag: '🇸🇬',
+    date: '2025-10-05',
+    status: 'upcoming',
+  },
+  {
+    id: 'usa-2025',
+    round: 19,
+    name: 'United States Grand Prix',
+    shortName: 'USA',
+    circuit: 'Circuit of the Americas',
+    country: 'United States',
+    countryFlag: '🇺🇸',
+    date: '2025-10-19',
+    status: 'upcoming',
+  },
+  {
+    id: 'mex-2025',
+    round: 20,
+    name: 'Mexico City Grand Prix',
+    shortName: 'MEX',
+    circuit: 'Autodromo Hermanos Rodriguez',
+    country: 'Mexico',
+    countryFlag: '🇲🇽',
+    date: '2025-10-26',
+    status: 'upcoming',
+  },
+  {
+    id: 'bra-2025',
+    round: 21,
+    name: 'São Paulo Grand Prix',
+    shortName: 'BRA',
+    circuit: 'Autodromo Jose Carlos Pace',
+    country: 'Brazil',
+    countryFlag: '🇧🇷',
+    date: '2025-11-09',
+    status: 'upcoming',
+  },
+  {
+    id: 'lv-2025',
+    round: 22,
+    name: 'Las Vegas Grand Prix',
+    shortName: 'LV',
+    circuit: 'Las Vegas Strip Circuit',
+    country: 'United States',
+    countryFlag: '🇺🇸',
+    date: '2025-11-22',
+    status: 'upcoming',
+  },
+  {
+    id: 'qat-2025',
+    round: 23,
+    name: 'Qatar Grand Prix',
+    shortName: 'QAT',
+    circuit: 'Losail International Circuit',
+    country: 'Qatar',
+    countryFlag: '🇶🇦',
+    date: '2025-11-30',
+    status: 'upcoming',
+  },
+  {
+    id: 'adh-2025',
+    round: 24,
+    name: 'Abu Dhabi Grand Prix',
+    shortName: 'ABU',
+    circuit: 'Yas Marina Circuit',
+    country: 'Abu Dhabi',
+    countryFlag: '🇦🇪',
+    date: '2025-12-07',
+    status: 'upcoming',
+  },
 ];
-
-export interface PredictionEntry {
-  position: number;
-  driverId: string;
-  confidence: number;
-}
-
-export interface ActualResult {
-  position: number;
-  driverId: string;
-  fastestLap: boolean;
-  dnf: boolean;
-  dnfReason?: string;
-  time: string;
-}
-
-export interface AccuracyMetrics {
-  top3Accuracy: number;
-  top5Accuracy: number;
-  top10Accuracy: number;
-  exactHitRate: number;
-  meanPositionError: number;
-  podiumCorrect: number;
-}
 
 // ————————————————
 // RACE PREDICTIONS
@@ -326,34 +681,71 @@ export const RACE_PREDICTIONS: Record<string, PredictionEntry[]> = {
     { position: 20, driverId: 'BOR', confidence: 11 },
   ],
   'can-2025': [
-    { position: 1, driverId: 'VER', confidence: 68 }, { position: 2, driverId: 'NOR', confidence: 64 },
-    { position: 3, driverId: 'LEC', confidence: 60 }, { position: 4, driverId: 'PIA', confidence: 56 },
-    { position: 5, driverId: 'HAM', confidence: 52 }, { position: 6, driverId: 'RUS', confidence: 49 },
-    { position: 7, driverId: 'SAI', confidence: 45 }, { position: 8, driverId: 'ALO', confidence: 41 },
-    { position: 9, driverId: 'ANT', confidence: 38 }, { position: 10, driverId: 'TSU', confidence: 35 },
-    { position: 11, driverId: 'GAS', confidence: 32 }, { position: 12, driverId: 'HAD', confidence: 29 },
-    { position: 13, driverId: 'ALB', confidence: 26 }, { position: 14, driverId: 'LAW', confidence: 23 },
-    { position: 15, driverId: 'STR', confidence: 20 }, { position: 16, driverId: 'OCO', confidence: 18 },
-    { position: 17, driverId: 'BEA', confidence: 16 }, { position: 18, driverId: 'DOO', confidence: 14 },
-    { position: 19, driverId: 'HUL', confidence: 12 }, { position: 20, driverId: 'BOR', confidence: 10 },
+    { position: 1, driverId: 'VER', confidence: 68 },
+    { position: 2, driverId: 'NOR', confidence: 64 },
+    { position: 3, driverId: 'LEC', confidence: 60 },
+    { position: 4, driverId: 'PIA', confidence: 56 },
+    { position: 5, driverId: 'HAM', confidence: 52 },
+    { position: 6, driverId: 'RUS', confidence: 49 },
+    { position: 7, driverId: 'SAI', confidence: 45 },
+    { position: 8, driverId: 'ALO', confidence: 41 },
+    { position: 9, driverId: 'ANT', confidence: 38 },
+    { position: 10, driverId: 'TSU', confidence: 35 },
+    { position: 11, driverId: 'GAS', confidence: 32 },
+    { position: 12, driverId: 'HAD', confidence: 29 },
+    { position: 13, driverId: 'ALB', confidence: 26 },
+    { position: 14, driverId: 'LAW', confidence: 23 },
+    { position: 15, driverId: 'STR', confidence: 20 },
+    { position: 16, driverId: 'OCO', confidence: 18 },
+    { position: 17, driverId: 'BEA', confidence: 16 },
+    { position: 18, driverId: 'DOO', confidence: 14 },
+    { position: 19, driverId: 'HUL', confidence: 12 },
+    { position: 20, driverId: 'BOR', confidence: 10 },
   ],
 };
 
 // Add same prediction data for remaining upcoming races
-const upcomingRaceIds = ['aut-2025','gbr-2025','bel-2025','hun-2025','ndl-2025','ita2-2025','aze-2025','sgp-2025','usa-2025','mex-2025','bra-2025','lv-2025','qat-2025','adh-2025'];
-const defaultPrediction: PredictionEntry[] = [
-  { position: 1, driverId: 'VER', confidence: 70 }, { position: 2, driverId: 'NOR', confidence: 66 },
-  { position: 3, driverId: 'PIA', confidence: 61 }, { position: 4, driverId: 'LEC', confidence: 57 },
-  { position: 5, driverId: 'HAM', confidence: 53 }, { position: 6, driverId: 'RUS', confidence: 49 },
-  { position: 7, driverId: 'SAI', confidence: 45 }, { position: 8, driverId: 'ALO', confidence: 41 },
-  { position: 9, driverId: 'ANT', confidence: 38 }, { position: 10, driverId: 'TSU', confidence: 35 },
-  { position: 11, driverId: 'GAS', confidence: 32 }, { position: 12, driverId: 'HAD', confidence: 29 },
-  { position: 13, driverId: 'ALB', confidence: 26 }, { position: 14, driverId: 'LAW', confidence: 23 },
-  { position: 15, driverId: 'STR', confidence: 20 }, { position: 16, driverId: 'OCO', confidence: 18 },
-  { position: 17, driverId: 'BEA', confidence: 16 }, { position: 18, driverId: 'DOO', confidence: 14 },
-  { position: 19, driverId: 'HUL', confidence: 12 }, { position: 20, driverId: 'BOR', confidence: 9 },
+const upcomingRaceIds = [
+  'aut-2025',
+  'gbr-2025',
+  'bel-2025',
+  'hun-2025',
+  'ndl-2025',
+  'ita2-2025',
+  'aze-2025',
+  'sgp-2025',
+  'usa-2025',
+  'mex-2025',
+  'bra-2025',
+  'lv-2025',
+  'qat-2025',
+  'adh-2025',
 ];
-upcomingRaceIds.forEach(id => { RACE_PREDICTIONS[id] = defaultPrediction; });
+const defaultPrediction: PredictionEntry[] = [
+  { position: 1, driverId: 'VER', confidence: 70 },
+  { position: 2, driverId: 'NOR', confidence: 66 },
+  { position: 3, driverId: 'PIA', confidence: 61 },
+  { position: 4, driverId: 'LEC', confidence: 57 },
+  { position: 5, driverId: 'HAM', confidence: 53 },
+  { position: 6, driverId: 'RUS', confidence: 49 },
+  { position: 7, driverId: 'SAI', confidence: 45 },
+  { position: 8, driverId: 'ALO', confidence: 41 },
+  { position: 9, driverId: 'ANT', confidence: 38 },
+  { position: 10, driverId: 'TSU', confidence: 35 },
+  { position: 11, driverId: 'GAS', confidence: 32 },
+  { position: 12, driverId: 'HAD', confidence: 29 },
+  { position: 13, driverId: 'ALB', confidence: 26 },
+  { position: 14, driverId: 'LAW', confidence: 23 },
+  { position: 15, driverId: 'STR', confidence: 20 },
+  { position: 16, driverId: 'OCO', confidence: 18 },
+  { position: 17, driverId: 'BEA', confidence: 16 },
+  { position: 18, driverId: 'DOO', confidence: 14 },
+  { position: 19, driverId: 'HUL', confidence: 12 },
+  { position: 20, driverId: 'BOR', confidence: 9 },
+];
+upcomingRaceIds.forEach((id) => {
+  RACE_PREDICTIONS[id] = defaultPrediction;
+});
 
 // ————————————————
 // RACE RESULTS
@@ -380,7 +772,14 @@ export const RACE_RESULTS: Record<string, ActualResult[]> = {
     { position: 17, driverId: 'BEA', fastestLap: false, dnf: false, time: '+2 Laps' },
     { position: 18, driverId: 'HUL', fastestLap: false, dnf: false, time: '+2 Laps' },
     { position: 19, driverId: 'BOR', fastestLap: false, dnf: false, time: '+2 Laps' },
-    { position: 20, driverId: 'DOO', fastestLap: false, dnf: true, dnfReason: 'Collision', time: 'DNF' },
+    {
+      position: 20,
+      driverId: 'DOO',
+      fastestLap: false,
+      dnf: true,
+      dnfReason: 'Collision',
+      time: 'DNF',
+    },
   ],
   'chn-2025': [
     { position: 1, driverId: 'PIA', fastestLap: false, dnf: false, time: '1:31:05.872' },
@@ -402,7 +801,14 @@ export const RACE_RESULTS: Record<string, ActualResult[]> = {
     { position: 17, driverId: 'OCO', fastestLap: false, dnf: false, time: '+2 Laps' },
     { position: 18, driverId: 'DOO', fastestLap: false, dnf: false, time: '+2 Laps' },
     { position: 19, driverId: 'HUL', fastestLap: false, dnf: false, time: '+2 Laps' },
-    { position: 20, driverId: 'BOR', fastestLap: false, dnf: true, dnfReason: 'Engine', time: 'DNF' },
+    {
+      position: 20,
+      driverId: 'BOR',
+      fastestLap: false,
+      dnf: true,
+      dnfReason: 'Engine',
+      time: 'DNF',
+    },
   ],
   'jpn-2025': [
     { position: 1, driverId: 'VER', fastestLap: false, dnf: false, time: '1:30:20.431' },
@@ -446,7 +852,14 @@ export const RACE_RESULTS: Record<string, ActualResult[]> = {
     { position: 17, driverId: 'BEA', fastestLap: false, dnf: false, time: '+2 Laps' },
     { position: 18, driverId: 'DOO', fastestLap: false, dnf: false, time: '+2 Laps' },
     { position: 19, driverId: 'HUL', fastestLap: false, dnf: false, time: '+2 Laps' },
-    { position: 20, driverId: 'BOR', fastestLap: false, dnf: true, dnfReason: 'Gearbox', time: 'DNF' },
+    {
+      position: 20,
+      driverId: 'BOR',
+      fastestLap: false,
+      dnf: true,
+      dnfReason: 'Gearbox',
+      time: 'DNF',
+    },
   ],
   'sau-2025': [
     { position: 1, driverId: 'NOR', fastestLap: false, dnf: false, time: '1:21:14.672' },
@@ -512,7 +925,14 @@ export const RACE_RESULTS: Record<string, ActualResult[]> = {
     { position: 17, driverId: 'BEA', fastestLap: false, dnf: false, time: '+2 Laps' },
     { position: 18, driverId: 'DOO', fastestLap: false, dnf: false, time: '+2 Laps' },
     { position: 19, driverId: 'HUL', fastestLap: false, dnf: false, time: '+2 Laps' },
-    { position: 20, driverId: 'BOR', fastestLap: false, dnf: true, dnfReason: 'Hydraulics', time: 'DNF' },
+    {
+      position: 20,
+      driverId: 'BOR',
+      fastestLap: false,
+      dnf: true,
+      dnfReason: 'Hydraulics',
+      time: 'DNF',
+    },
   ],
   'mon-2025': [
     { position: 1, driverId: 'LEC', fastestLap: false, dnf: false, time: '2:02:20.117' },
@@ -543,36 +963,90 @@ export const RACE_RESULTS: Record<string, ActualResult[]> = {
 // ————————————————
 
 export const RACE_ACCURACY: Record<string, AccuracyMetrics> = {
-  'aus-2025': { top3Accuracy: 67, top5Accuracy: 60, top10Accuracy: 70, exactHitRate: 20, meanPositionError: 2.1, podiumCorrect: 2 },
-  'chn-2025': { top3Accuracy: 33, top5Accuracy: 40, top10Accuracy: 60, exactHitRate: 10, meanPositionError: 3.0, podiumCorrect: 1 },
-  'jpn-2025': { top3Accuracy: 100, top5Accuracy: 80, top10Accuracy: 80, exactHitRate: 25, meanPositionError: 1.5, podiumCorrect: 3 },
-  'bhr-2025': { top3Accuracy: 67, top5Accuracy: 60, top10Accuracy: 60, exactHitRate: 15, meanPositionError: 2.6, podiumCorrect: 2 },
-  'sau-2025': { top3Accuracy: 67, top5Accuracy: 60, top10Accuracy: 70, exactHitRate: 20, meanPositionError: 2.2, podiumCorrect: 2 },
-  'mia-2025': { top3Accuracy: 67, top5Accuracy: 60, top10Accuracy: 70, exactHitRate: 15, meanPositionError: 2.4, podiumCorrect: 2 },
-  'ita-2025': { top3Accuracy: 33, top5Accuracy: 40, top10Accuracy: 60, exactHitRate: 10, meanPositionError: 3.3, podiumCorrect: 1 },
-  'mon-2025': { top3Accuracy: 100, top5Accuracy: 80, top10Accuracy: 80, exactHitRate: 30, meanPositionError: 1.3, podiumCorrect: 3 },
+  'aus-2025': {
+    top3Accuracy: 67,
+    top5Accuracy: 60,
+    top10Accuracy: 70,
+    exactHitRate: 20,
+    meanPositionError: 2.1,
+    podiumCorrect: 2,
+  },
+  'chn-2025': {
+    top3Accuracy: 33,
+    top5Accuracy: 40,
+    top10Accuracy: 60,
+    exactHitRate: 10,
+    meanPositionError: 3.0,
+    podiumCorrect: 1,
+  },
+  'jpn-2025': {
+    top3Accuracy: 100,
+    top5Accuracy: 80,
+    top10Accuracy: 80,
+    exactHitRate: 25,
+    meanPositionError: 1.5,
+    podiumCorrect: 3,
+  },
+  'bhr-2025': {
+    top3Accuracy: 67,
+    top5Accuracy: 60,
+    top10Accuracy: 60,
+    exactHitRate: 15,
+    meanPositionError: 2.6,
+    podiumCorrect: 2,
+  },
+  'sau-2025': {
+    top3Accuracy: 67,
+    top5Accuracy: 60,
+    top10Accuracy: 70,
+    exactHitRate: 20,
+    meanPositionError: 2.2,
+    podiumCorrect: 2,
+  },
+  'mia-2025': {
+    top3Accuracy: 67,
+    top5Accuracy: 60,
+    top10Accuracy: 70,
+    exactHitRate: 15,
+    meanPositionError: 2.4,
+    podiumCorrect: 2,
+  },
+  'ita-2025': {
+    top3Accuracy: 33,
+    top5Accuracy: 40,
+    top10Accuracy: 60,
+    exactHitRate: 10,
+    meanPositionError: 3.3,
+    podiumCorrect: 1,
+  },
+  'mon-2025': {
+    top3Accuracy: 100,
+    top5Accuracy: 80,
+    top10Accuracy: 80,
+    exactHitRate: 30,
+    meanPositionError: 1.3,
+    podiumCorrect: 3,
+  },
 };
 
 // Helper function to compute position delta for a driver in a race
 export function getPositionDelta(raceId: string, driverId: string): number | null {
-  const prediction = RACE_PREDICTIONS[raceId]?.find(p => p.driverId === driverId);
-  const result = RACE_RESULTS[raceId]?.find(r => r.driverId === driverId);
+  const prediction = RACE_PREDICTIONS[raceId]?.find((p) => p.driverId === driverId);
+  const result = RACE_RESULTS[raceId]?.find((r) => r.driverId === driverId);
   if (!prediction || !result) return null;
   return prediction.position - result.position; // positive = predicted higher (better) than actual
 }
 
 // Season summary for dashboard
-export const SEASON_CHART_DATA = RACES
-  .filter(r => r.status === 'completed')
-  .map(r => {
-    const acc = RACE_ACCURACY[r.id];
-    return {
-      race: r.shortName,
-      round: r.round,
-      top3: acc?.top3Accuracy ?? 0,
-      top10: acc?.top10Accuracy ?? 0,
-      exactHit: acc?.exactHitRate ?? 0,
-      mpe: acc?.meanPositionError ?? 0,
-      podiumCorrect: acc?.podiumCorrect ?? 0,
-    };
-  });
+export const SEASON_CHART_DATA = RACES.filter((r) => r.status === 'completed').map((r) => {
+  const acc = RACE_ACCURACY[r.id];
+  return {
+    race: r.shortName,
+    round: r.round,
+    top3: acc?.top3Accuracy ?? 0,
+    top10: acc?.top10Accuracy ?? 0,
+    exactHit: acc?.exactHitRate ?? 0,
+    mpe: acc?.meanPositionError ?? 0,
+    podiumCorrect: acc?.podiumCorrect ?? 0,
+  };
+});

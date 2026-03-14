@@ -23,7 +23,11 @@ export function ExactHitBarChart() {
         <Zap size={13} className="text-[#22c55e]" />
         <h2
           className="text-xs uppercase tracking-wider text-[#6b7280]"
-          style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, letterSpacing: '0.1em' }}
+          style={{
+            fontFamily: "'Barlow Condensed', sans-serif",
+            fontWeight: 700,
+            letterSpacing: '0.1em',
+          }}
         >
           Exact Hit Rate per Race
         </h2>
@@ -36,11 +40,20 @@ export function ExactHitBarChart() {
       </div>
       <div className="h-44">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={chartData} margin={{ top: 5, right: 10, bottom: 5, left: -20 }} barSize={22}>
+          <BarChart
+            data={chartData}
+            margin={{ top: 5, right: 10, bottom: 5, left: -20 }}
+            barSize={22}
+          >
             <CartesianGrid strokeDasharray="3 3" stroke="#1e1e30" vertical={false} />
             <XAxis
               dataKey="race"
-              tick={{ fill: '#4a4a62', fontSize: 10, fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600 }}
+              tick={{
+                fill: '#4a4a62',
+                fontSize: 10,
+                fontFamily: "'Barlow Condensed', sans-serif",
+                fontWeight: 600,
+              }}
               axisLine={{ stroke: '#1e1e30' }}
               tickLine={false}
             />
@@ -56,8 +69,16 @@ export function ExactHitBarChart() {
                 if (!active || !payload?.length) return null;
                 return (
                   <div className="bg-[#131320] border border-[#2a2a40] rounded-lg px-3 py-2 shadow-xl">
-                    <p className="text-[#6b7280] text-[10px] mb-1" style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700 }}>{label}</p>
-                    <span className="text-white text-xs" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                    <p
+                      className="text-[#6b7280] text-[10px] mb-1"
+                      style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700 }}
+                    >
+                      {label}
+                    </p>
+                    <span
+                      className="text-white text-xs"
+                      style={{ fontFamily: "'JetBrains Mono', monospace" }}
+                    >
                       {payload[0]?.value}% exact positions
                     </span>
                   </div>

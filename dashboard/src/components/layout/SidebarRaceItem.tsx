@@ -12,9 +12,7 @@ export function SidebarRaceItem({ race, isSelected, onClick }: Props) {
     <button
       onClick={onClick}
       className={`w-full text-left px-4 py-2.5 transition-all duration-150 flex items-center gap-3 group ${
-        isSelected
-          ? 'bg-[#1a1a28] border-r-2 border-[#e10600]'
-          : 'hover:bg-[#131320]'
+        isSelected ? 'bg-[#1a1a28] border-r-2 border-[#e10600]' : 'hover:bg-[#131320]'
       }`}
     >
       <span
@@ -45,9 +43,7 @@ export function SidebarRaceItem({ race, isSelected, onClick }: Props) {
       {race.status === 'next' && (
         <div className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-[#e10600] animate-pulse" />
       )}
-      {race.status === 'upcoming' && (
-        <Clock size={11} className="flex-shrink-0 text-[#3a3a52]" />
-      )}
+      {race.status === 'upcoming' && <Clock size={11} className="flex-shrink-0 text-[#3a3a52]" />}
     </button>
   );
 }

@@ -78,7 +78,10 @@ export function Sidebar({ open }: Props) {
           </div>
 
           <div className="px-5 py-3 border-t border-[#1e1e30] flex-shrink-0">
-            <p className="text-[10px] text-[#2e2e45]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+            <p
+              className="text-[10px] text-[#2e2e45]"
+              style={{ fontFamily: "'JetBrains Mono', monospace" }}
+            >
               MODEL v2.4.1 · 2025 SEASON
             </p>
           </div>
