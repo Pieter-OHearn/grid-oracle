@@ -44,6 +44,13 @@ export interface AccuracyMetrics {
   podiumCorrect: number;
 }
 
+export interface Row {
+  result: ActualResult;
+  prediction: PredictionEntry | undefined;
+  predictedPos: number | null;
+  delta: number | null;
+}
+
 export interface SeasonChartPoint {
   race: string;
   round: number;
