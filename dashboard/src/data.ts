@@ -211,6 +211,11 @@ export const DRIVERS: Record<string, Driver> = {
   },
 };
 
+// Reverse lookup: full driver name → driver code (for mapping API responses)
+export const DRIVER_BY_NAME: Record<string, string> = Object.fromEntries(
+  Object.entries(DRIVERS).map(([code, driver]) => [driver.name, code]),
+);
+
 export const RACES: Race[] = [
   {
     id: 'aus-2025',
