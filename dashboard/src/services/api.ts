@@ -1,5 +1,20 @@
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
 
+export interface ApiRaceListItem {
+  id: number;
+  name: string;
+  circuit: string;
+  date: string;
+  is_completed: boolean;
+}
+
+export interface ApiPredictionItem {
+  driver: string;
+  constructor: string;
+  predicted_position: number;
+  confidence_score: number | null;
+}
+
 async function request<T>(path: string): Promise<T> {
   const response = await fetch(`${BASE_URL}${path}`);
   if (!response.ok) {
@@ -9,7 +24,8 @@ async function request<T>(path: string): Promise<T> {
 }
 
 export const api = {
-  getPredictions: (raceId: string) => request(`/predictions/${raceId}`),
-  getResults: (raceId: string) => request(`/results/${raceId}`),
-  getRaces: () => request('/races'),
+  getRaceList: (season: number) => request<ApiRaceListItem[]>(`/races/${season}`),
+  getPredictions: (raceId: number) =>
+    request<ApiPredictionItem[]>(`/races/${raceId}/predictions`),
+  getResults: (raceId: number) => request<unknown[]>(`/races/${raceId}/results`),
 };
