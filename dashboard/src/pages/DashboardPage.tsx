@@ -1,41 +1,19 @@
 import { motion } from 'framer-motion';
 import { BarChart2 } from 'lucide-react';
-import { RACES, RACE_ACCURACY, RACE_RESULTS } from '../data';
+import { RACE_ACCURACY } from '../data';
 import { StatCard } from '../components/common/StatCard';
 import { AccuracyLineChart } from '../components/charts/AccuracyLineChart';
 import { ExactHitBarChart } from '../components/charts/ExactHitBarChart';
 import { PerRaceBreakdownTable } from '../components/dashboard/PerRaceBreakdownTable';
 import { WinsTally } from '../components/dashboard/WinsTally';
-
-const completedRaces = RACES.filter((r) => r.status === 'completed');
-
-const winnerCounts: Record<string, number> = {};
-completedRaces.forEach((race) => {
-  const results = RACE_RESULTS[race.id];
-  if (results) {
-    const winner = results.find((r) => r.position === 1);
-    if (winner) {
-      winnerCounts[winner.driverId] = (winnerCounts[winner.driverId] ?? 0) + 1;
-    }
-  }
-});
-
-const seasonAvgTop3 = Math.round(
-  completedRaces.reduce((s, r) => s + (RACE_ACCURACY[r.id]?.top3Accuracy ?? 0), 0) /
-    completedRaces.length,
-);
-const seasonAvgExact = Math.round(
-  completedRaces.reduce((s, r) => s + (RACE_ACCURACY[r.id]?.exactHitRate ?? 0), 0) /
-    completedRaces.length,
-);
-const seasonAvgMPE = (
-  completedRaces.reduce((s, r) => s + (RACE_ACCURACY[r.id]?.meanPositionError ?? 0), 0) /
-  completedRaces.length
-).toFixed(2);
-const bestRace = completedRaces.reduce((best, r) => {
-  const acc = RACE_ACCURACY[r.id]?.top3Accuracy ?? 0;
-  return acc > (RACE_ACCURACY[best?.id]?.top3Accuracy ?? 0) ? r : best;
-}, completedRaces[0]);
+import {
+  completedRaces,
+  winnerCounts,
+  seasonAvgTop3,
+  seasonAvgExact,
+  seasonAvgMPE,
+  bestRace,
+} from '../utils/season';
 
 export function DashboardPage() {
   const summaryStats = [
@@ -72,7 +50,7 @@ export function DashboardPage() {
       value: bestRace?.shortName ?? '—',
       icon: '🎯',
       color: '#3b82f6',
-      sub: '100% podium',
+      sub: bestRace ? `${RACE_ACCURACY[bestRace.id]?.top3Accuracy ?? 0}% podium` : '—',
     },
   ];
 

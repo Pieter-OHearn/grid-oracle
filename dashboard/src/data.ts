@@ -1,4 +1,5 @@
-// GridOracle — Mock Data for 2025 F1 Season
+// GridOracle — Temporary mock data for UI scaffolding.
+// This will be replaced by live API responses from services/api.ts in a future ticket.
 import type { Driver, Race, PredictionEntry, ActualResult, AccuracyMetrics } from './types';
 
 export const CONSTRUCTOR_COLORS: Record<string, string> = {
