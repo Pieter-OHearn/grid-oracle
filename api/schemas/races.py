@@ -30,9 +30,12 @@ class ComparisonItem(BaseModel):
     driver: str
     constructor: str
     predicted_position: int
+    confidence_score: float | None = None
     finish_position: int | None = None
     # predicted_position - finish_position; positive = predicted too high
     position_delta: int | None = None
+    status: str | None = None
+    fastest_lap: bool = False
 
 
 class AccuracyItem(BaseModel):

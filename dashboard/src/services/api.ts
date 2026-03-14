@@ -23,6 +23,17 @@ export interface ApiResultItem {
   status: string;
 }
 
+export interface ApiComparisonItem {
+  driver: string;
+  constructor: string;
+  predicted_position: number;
+  confidence_score: number | null;
+  finish_position: number | null;
+  position_delta: number | null;
+  status: string | null;
+  fastest_lap: boolean;
+}
+
 async function request<T>(path: string): Promise<T> {
   const response = await fetch(`${BASE_URL}${path}`);
   if (!response.ok) {
@@ -35,4 +46,5 @@ export const api = {
   getRaceList: (season: number) => request<ApiRaceListItem[]>(`/races/${season}`),
   getPredictions: (raceId: number) => request<ApiPredictionItem[]>(`/races/${raceId}/predictions`),
   getResults: (raceId: number) => request<ApiResultItem[]>(`/races/${raceId}/results`),
+  getComparison: (raceId: number) => request<ApiComparisonItem[]>(`/races/${raceId}/comparison`),
 };

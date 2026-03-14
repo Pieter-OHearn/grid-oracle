@@ -139,8 +139,15 @@ def get_comparison(race_id: int, db: Session = Depends(get_db)):
                 driver=p.driver.full_name,
                 constructor=p.constructor.name,
                 predicted_position=p.predicted_position,
+                confidence_score=(
+                    float(p.confidence_score)
+                    if p.confidence_score is not None
+                    else None
+                ),
                 finish_position=finish_pos,
                 position_delta=delta,
+                status=result.status if result else None,
+                fastest_lap=result.fastest_lap if result else False,
             )
         )
     return items
