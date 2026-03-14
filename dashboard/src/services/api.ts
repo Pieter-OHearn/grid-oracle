@@ -25,7 +25,6 @@ async function request<T>(path: string): Promise<T> {
 
 export const api = {
   getRaceList: (season: number) => request<ApiRaceListItem[]>(`/races/${season}`),
-  getPredictions: (raceId: number) =>
-    request<ApiPredictionItem[]>(`/races/${raceId}/predictions`),
+  getPredictions: (raceId: number) => request<ApiPredictionItem[]>(`/races/${raceId}/predictions`),
   getResults: (raceId: number) => request<unknown[]>(`/races/${raceId}/results`),
 };
