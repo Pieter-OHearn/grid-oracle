@@ -25,8 +25,9 @@ export function PredictionPage() {
     async function load() {
       setLoading(true);
       try {
-        const raceList = await api.getRaceList(2025);
-        const apiRace = raceList.find((r) => r.date === race!.date);
+        const season = new Date(race.date).getFullYear();
+        const raceList = await api.getRaceList(season);
+        const apiRace = raceList.find((r) => r.date === race.date);
         if (!apiRace) throw new Error('Race not found in API');
 
         const apiPreds = await api.getPredictions(apiRace.id);
@@ -53,7 +54,7 @@ export function PredictionPage() {
     return () => {
       cancelled = true;
     };
-  }, [raceId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [raceId, race]);
 
   if (!race) {
     return (

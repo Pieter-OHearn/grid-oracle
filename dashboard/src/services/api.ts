@@ -15,6 +15,14 @@ export interface ApiPredictionItem {
   confidence_score: number | null;
 }
 
+export interface ApiResultItem {
+  driver: string;
+  constructor: string;
+  finish_position: number | null;
+  grid_position: number | null;
+  status: string;
+}
+
 async function request<T>(path: string): Promise<T> {
   const response = await fetch(`${BASE_URL}${path}`);
   if (!response.ok) {
@@ -26,5 +34,5 @@ async function request<T>(path: string): Promise<T> {
 export const api = {
   getRaceList: (season: number) => request<ApiRaceListItem[]>(`/races/${season}`),
   getPredictions: (raceId: number) => request<ApiPredictionItem[]>(`/races/${raceId}/predictions`),
-  getResults: (raceId: number) => request<unknown[]>(`/races/${raceId}/results`),
+  getResults: (raceId: number) => request<ApiResultItem[]>(`/races/${raceId}/results`),
 };
