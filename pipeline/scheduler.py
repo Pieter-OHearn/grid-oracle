@@ -11,11 +11,15 @@ from apscheduler.triggers.date import DateTrigger
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
+from pipeline.features.builder import build_features_for_race, export_parquet
 from pipeline.ingest.calendar_sync import sync_season_calendar
 from pipeline.ingest.fetch_qualifying import ingest_event as ingest_qualifying_event
 from pipeline.ingest.fetch_results import ingest_event as ingest_results_event
 from pipeline.ingest.fetch_weather import fetch_and_store_weather
 from pipeline.ingest.upsert_helpers import get_engine
+from pipeline.ml import evaluate as ml_evaluate
+from pipeline.ml import predict as ml_predict
+from pipeline.ml import train as ml_train
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 for _noisy in ("fastf1", "req", "core", "logger", "_api", "apscheduler"):
@@ -105,6 +109,88 @@ def _make_job_id(job_type: str, season: int, round_num: int) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Post-race ML pipeline
+# ---------------------------------------------------------------------------
+
+
+def _get_latest_model_version_id_for_race(race_id: int, engine: Engine) -> int | None:
+    """Return the most recently used model_version_id for a race's predictions."""
+    with engine.connect() as conn:
+        row = conn.execute(
+            text("SELECT model_version_id FROM predictions WHERE race_id = :rid ORDER BY created_at DESC LIMIT 1"),
+            {"rid": race_id},
+        ).fetchone()
+    return row[0] if row else None
+
+
+def _get_remaining_race_ids(season: int, engine: Engine) -> list[int]:
+    """Return IDs of races in *season* that are not completed and have date > today."""
+    with engine.connect() as conn:
+        rows = conn.execute(
+            text(
+                "SELECT id FROM races "
+                "WHERE season = :season AND is_completed = FALSE AND date > CURRENT_DATE "
+                "ORDER BY date"
+            ),
+            {"season": season},
+        ).fetchall()
+    return [row[0] for row in rows]
+
+
+def post_race_pipeline(race_id: int, season: int, engine: Engine) -> None:
+    """Build features, retrain, evaluate, and generate predictions for all remaining races.
+
+    Called after race results are ingested.  A failure anywhere in the chain is
+    logged but not re-raised — stale predictions from the previous model remain live.
+    """
+    try:
+        logger.info("post_race_pipeline: starting (race_id=%d, season=%d)", race_id, season)
+
+        # 1. Build features for the just-completed race and export to parquet
+        df = build_features_for_race(race_id, engine)
+        if not df.empty:
+            export_parquet(df, race_id)
+
+        # 2. Capture the model_version_id used for this race's predictions (for evaluation)
+        old_model_version_id = _get_latest_model_version_id_for_race(race_id, engine)
+
+        # 3. Retrain with all available data
+        new_model_version_id = ml_train.run(engine=engine)
+        logger.info("post_race_pipeline: retrain complete — model_version_id=%d", new_model_version_id)
+
+        # 4. Evaluate the completed race against its pre-race predictions
+        if old_model_version_id is not None:
+            try:
+                ml_evaluate.run(race_id=race_id, model_version_id=old_model_version_id, engine=engine)
+            except Exception:
+                logger.exception(
+                    "post_race_pipeline: evaluation failed for race_id=%d model_version_id=%d",
+                    race_id,
+                    old_model_version_id,
+                )
+
+        # 5. Predict all remaining races in the season using the new model
+        remaining_ids = _get_remaining_race_ids(season, engine)
+        logger.info("post_race_pipeline: predicting %d remaining races", len(remaining_ids))
+        for rid in remaining_ids:
+            try:
+                ml_predict.run(race_id=rid, model_version_id=new_model_version_id, engine=engine)
+            except Exception:
+                logger.exception("post_race_pipeline: prediction failed for race_id=%d", rid)
+
+        logger.info(
+            "post_race_pipeline: complete — model_version_id=%d, %d races predicted",
+            new_model_version_id,
+            len(remaining_ids),
+        )
+    except Exception:
+        logger.exception(
+            "post_race_pipeline: failed for race_id=%d — stale predictions remain live",
+            race_id,
+        )
+
+
+# ---------------------------------------------------------------------------
 # Job execution
 # ---------------------------------------------------------------------------
 
@@ -124,6 +210,7 @@ def _run_job(job_type: str, season: int, round_num: int, race_id: int, engine: E
             ingest_qualifying_event(season, round_num, engine)
         elif job_type == JOB_RACE:
             ingest_results_event(season, round_num, engine)
+            post_race_pipeline(race_id, season, engine)
         else:
             logger.error("Unknown job type: %s", job_type)
             return
