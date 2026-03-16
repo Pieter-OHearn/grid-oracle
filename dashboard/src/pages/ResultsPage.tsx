@@ -13,7 +13,7 @@ import type { Row, AccuracyMetrics } from '../types';
 
 export function ResultsPage() {
   const { raceId } = useParams();
-  const { races } = useRaceList();
+  const { races, racesLoaded } = useRaceList();
   const numericId = raceId != null ? Number(raceId) : undefined;
   const race = numericId != null ? races.find((r) => r.id === numericId) : undefined;
 
@@ -22,7 +22,12 @@ export function ResultsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (numericId == null || (race && !race.is_completed)) {
+    if (numericId == null) {
+      setLoading(false);
+      return;
+    }
+    if (!racesLoaded) return; // wait for context to finish loading
+    if (race && !race.is_completed) {
       setLoading(false);
       return;
     }
@@ -51,7 +56,7 @@ export function ResultsPage() {
     return () => {
       cancelled = true;
     };
-  }, [numericId, race]);
+  }, [numericId, racesLoaded, race]);
 
   // If race is loaded but not completed, redirect to prediction page
   if (race && !race.is_completed) {

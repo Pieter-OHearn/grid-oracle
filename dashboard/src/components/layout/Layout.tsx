@@ -14,12 +14,16 @@ export function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [races, setRaces] = useState<AppRace[]>([]);
   const [currentSeason, setCurrentSeason] = useState(0);
+  const [racesLoaded, setRacesLoaded] = useState(false);
 
   useEffect(() => {
     async function load() {
       try {
         const seasons = await api.getSeasons();
-        if (!seasons.length) return;
+        if (!seasons.length) {
+          setRacesLoaded(true);
+          return;
+        }
         const latest = seasons[0];
         setCurrentSeason(latest);
         const raw = await api.getRaceList(latest);
@@ -34,13 +38,15 @@ export function Layout() {
         );
       } catch {
         // API unavailable — races stay empty; pages handle empty state
+      } finally {
+        setRacesLoaded(true);
       }
     }
     load();
   }, []);
 
   return (
-    <RaceListContext.Provider value={{ races, currentSeason }}>
+    <RaceListContext.Provider value={{ races, currentSeason, racesLoaded }}>
       <div
         className="flex h-screen bg-[#08080e] text-white overflow-hidden"
         style={{ fontFamily: "'Barlow', sans-serif" }}

@@ -12,11 +12,13 @@ export interface AppRace extends ApiRaceListItem {
 interface RaceListContextValue {
   races: AppRace[];
   currentSeason: number;
+  racesLoaded: boolean;
 }
 
 export const RaceListContext = createContext<RaceListContextValue>({
   races: [],
   currentSeason: 0,
+  racesLoaded: false,
 });
 
 export function useRaceList() {

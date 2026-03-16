@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { Calendar, MapPin } from 'lucide-react';
 import type { AppRace } from '../../context/RaceListContext';
+import { useRaceList } from '../../context/RaceListContext';
 import type { PredictionEntry } from '../../types';
 import { StatusBadge } from '../common/StatusBadge';
 import { getConfidenceColor, formatDate } from '../../utils/predictions';
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export function RaceHero({ race, predictions }: Props) {
+  const { races } = useRaceList();
   const avgConfidence = Math.round(
     predictions.reduce((s, p) => s + p.confidence, 0) / predictions.length,
   );
@@ -47,7 +49,7 @@ export function RaceHero({ race, predictions }: Props) {
                 className="text-[#3a3a52] text-[10px]"
                 style={{ fontFamily: "'JetBrains Mono', monospace" }}
               >
-                Round {String(race.round).padStart(2, '0')} / 24
+                Round {String(race.round).padStart(2, '0')} / {races.length || 24}
               </span>
             </div>
             <h1
