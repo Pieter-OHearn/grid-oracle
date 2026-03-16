@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { BarChart2, BarChart2 as EmptyIcon } from 'lucide-react';
 import { api } from '../services/api';
 import type { ApiAccuracyItem } from '../services/api';
-import { RACES, RACE_RESULTS, DRIVERS, CONSTRUCTOR_COLORS } from '../data';
+import { DRIVERS, CONSTRUCTOR_COLORS, DRIVER_BY_NAME } from '../data';
 import type { SeasonChartPoint } from '../types';
 import type { BreakdownRow } from '../components/dashboard/PerRaceBreakdownTable';
 import { StatCard } from '../components/common/StatCard';
@@ -13,35 +13,29 @@ import { PerRaceBreakdownTable } from '../components/dashboard/PerRaceBreakdownT
 import { WinsTally } from '../components/dashboard/WinsTally';
 import { SeasonSelector } from '../components/dashboard/SeasonSelector';
 
-const RACE_BY_NAME = new Map(RACES.map((r) => [r.name, r]));
-
 function buildChartData(items: ApiAccuracyItem[]): SeasonChartPoint[] {
-  return items.map((item, idx) => {
-    const race = RACE_BY_NAME.get(item.race_name);
-    return {
-      race: race?.shortName ?? item.race_name.split(' ')[0].slice(0, 3).toUpperCase(),
-      round: race?.round ?? idx + 1,
-      top3: Math.round((item.top3_accuracy ?? 0) * 100),
-      top10: 0,
-      exactHit: Math.round((item.exact_position_accuracy ?? 0) * 100),
-      mpe: item.mean_position_error ?? 0,
-      podiumCorrect: 0,
-    };
-  });
+  return items.map((item, idx) => ({
+    race: item.race_name.replace(' Grand Prix', '').slice(0, 3).toUpperCase(),
+    round: idx + 1,
+    top3: Math.round((item.top3_accuracy ?? 0) * 100),
+    top10: 0,
+    exactHit: Math.round((item.exact_position_accuracy ?? 0) * 100),
+    mpe: item.mean_position_error ?? 0,
+    podiumCorrect: 0,
+  }));
 }
 
 function buildBreakdownRows(items: ApiAccuracyItem[]): BreakdownRow[] {
   return items.map((item, idx) => {
-    const race = RACE_BY_NAME.get(item.race_name);
-    const results = race ? RACE_RESULTS[race.id] : undefined;
-    const winner = results?.find((r) => r.position === 1);
-    const winnerDriver = winner ? DRIVERS[winner.driverId] : undefined;
+    const driverCode = item.winner_name ? (DRIVER_BY_NAME[item.winner_name] ?? null) : null;
+    const driver = driverCode ? DRIVERS[driverCode] : null;
+    const shortName = item.race_name.replace(' Grand Prix', '');
     return {
       raceId: item.race_id,
-      round: race?.round ?? idx + 1,
-      shortName: race?.shortName ?? item.race_name.replace(' Grand Prix', ''),
-      country: race?.country ?? item.race_name.replace(' Grand Prix', ''),
-      countryFlag: race?.countryFlag ?? '🏁',
+      round: idx + 1,
+      shortName: shortName.slice(0, 3).toUpperCase(),
+      country: shortName,
+      countryFlag: '🏁',
       top3Accuracy: item.top3_accuracy != null ? Math.round(item.top3_accuracy * 100) : undefined,
       top10Accuracy: undefined,
       exactHitRate:
@@ -49,10 +43,12 @@ function buildBreakdownRows(items: ApiAccuracyItem[]): BreakdownRow[] {
           ? Math.round(item.exact_position_accuracy * 100)
           : undefined,
       meanPositionError: item.mean_position_error ?? undefined,
-      winnerShortName: winnerDriver?.shortName,
-      winnerColor: winnerDriver
-        ? (CONSTRUCTOR_COLORS[winnerDriver.constructor] ?? '#6b7280')
-        : undefined,
+      winnerShortName: driver?.shortName ?? item.winner_name ?? undefined,
+      winnerColor: driver
+        ? (CONSTRUCTOR_COLORS[driver.constructor] ?? '#6b7280')
+        : item.winner_constructor
+          ? (CONSTRUCTOR_COLORS[item.winner_constructor] ?? '#6b7280')
+          : undefined,
     };
   });
 }
@@ -60,29 +56,42 @@ function buildBreakdownRows(items: ApiAccuracyItem[]): BreakdownRow[] {
 function buildWinnerCounts(items: ApiAccuracyItem[]): Record<string, number> {
   const counts: Record<string, number> = {};
   for (const item of items) {
-    const race = RACE_BY_NAME.get(item.race_name);
-    if (!race) continue;
-    const results = RACE_RESULTS[race.id];
-    const winner = results?.find((r) => r.position === 1);
-    if (winner) {
-      counts[winner.driverId] = (counts[winner.driverId] ?? 0) + 1;
-    }
+    if (!item.winner_name) continue;
+    const code = DRIVER_BY_NAME[item.winner_name] ?? item.winner_name;
+    counts[code] = (counts[code] ?? 0) + 1;
   }
   return counts;
 }
 
 export function DashboardPage() {
-  const [season, setSeason] = useState(2025);
+  const [availableSeasons, setAvailableSeasons] = useState<number[]>([]);
+  const [season, setSeason] = useState<number | null>(null);
   const [accuracyData, setAccuracyData] = useState<ApiAccuracyItem[]>([]);
+  const [totalRaces, setTotalRaces] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Fetch available seasons on mount
   useEffect(() => {
+    api
+      .getSeasons()
+      .then((seasons) => {
+        setAvailableSeasons(seasons);
+        if (seasons.length) setSeason(seasons[0]);
+      })
+      .catch(() => setError('Failed to load seasons'));
+  }, []);
+
+  // Fetch accuracy + race list when season changes
+  useEffect(() => {
+    if (season == null) return;
     setLoading(true);
     setError(null);
-    api
-      .getSeasonAccuracy(season)
-      .then(setAccuracyData)
+    Promise.all([api.getSeasonAccuracy(season), api.getRaceList(season)])
+      .then(([accuracy, races]) => {
+        setAccuracyData(accuracy);
+        setTotalRaces(races.length);
+      })
       .catch(() => setError('Failed to load season data'))
       .finally(() => setLoading(false));
   }, [season]);
@@ -119,7 +128,9 @@ export function DashboardPage() {
         (r.top3_accuracy ?? 0) > (best.top3_accuracy ?? 0) ? r : best,
       )
     : null;
-  const bestRace = bestItem ? (RACE_BY_NAME.get(bestItem.race_name)?.shortName ?? '—') : '—';
+  const bestRace = bestItem
+    ? bestItem.race_name.replace(' Grand Prix', '').slice(0, 3).toUpperCase()
+    : '—';
 
   const summaryStats = [
     {
@@ -127,7 +138,7 @@ export function DashboardPage() {
       value: accuracyData.length.toString(),
       icon: '🏎️',
       color: '#e10600',
-      sub: 'of 24 total',
+      sub: totalRaces > 0 ? `of ${totalRaces} total` : 'races evaluated',
     },
     {
       label: 'Avg Podium Accuracy',
@@ -188,11 +199,17 @@ export function DashboardPage() {
               className="text-[#3a3a52] text-xs"
               style={{ fontFamily: "'JetBrains Mono', monospace" }}
             >
-              {season} F1 Season · Rounds 1–{accuracyData.length} completed
+              {season ?? '—'} F1 Season · Rounds 1–{accuracyData.length} completed
             </p>
           </div>
         </div>
-        <SeasonSelector season={season} onChange={setSeason} />
+        {availableSeasons.length > 0 && season != null && (
+          <SeasonSelector
+            season={season}
+            onChange={setSeason}
+            availableSeasons={availableSeasons}
+          />
+        )}
       </motion.div>
 
       {loading && (

@@ -9,15 +9,14 @@ import {
   Cell,
 } from 'recharts';
 import { Zap } from 'lucide-react';
-import { SEASON_CHART_DATA } from '../../data';
 import type { SeasonChartPoint } from '../../types';
 
 interface Props {
-  data?: SeasonChartPoint[];
+  data: SeasonChartPoint[];
 }
 
 export function ExactHitBarChart({ data }: Props) {
-  const chartData = (data ?? SEASON_CHART_DATA).map((d) => ({
+  const chartData = data.map((d) => ({
     ...d,
     fill: d.exactHit >= 25 ? '#22c55e' : d.exactHit >= 15 ? '#eab308' : '#ef4444',
   }));

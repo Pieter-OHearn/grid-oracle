@@ -1,11 +1,12 @@
 import { motion } from 'framer-motion';
 import { Calendar, MapPin } from 'lucide-react';
-import type { Race, PredictionEntry } from '../../types';
+import type { AppRace } from '../../context/RaceListContext';
+import type { PredictionEntry } from '../../types';
 import { StatusBadge } from '../common/StatusBadge';
 import { getConfidenceColor, formatDate } from '../../utils/predictions';
 
 interface Props {
-  race: Race;
+  race: AppRace;
   predictions: PredictionEntry[];
 }
 

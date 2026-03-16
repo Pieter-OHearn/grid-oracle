@@ -3,12 +3,10 @@ import { ChevronDown } from 'lucide-react';
 interface Props {
   season: number;
   onChange: (season: number) => void;
-  availableSeasons?: number[];
+  availableSeasons: number[];
 }
 
-const DEFAULT_SEASONS = [2025, 2024];
-
-export function SeasonSelector({ season, onChange, availableSeasons = DEFAULT_SEASONS }: Props) {
+export function SeasonSelector({ season, onChange, availableSeasons }: Props) {
   return (
     <div className="relative">
       <select

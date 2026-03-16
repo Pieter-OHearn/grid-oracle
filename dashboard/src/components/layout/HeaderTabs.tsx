@@ -1,8 +1,8 @@
 import { NavLink } from 'react-router';
-import type { Race } from '../../types';
+import type { AppRace } from '../../context/RaceListContext';
 
 interface Props {
-  race: Race;
+  race: AppRace;
 }
 
 const tabStyle = {
@@ -29,7 +29,7 @@ export function HeaderTabs({ race }: Props) {
       >
         Prediction
       </NavLink>
-      {race.status === 'completed' && (
+      {race.is_completed && (
         <NavLink
           to={`/race/${race.id}/results`}
           className={({ isActive }) =>

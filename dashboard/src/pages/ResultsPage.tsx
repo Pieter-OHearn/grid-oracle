@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, Navigate } from 'react-router';
 import { AlertCircle, Target, Zap } from 'lucide-react';
-import { RACES, RACE_PREDICTIONS, RACE_RESULTS, RACE_ACCURACY } from '../data';
 import { api } from '../services/api';
+import { useRaceList } from '../context/RaceListContext';
 import { AccuracyMetricsGrid } from '../components/results/AccuracyMetricsGrid';
 import { ComparisonRows } from '../components/results/ComparisonRows';
 import { RaceResultsHeader } from '../components/results/RaceResultsHeader';
@@ -13,14 +13,16 @@ import type { Row, AccuracyMetrics } from '../types';
 
 export function ResultsPage() {
   const { raceId } = useParams();
-  const race = RACES.find((r) => r.id === raceId);
+  const { races } = useRaceList();
+  const numericId = raceId != null ? Number(raceId) : undefined;
+  const race = numericId != null ? races.find((r) => r.id === numericId) : undefined;
 
   const [rows, setRows] = useState<Row[] | null>(null);
   const [accuracy, setAccuracy] = useState<AccuracyMetrics | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!race || race.status !== 'completed') {
+    if (numericId == null || (race && !race.is_completed)) {
       setLoading(false);
       return;
     }
@@ -30,32 +32,15 @@ export function ResultsPage() {
     async function load() {
       setLoading(true);
       try {
-        const season = new Date(race.date).getFullYear();
-        const raceList = await api.getRaceList(season);
-        const apiRace = raceList.find((r) => r.date === race.date);
-        if (!apiRace) throw new Error('Race not found in API');
-
-        const items = await api.getComparison(apiRace.id);
+        const items = await api.getComparison(numericId!);
         if (!cancelled) {
           setRows(mapApiToRows(items));
           setAccuracy(computeAccuracy(items));
         }
       } catch {
-        if (!cancelled && raceId) {
-          const predictions = RACE_PREDICTIONS[raceId];
-          const results = RACE_RESULTS[raceId];
-          const acc = RACE_ACCURACY[raceId];
-          if (predictions && results) {
-            setRows(
-              results.map((result) => {
-                const prediction = predictions.find((p) => p.driverId === result.driverId);
-                const predictedPos = prediction?.position ?? null;
-                const delta = predictedPos !== null ? predictedPos - result.position : null;
-                return { result, prediction, predictedPos, delta };
-              }),
-            );
-          }
-          if (acc) setAccuracy(acc);
+        if (!cancelled) {
+          setRows(null);
+          setAccuracy(null);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -66,9 +51,10 @@ export function ResultsPage() {
     return () => {
       cancelled = true;
     };
-  }, [raceId, race]);
+  }, [numericId, race]);
 
-  if (!race || race.status !== 'completed') {
+  // If race is loaded but not completed, redirect to prediction page
+  if (race && !race.is_completed) {
     return <Navigate to={`/race/${raceId}`} replace />;
   }
 
@@ -93,7 +79,7 @@ export function ResultsPage() {
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      <RaceResultsHeader race={race} />
+      {race && <RaceResultsHeader race={race} />}
 
       <AccuracyMetricsGrid accuracy={accuracy} />
 

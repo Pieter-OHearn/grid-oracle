@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router';
 import { AlertCircle } from 'lucide-react';
-import { RACES, RACE_PREDICTIONS, DRIVER_BY_NAME } from '../data';
+import { DRIVER_BY_NAME } from '../data';
 import { api } from '../services/api';
+import { useRaceList } from '../context/RaceListContext';
 import { RaceHero } from '../components/prediction/RaceHero';
 import { PodiumPreview } from '../components/prediction/PodiumPreview';
 import { FullGridTable } from '../components/prediction/FullGridTable';
@@ -10,12 +11,14 @@ import type { PredictionEntry } from '../types';
 
 export function PredictionPage() {
   const { raceId } = useParams();
-  const race = RACES.find((r) => r.id === raceId);
+  const { races } = useRaceList();
+  const numericId = raceId != null ? Number(raceId) : undefined;
+  const race = numericId != null ? races.find((r) => r.id === numericId) : undefined;
   const [predictions, setPredictions] = useState<PredictionEntry[] | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!race) {
+    if (numericId == null) {
       setLoading(false);
       return;
     }
@@ -25,12 +28,7 @@ export function PredictionPage() {
     async function load() {
       setLoading(true);
       try {
-        const season = new Date(race.date).getFullYear();
-        const raceList = await api.getRaceList(season);
-        const apiRace = raceList.find((r) => r.date === race.date);
-        if (!apiRace) throw new Error('Race not found in API');
-
-        const apiPreds = await api.getPredictions(apiRace.id);
+        const apiPreds = await api.getPredictions(numericId!);
         if (!cancelled) {
           setPredictions(
             apiPreds.map((p) => ({
@@ -41,10 +39,7 @@ export function PredictionPage() {
           );
         }
       } catch {
-        // API unavailable — fall back to mock data so the UI always works
-        if (!cancelled) {
-          setPredictions(raceId ? (RACE_PREDICTIONS[raceId] ?? null) : null);
-        }
+        if (!cancelled) setPredictions(null);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -54,9 +49,9 @@ export function PredictionPage() {
     return () => {
       cancelled = true;
     };
-  }, [raceId, race]);
+  }, [numericId]);
 
-  if (!race) {
+  if (numericId == null || (!loading && !race)) {
     return (
       <div className="flex items-center justify-center h-full text-[#6b7280]">
         <div className="text-center">
@@ -88,7 +83,7 @@ export function PredictionPage() {
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
-      <RaceHero race={race} predictions={predictions} />
+      {race && <RaceHero race={race} predictions={predictions} />}
       <PodiumPreview predictions={predictions} />
       <FullGridTable predictions={predictions} />
     </div>
