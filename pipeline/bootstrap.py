@@ -16,6 +16,7 @@ Steps:
 
 import logging
 import sys
+from datetime import date
 from pathlib import Path
 
 from pipeline.features.builder import build_features_for_race, export_parquet
@@ -49,7 +50,8 @@ def main() -> None:
     for hist_season in HISTORICAL_SEASONS:
         logger.info("  Syncing %d calendar…", hist_season)
         hist_events = sync_season_calendar(hist_season, engine)
-        hist_completed = [e for e in hist_events if e.get("is_completed", False)]
+        today = date.today()
+        hist_completed = [e for e in hist_events if e["event_date"] < today]
         logger.info("  %d: %d completed races to ingest", hist_season, len(hist_completed))
         for event in hist_completed:
             round_num = event["round"]
@@ -80,8 +82,9 @@ def main() -> None:
         sys.exit(1)
     logger.info("Calendar synced — %d events", len(events))
 
-    completed_events = [e for e in events if e.get("is_completed", False)]
-    upcoming_events = [e for e in events if not e.get("is_completed", False)]
+    today = date.today()
+    completed_events = [e for e in events if e["event_date"] < today]
+    upcoming_events = [e for e in events if e["event_date"] >= today]
     next_event = upcoming_events[0] if upcoming_events else None
 
     logger.info(
