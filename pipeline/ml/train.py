@@ -166,11 +166,23 @@ def insert_model_version(
 def update_artifact_path(engine: Engine, model_version_id: int, artifact_path: Path) -> None:
     """Record the artifact path for a model_versions row."""
     with engine.begin() as conn:
-        conn.execute(
+        result = conn.execute(
             text("UPDATE model_versions SET artifact_path = :path WHERE id = :id"),
             {"path": str(artifact_path), "id": model_version_id},
         )
+    if result.rowcount == 0:
+        raise RuntimeError(f"update_artifact_path: no model_versions row found with id={model_version_id}")
     logger.info("Recorded artifact_path=%s for model_version_id=%d", artifact_path, model_version_id)
+
+
+def _delete_model_version(engine: Engine, model_version_id: int) -> None:
+    """Delete a model_versions row. Used to roll back an orphaned insert on failure."""
+    with engine.begin() as conn:
+        conn.execute(
+            text("DELETE FROM model_versions WHERE id = :id"),
+            {"id": model_version_id},
+        )
+    logger.warning("Rolled back model_versions row id=%d after artifact save failure", model_version_id)
 
 
 def get_available_seasons(engine: Engine) -> list[int]:
@@ -237,8 +249,12 @@ def run(
     if artifact_path is None:
         artifact_path = ARTIFACTS_DIR / f"model_v{model_version_id}.json"
 
-    save_model(model, artifact_path)
-    update_artifact_path(engine, model_version_id, artifact_path)
+    try:
+        save_model(model, artifact_path)
+        update_artifact_path(engine, model_version_id, artifact_path)
+    except Exception:
+        _delete_model_version(engine, model_version_id)
+        raise
 
     logger.info("Training complete — model_version_id=%d", model_version_id)
     return model_version_id

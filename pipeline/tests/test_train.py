@@ -187,12 +187,24 @@ def test_insert_model_version():
 
 def test_update_artifact_path():
     mock_conn = MagicMock()
+    mock_conn.execute.return_value.rowcount = 1
     mock_engine = MagicMock()
     mock_engine.begin.return_value.__enter__ = MagicMock(return_value=mock_conn)
     mock_engine.begin.return_value.__exit__ = MagicMock(return_value=False)
 
     update_artifact_path(mock_engine, model_version_id=7, artifact_path=Path("/some/model_v7.json"))
     mock_conn.execute.assert_called_once()
+
+
+def test_update_artifact_path_no_row():
+    mock_conn = MagicMock()
+    mock_conn.execute.return_value.rowcount = 0
+    mock_engine = MagicMock()
+    mock_engine.begin.return_value.__enter__ = MagicMock(return_value=mock_conn)
+    mock_engine.begin.return_value.__exit__ = MagicMock(return_value=False)
+
+    with pytest.raises(RuntimeError, match="no model_versions row found"):
+        update_artifact_path(mock_engine, model_version_id=99, artifact_path=Path("/some/model_v99.json"))
 
 
 def test_insert_model_version_no_row():
@@ -219,7 +231,7 @@ def test_insert_model_version_no_row():
 
 
 def test_run_derives_artifact_path_when_none(tmp_path):
-    """When artifact_path=None, run() saves to model_v{id}.json and records it."""
+    """When artifact_path=None, run() saves to model_v{id}.json and records it in the DB."""
     from pipeline.ml.train import run
 
     train_df = _make_feature_df(n=40, season=2023)
@@ -228,6 +240,7 @@ def test_run_derives_artifact_path_when_none(tmp_path):
 
     mock_conn = MagicMock()
     mock_conn.execute.return_value.fetchone.return_value = (99,)
+    mock_conn.execute.return_value.rowcount = 1
     mock_engine = MagicMock()
     mock_engine.begin.return_value.__enter__ = MagicMock(return_value=mock_conn)
     mock_engine.begin.return_value.__exit__ = MagicMock(return_value=False)
@@ -249,10 +262,12 @@ def test_run_derives_artifact_path_when_none(tmp_path):
     assert model_version_id == 99
     expected_path = tmp_path / "model_v99.json"
     assert expected_path.exists()
+    # insert_model_version + update_artifact_path = 2 DB calls
+    assert mock_conn.execute.call_count == 2
 
 
 def test_run_explicit_artifact_path(tmp_path):
-    """When artifact_path is provided explicitly, run() saves to that path."""
+    """When artifact_path is provided explicitly, run() saves to that path and records it in DB."""
     from pipeline.ml.train import run
 
     train_df = _make_feature_df(n=40, season=2023)
@@ -263,6 +278,7 @@ def test_run_explicit_artifact_path(tmp_path):
 
     mock_conn = MagicMock()
     mock_conn.execute.return_value.fetchone.return_value = (5,)
+    mock_conn.execute.return_value.rowcount = 1
     mock_engine = MagicMock()
     mock_engine.begin.return_value.__enter__ = MagicMock(return_value=mock_conn)
     mock_engine.begin.return_value.__exit__ = MagicMock(return_value=False)
@@ -280,3 +296,37 @@ def test_run_explicit_artifact_path(tmp_path):
         )
 
     assert explicit_path.exists()
+    # insert_model_version + update_artifact_path = 2 DB calls
+    assert mock_conn.execute.call_count == 2
+
+
+def test_run_rolls_back_db_row_if_save_model_fails(tmp_path):
+    """If save_model raises, run() deletes the orphaned model_versions row and re-raises."""
+    from pipeline.ml.train import run
+
+    train_df = _make_feature_df(n=40, season=2023)
+    test_df = _make_feature_df(n=20, season=2024)
+    combined_df = pd.concat([train_df, test_df], ignore_index=True)
+
+    mock_conn = MagicMock()
+    mock_conn.execute.return_value.fetchone.return_value = (7,)
+    mock_engine = MagicMock()
+    mock_engine.begin.return_value.__enter__ = MagicMock(return_value=mock_conn)
+    mock_engine.begin.return_value.__exit__ = MagicMock(return_value=False)
+
+    with (
+        patch("pipeline.ml.train.load_feature_parquets", return_value=combined_df),
+        patch("pipeline.ml.train.attach_targets", return_value=combined_df),
+        patch("pipeline.ml.train.save_model", side_effect=OSError("disk full")),
+    ):
+        with pytest.raises(OSError, match="disk full"):
+            run(
+                data_dir=tmp_path,
+                artifact_path=tmp_path / "model.json",
+                engine=mock_engine,
+                train_seasons=[2023],
+                test_seasons=[2024],
+            )
+
+    # insert_model_version + _delete_model_version = 2 DB calls (no update_artifact_path)
+    assert mock_conn.execute.call_count == 2
