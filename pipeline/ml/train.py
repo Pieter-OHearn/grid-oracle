@@ -168,20 +168,33 @@ def insert_model_version(
     return model_version_id
 
 
+def get_available_seasons(engine: Engine) -> list[int]:
+    """Return all seasons that have at least one completed race in the DB."""
+    with engine.connect() as conn:
+        rows = conn.execute(
+            text("SELECT DISTINCT season FROM races WHERE is_completed = TRUE ORDER BY season")
+        ).fetchall()
+    return [row[0] for row in rows]
+
+
 def run(
     data_dir: Path = DATA_DIR,
     artifact_path: Path = ARTIFACTS_DIR / "model_v1.json",
     engine: Engine | None = None,
+    train_seasons: list[int] | None = None,
+    test_seasons: list[int] | None = None,
 ) -> int:
     """End-to-end training pipeline."""
     if engine is None:
         engine = get_engine()
 
+    if train_seasons is None:
+        train_seasons = [2022, 2023]
+    if test_seasons is None:
+        test_seasons = [2024]
+
     features_df = load_feature_parquets(data_dir)
     df = attach_targets(features_df, engine)
-
-    train_seasons = [2022, 2023]
-    test_seasons = [2024]
 
     model, mae, training_races_count = train_model(
         df,
@@ -222,9 +235,30 @@ def main() -> None:
         default=ARTIFACTS_DIR / "model_v1.json",
         help="Path to save the trained model",
     )
+    parser.add_argument(
+        "--train-seasons",
+        type=int,
+        nargs="+",
+        default=None,
+        metavar="YEAR",
+        help="Seasons to use for training (default: 2022 2023)",
+    )
+    parser.add_argument(
+        "--test-seasons",
+        type=int,
+        nargs="+",
+        default=None,
+        metavar="YEAR",
+        help="Seasons to use for evaluation (default: 2024)",
+    )
     args = parser.parse_args()
 
-    run(data_dir=args.data_dir, artifact_path=args.output)
+    run(
+        data_dir=args.data_dir,
+        artifact_path=args.output,
+        train_seasons=args.train_seasons,
+        test_seasons=args.test_seasons,
+    )
 
 
 if __name__ == "__main__":
