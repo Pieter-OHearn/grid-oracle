@@ -64,6 +64,7 @@ def list_races(season: int, db: Session = Depends(get_db)):
             round=r.round,
             name=r.name,
             circuit=r.circuit.name,
+            city=r.circuit.city,
             country=r.circuit.country,
             date=r.date,
             is_completed=r.is_completed,

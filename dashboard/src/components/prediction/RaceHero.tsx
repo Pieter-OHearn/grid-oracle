@@ -66,7 +66,7 @@ export function RaceHero({ race, predictions }: Props) {
             </h1>
             <div className="flex items-center gap-4 mt-1.5">
               <span className="flex items-center gap-1.5 text-[#6b7280] text-xs">
-                <MapPin size={11} /> {race.circuit}
+                <MapPin size={11} /> {race.city}
               </span>
               <span className="flex items-center gap-1.5 text-[#6b7280] text-xs">
                 <Calendar size={11} /> {formatDate(race.date)}

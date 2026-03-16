@@ -8,6 +8,7 @@ class RaceListItem(BaseModel):
     round: int
     name: str
     circuit: str
+    city: str
     country: str
     date: datetime.date
     is_completed: bool

@@ -5,6 +5,7 @@ export interface ApiRaceListItem {
   round: number;
   name: string;
   circuit: string;
+  city: string;
   country: string;
   date: string;
   is_completed: boolean;
