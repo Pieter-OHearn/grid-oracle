@@ -1,5 +1,8 @@
 import { motion } from 'framer-motion';
+import { Calendar, MapPin } from 'lucide-react';
 import type { AppRace } from '../../context/RaceListContext';
+import { useRaceList } from '../../context/RaceListContext';
+import { StatusBadge } from '../common/StatusBadge';
 import { formatDate } from '../../utils/results';
 
 interface Props {
@@ -7,6 +10,8 @@ interface Props {
 }
 
 export function RaceResultsHeader({ race }: Props) {
+  const { races } = useRaceList();
+
   return (
     <motion.div
       initial={{ opacity: 0, y: -10 }}
@@ -16,34 +21,37 @@ export function RaceResultsHeader({ race }: Props) {
     >
       <div className="bg-[#0f0f1a] border border-[#1e1e30] rounded-xl p-5 flex flex-col md:flex-row gap-4 items-start md:items-center">
         <div className="flex items-center gap-4 flex-1">
-          <span className="text-4xl">{race.countryFlag}</span>
+          <div className="text-5xl">{race.countryFlag}</div>
           <div>
-            <div className="flex items-center gap-2 mb-0.5">
-              <span
-                className="px-2 py-0.5 bg-[#22c55e]/15 text-[#22c55e] border border-[#22c55e]/30 rounded text-[10px] uppercase tracking-wider"
-                style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700 }}
-              >
-                Race Concluded
-              </span>
+            <div className="flex items-center gap-2 mb-1">
+              <StatusBadge status={race.status} />
               <span
                 className="text-[#3a3a52] text-[10px]"
                 style={{ fontFamily: "'JetBrains Mono', monospace" }}
               >
-                Round {String(race.round).padStart(2, '0')} · {formatDate(race.date)}
+                Round {String(race.round).padStart(2, '0')} / {races.length || 24}
               </span>
             </div>
             <h1
               className="text-white"
               style={{
                 fontFamily: "'Barlow Condensed', sans-serif",
-                fontSize: '1.5rem',
+                fontSize: '1.6rem',
                 fontWeight: 800,
+                letterSpacing: '0.02em',
                 lineHeight: 1.1,
               }}
             >
               {race.name}
             </h1>
-            <p className="text-[#6b7280] text-xs mt-0.5">{race.circuit}</p>
+            <div className="flex items-center gap-4 mt-1.5">
+              <span className="flex items-center gap-1.5 text-[#6b7280] text-xs">
+                <MapPin size={11} /> {race.city}
+              </span>
+              <span className="flex items-center gap-1.5 text-[#6b7280] text-xs">
+                <Calendar size={11} /> {formatDate(race.date)}
+              </span>
+            </div>
           </div>
         </div>
       </div>
