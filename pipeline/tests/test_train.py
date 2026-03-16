@@ -6,11 +6,11 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from pipeline.ml.features import prepare_features
 from pipeline.ml.train import (
     attach_targets,
     insert_model_version,
     load_feature_parquets,
-    prepare_features,
     save_model,
     train_model,
 )
