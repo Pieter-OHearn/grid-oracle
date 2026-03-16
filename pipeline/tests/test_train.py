@@ -1,5 +1,6 @@
 """Unit tests for pipeline.ml.train."""
 
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import numpy as np
@@ -13,6 +14,7 @@ from pipeline.ml.train import (
     load_feature_parquets,
     save_model,
     train_model,
+    update_artifact_path,
 )
 
 # ---------------------------------------------------------------------------
@@ -183,6 +185,16 @@ def test_insert_model_version():
     mock_conn.execute.assert_called_once()
 
 
+def test_update_artifact_path():
+    mock_conn = MagicMock()
+    mock_engine = MagicMock()
+    mock_engine.begin.return_value.__enter__ = MagicMock(return_value=mock_conn)
+    mock_engine.begin.return_value.__exit__ = MagicMock(return_value=False)
+
+    update_artifact_path(mock_engine, model_version_id=7, artifact_path=Path("/some/model_v7.json"))
+    mock_conn.execute.assert_called_once()
+
+
 def test_insert_model_version_no_row():
     mock_conn = MagicMock()
     mock_conn.execute.return_value.fetchone.return_value = None
@@ -199,3 +211,72 @@ def test_insert_model_version_no_row():
             train_seasons=[2022],
             test_seasons=[2024],
         )
+
+
+# ---------------------------------------------------------------------------
+# run — artifact path auto-derivation
+# ---------------------------------------------------------------------------
+
+
+def test_run_derives_artifact_path_when_none(tmp_path):
+    """When artifact_path=None, run() saves to model_v{id}.json and records it."""
+    from pipeline.ml.train import run
+
+    train_df = _make_feature_df(n=40, season=2023)
+    test_df = _make_feature_df(n=20, season=2024)
+    combined_df = pd.concat([train_df, test_df], ignore_index=True)
+
+    mock_conn = MagicMock()
+    mock_conn.execute.return_value.fetchone.return_value = (99,)
+    mock_engine = MagicMock()
+    mock_engine.begin.return_value.__enter__ = MagicMock(return_value=mock_conn)
+    mock_engine.begin.return_value.__exit__ = MagicMock(return_value=False)
+
+    with (
+        patch("pipeline.ml.train.get_engine", return_value=mock_engine),
+        patch("pipeline.ml.train.load_feature_parquets", return_value=combined_df),
+        patch("pipeline.ml.train.attach_targets", return_value=combined_df),
+        patch("pipeline.ml.train.ARTIFACTS_DIR", tmp_path),
+    ):
+        model_version_id = run(
+            data_dir=tmp_path,
+            artifact_path=None,
+            engine=mock_engine,
+            train_seasons=[2023],
+            test_seasons=[2024],
+        )
+
+    assert model_version_id == 99
+    expected_path = tmp_path / "model_v99.json"
+    assert expected_path.exists()
+
+
+def test_run_explicit_artifact_path(tmp_path):
+    """When artifact_path is provided explicitly, run() saves to that path."""
+    from pipeline.ml.train import run
+
+    train_df = _make_feature_df(n=40, season=2023)
+    test_df = _make_feature_df(n=20, season=2024)
+    combined_df = pd.concat([train_df, test_df], ignore_index=True)
+
+    explicit_path = tmp_path / "my_model.json"
+
+    mock_conn = MagicMock()
+    mock_conn.execute.return_value.fetchone.return_value = (5,)
+    mock_engine = MagicMock()
+    mock_engine.begin.return_value.__enter__ = MagicMock(return_value=mock_conn)
+    mock_engine.begin.return_value.__exit__ = MagicMock(return_value=False)
+
+    with (
+        patch("pipeline.ml.train.load_feature_parquets", return_value=combined_df),
+        patch("pipeline.ml.train.attach_targets", return_value=combined_df),
+    ):
+        run(
+            data_dir=tmp_path,
+            artifact_path=explicit_path,
+            engine=mock_engine,
+            train_seasons=[2023],
+            test_seasons=[2024],
+        )
+
+    assert explicit_path.exists()

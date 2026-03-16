@@ -163,6 +163,16 @@ def insert_model_version(
     return model_version_id
 
 
+def update_artifact_path(engine: Engine, model_version_id: int, artifact_path: Path) -> None:
+    """Record the artifact path for a model_versions row."""
+    with engine.begin() as conn:
+        conn.execute(
+            text("UPDATE model_versions SET artifact_path = :path WHERE id = :id"),
+            {"path": str(artifact_path), "id": model_version_id},
+        )
+    logger.info("Recorded artifact_path=%s for model_version_id=%d", artifact_path, model_version_id)
+
+
 def get_available_seasons(engine: Engine) -> list[int]:
     """Return all seasons that have at least one completed race in the DB."""
     with engine.connect() as conn:
@@ -174,7 +184,7 @@ def get_available_seasons(engine: Engine) -> list[int]:
 
 def run(
     data_dir: Path = DATA_DIR,
-    artifact_path: Path = ARTIFACTS_DIR / "model_v1.json",
+    artifact_path: Path | None = None,
     engine: Engine | None = None,
     train_seasons: list[int] | None = None,
     test_seasons: list[int] | None = None,
@@ -185,6 +195,10 @@ def run(
     database via get_available_seasons(): all but the last go to training,
     the last goes to testing. Raises ValueError if seasons overlap or fewer
     than two completed seasons exist.
+
+    When artifact_path is None, the path is auto-derived as
+    ``ARTIFACTS_DIR/model_v{model_version_id}.json`` after the DB row is
+    inserted. Pass an explicit artifact_path to override this behaviour.
     """
     if engine is None:
         engine = get_engine()
@@ -211,8 +225,6 @@ def run(
         test_seasons=test_seasons,
     )
 
-    save_model(model, artifact_path)
-
     model_version_id = insert_model_version(
         engine,
         name="xgb_v1",
@@ -221,6 +233,13 @@ def run(
         train_seasons=train_seasons,
         test_seasons=test_seasons,
     )
+
+    if artifact_path is None:
+        artifact_path = ARTIFACTS_DIR / f"model_v{model_version_id}.json"
+
+    save_model(model, artifact_path)
+    update_artifact_path(engine, model_version_id, artifact_path)
+
     logger.info("Training complete — model_version_id=%d", model_version_id)
     return model_version_id
 
@@ -241,8 +260,8 @@ def main() -> None:
     parser.add_argument(
         "--output",
         type=Path,
-        default=ARTIFACTS_DIR / "model_v1.json",
-        help="Path to save the trained model",
+        default=None,
+        help="Path to save the trained model (default: auto-derived from model_version_id)",
     )
     parser.add_argument(
         "--train-seasons",

@@ -12,6 +12,7 @@ from pipeline.ml.predict import (
     load_features,
     load_model,
     normalise_positions,
+    resolve_artifact_path,
     run,
     store_predictions,
 )
@@ -50,6 +51,44 @@ def _make_features_df(n: int = 5) -> pd.DataFrame:
         fd["constructor_id"] = (i % 5) + 1
         rows.append(fd)
     return pd.DataFrame(rows)
+
+
+# ---------------------------------------------------------------------------
+# resolve_artifact_path
+# ---------------------------------------------------------------------------
+
+
+def test_resolve_artifact_path_success():
+    mock_conn = MagicMock()
+    mock_conn.execute.return_value.fetchone.return_value = ("/artifacts/model_v3.json",)
+    mock_engine = MagicMock()
+    mock_engine.connect.return_value.__enter__ = MagicMock(return_value=mock_conn)
+    mock_engine.connect.return_value.__exit__ = MagicMock(return_value=False)
+
+    result = resolve_artifact_path(mock_engine, model_version_id=3)
+    assert result == Path("/artifacts/model_v3.json")
+
+
+def test_resolve_artifact_path_no_row():
+    mock_conn = MagicMock()
+    mock_conn.execute.return_value.fetchone.return_value = None
+    mock_engine = MagicMock()
+    mock_engine.connect.return_value.__enter__ = MagicMock(return_value=mock_conn)
+    mock_engine.connect.return_value.__exit__ = MagicMock(return_value=False)
+
+    with pytest.raises(ValueError, match="No artifact_path recorded"):
+        resolve_artifact_path(mock_engine, model_version_id=99)
+
+
+def test_resolve_artifact_path_null_column():
+    mock_conn = MagicMock()
+    mock_conn.execute.return_value.fetchone.return_value = (None,)
+    mock_engine = MagicMock()
+    mock_engine.connect.return_value.__enter__ = MagicMock(return_value=mock_conn)
+    mock_engine.connect.return_value.__exit__ = MagicMock(return_value=False)
+
+    with pytest.raises(ValueError, match="No artifact_path recorded"):
+        resolve_artifact_path(mock_engine, model_version_id=5)
 
 
 # ---------------------------------------------------------------------------
@@ -263,6 +302,40 @@ def test_run_end_to_end(tmp_path):
     assert set(result.columns) == {"driver_id", "constructor_id", "predicted_position"}
     positions = sorted(result["predicted_position"].tolist())
     assert positions == [1, 2, 3, 4, 5]  # unique 1..N
+
+
+def test_run_resolves_path_from_db_when_none(tmp_path):
+    """run() loads the model from the DB-stored artifact_path when model_path is None."""
+    from xgboost import XGBRegressor
+
+    n_features = len(FEATURE_COLS)
+    X = np.random.RandomState(0).rand(40, n_features)
+    y = np.random.RandomState(0).randint(1, 21, size=40).astype(float)
+    model = XGBRegressor(n_estimators=10, random_state=42, enable_categorical=False)
+    model.fit(X, y)
+    model_path = tmp_path / "model_v7.json"
+    model.save_model(str(model_path))
+
+    features_df = _make_features_df(5)
+
+    mock_conn = MagicMock()
+    mock_conn.execute.return_value.fetchone.return_value = (str(model_path),)
+    mock_engine = MagicMock()
+    mock_engine.connect.return_value.__enter__ = MagicMock(return_value=mock_conn)
+    mock_engine.connect.return_value.__exit__ = MagicMock(return_value=False)
+    mock_engine.begin.return_value.__enter__ = MagicMock(return_value=mock_conn)
+    mock_engine.begin.return_value.__exit__ = MagicMock(return_value=False)
+
+    with patch("pipeline.ml.predict.load_features", return_value=features_df):
+        result = run(
+            race_id=1,
+            model_version_id=7,
+            model_path=None,
+            engine=mock_engine,
+        )
+
+    assert len(result) == 5
+    assert sorted(result["predicted_position"].tolist()) == [1, 2, 3, 4, 5]
 
 
 def test_run_raises_on_missing_feature_columns(tmp_path):
