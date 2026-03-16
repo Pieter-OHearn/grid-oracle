@@ -339,3 +339,24 @@ def test_get_season_accuracy_empty_season(client, seed_data):
     response = client.get("/seasons/1900/accuracy")
     assert response.status_code == 200
     assert response.json() == []
+
+
+def test_get_season_accuracy_includes_winner(client, seed_data):
+    response = client.get(f"/seasons/{seed_data['season']}/accuracy")
+    assert response.status_code == 200
+    item = response.json()[0]
+    assert item["winner_name"] == "Max Verstappen"
+    assert item["winner_constructor"] == "Red Bull Racing"
+
+
+# --- /seasons ---
+
+
+def test_list_seasons_returns_200(client, seed_data):
+    response = client.get("/seasons")
+    assert response.status_code == 200
+
+
+def test_list_seasons_returns_expected_year(client, seed_data):
+    response = client.get("/seasons")
+    assert seed_data["season"] in response.json()

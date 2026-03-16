@@ -41,6 +41,8 @@ export interface ApiAccuracyItem {
   top3_accuracy: number | null;
   exact_position_accuracy: number | null;
   mean_position_error: number | null;
+  winner_name: string | null;
+  winner_constructor: string | null;
 }
 
 async function request<T>(path: string): Promise<T> {
