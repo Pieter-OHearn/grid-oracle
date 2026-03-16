@@ -158,7 +158,7 @@ def test_load_features_warns_on_missing_qualifying(caplog):
 def test_prepare_features():
     df = _make_features_df(3)
     result = prepare_features(df)
-    assert result["circuit_type"].dtype.name == "category"
+    assert result["circuit_type"].dtype == float
     assert result["is_wet_race_forecast"].dtype in (np.int64, np.int32, int)
 
 

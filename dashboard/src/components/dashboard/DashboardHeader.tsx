@@ -9,7 +9,12 @@ interface Props {
   onSeasonChange: (season: number) => void;
 }
 
-export function DashboardHeader({ season, completedCount, availableSeasons, onSeasonChange }: Props) {
+export function DashboardHeader({
+  season,
+  completedCount,
+  availableSeasons,
+  onSeasonChange,
+}: Props) {
   return (
     <motion.div
       initial={{ opacity: 0, y: -10 }}

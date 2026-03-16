@@ -10,7 +10,8 @@ export const CONSTRUCTOR_COLORS: Record<string, string> = {
   Williams: '#64C4FF',
   'Racing Bulls': '#6692FF',
   Haas: '#B6BABD',
-  'Kick Sauber': '#52E252',
+  Audi: '#52E252',
+  Cadillac: '#CC0000',
 };
 
 export const CONSTRUCTOR_SHORT: Record<string, string> = {
@@ -23,7 +24,8 @@ export const CONSTRUCTOR_SHORT: Record<string, string> = {
   Williams: 'WIL',
   'Racing Bulls': 'RB',
   Haas: 'HAA',
-  'Kick Sauber': 'SAU',
+  Audi: 'AUD',
+  Cadillac: 'CAD',
 };
 
 export const DRIVERS: Record<string, Driver> = {
@@ -31,19 +33,19 @@ export const DRIVERS: Record<string, Driver> = {
     id: 'VER',
     name: 'Max Verstappen',
     shortName: 'VER',
-    number: 1,
+    number: 33,
     constructor: 'Red Bull',
     nationality: 'Netherlands',
     flag: '🇳🇱',
   },
-  LAW: {
-    id: 'LAW',
-    name: 'Liam Lawson',
-    shortName: 'LAW',
-    number: 30,
+  HAD: {
+    id: 'HAD',
+    name: 'Isack Hadjar',
+    shortName: 'HAD',
+    number: 6,
     constructor: 'Red Bull',
-    nationality: 'New Zealand',
-    flag: '🇳🇿',
+    nationality: 'France',
+    flag: '🇫🇷',
   },
   LEC: {
     id: 'LEC',
@@ -126,14 +128,14 @@ export const DRIVERS: Record<string, Driver> = {
     nationality: 'France',
     flag: '🇫🇷',
   },
-  DOO: {
-    id: 'DOO',
-    name: 'Jack Doohan',
-    shortName: 'DOO',
-    number: 7,
+  COL: {
+    id: 'COL',
+    name: 'Franco Colapinto',
+    shortName: 'COL',
+    number: 43,
     constructor: 'Alpine',
-    nationality: 'Australia',
-    flag: '🇦🇺',
+    nationality: 'Argentina',
+    flag: '🇦🇷',
   },
   ALB: {
     id: 'ALB',
@@ -153,23 +155,23 @@ export const DRIVERS: Record<string, Driver> = {
     nationality: 'Spain',
     flag: '🇪🇸',
   },
-  TSU: {
-    id: 'TSU',
-    name: 'Yuki Tsunoda',
-    shortName: 'TSU',
-    number: 22,
+  LAW: {
+    id: 'LAW',
+    name: 'Liam Lawson',
+    shortName: 'LAW',
+    number: 30,
     constructor: 'Racing Bulls',
-    nationality: 'Japan',
-    flag: '🇯🇵',
+    nationality: 'New Zealand',
+    flag: '🇳🇿',
   },
-  HAD: {
-    id: 'HAD',
-    name: 'Isack Hadjar',
-    shortName: 'HAD',
-    number: 6,
+  LIN: {
+    id: 'LIN',
+    name: 'Arvid Lindblad',
+    shortName: 'LIN',
+    number: 34,
     constructor: 'Racing Bulls',
-    nationality: 'France',
-    flag: '🇫🇷',
+    nationality: 'Great Britain',
+    flag: '🇬🇧',
   },
   OCO: {
     id: 'OCO',
@@ -194,7 +196,7 @@ export const DRIVERS: Record<string, Driver> = {
     name: 'Nico Hülkenberg',
     shortName: 'HUL',
     number: 27,
-    constructor: 'Kick Sauber',
+    constructor: 'Audi',
     nationality: 'Germany',
     flag: '🇩🇪',
   },
@@ -203,13 +205,38 @@ export const DRIVERS: Record<string, Driver> = {
     name: 'Gabriel Bortoleto',
     shortName: 'BOR',
     number: 5,
-    constructor: 'Kick Sauber',
+    constructor: 'Audi',
     nationality: 'Brazil',
     flag: '🇧🇷',
+  },
+  BOT: {
+    id: 'BOT',
+    name: 'Valtteri Bottas',
+    shortName: 'BOT',
+    number: 77,
+    constructor: 'Cadillac',
+    nationality: 'Finland',
+    flag: '🇫🇮',
+  },
+  PER: {
+    id: 'PER',
+    name: 'Sergio Perez',
+    shortName: 'PER',
+    number: 11,
+    constructor: 'Cadillac',
+    nationality: 'Mexico',
+    flag: '🇲🇽',
   },
 };
 
 // Reverse lookup: full driver name → driver code (for mapping API responses)
-export const DRIVER_BY_NAME: Record<string, string> = Object.fromEntries(
-  Object.entries(DRIVERS).map(([code, driver]) => [driver.name, code]),
-);
+// Includes aliases for FastF1 name variants (ASCII, full legal names, etc.)
+const DRIVER_NAME_ALIASES: Record<string, string> = {
+  'Nico Hulkenberg': 'HUL', // FastF1 strips umlaut
+  'Alexander Albon': 'ALB', // FastF1 uses legal name
+};
+
+export const DRIVER_BY_NAME: Record<string, string> = {
+  ...Object.fromEntries(Object.entries(DRIVERS).map(([code, driver]) => [driver.name, code])),
+  ...DRIVER_NAME_ALIASES,
+};

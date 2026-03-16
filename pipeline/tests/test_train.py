@@ -107,7 +107,7 @@ def test_prepare_features():
         }
     )
     result = prepare_features(df)
-    assert result["circuit_type"].dtype.name == "category"
+    assert result["circuit_type"].dtype == float
     assert result["is_wet_race_forecast"].dtype in (np.int64, np.int32, int)
     assert list(result["is_wet_race_forecast"]) == [1, 0, 1]
 
