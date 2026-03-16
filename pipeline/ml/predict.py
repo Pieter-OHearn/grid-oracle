@@ -12,10 +12,22 @@ from sqlalchemy.engine import Engine
 from xgboost import XGBRegressor
 
 from pipeline.ingest.upsert_helpers import get_engine
-from pipeline.ml.features import ARTIFACTS_DIR, prepare_features
+from pipeline.ml.features import prepare_features
 from pipeline.ml.train import FEATURE_COLS
 
 logger = logging.getLogger(__name__)
+
+
+def resolve_artifact_path(engine: Engine, model_version_id: int) -> Path:
+    """Return the artifact_path stored in model_versions for the given id."""
+    with engine.connect() as conn:
+        row = conn.execute(
+            text("SELECT artifact_path FROM model_versions WHERE id = :id"),
+            {"id": model_version_id},
+        ).fetchone()
+    if row is None or row[0] is None:
+        raise ValueError(f"No artifact_path recorded for model_version_id={model_version_id}")
+    return Path(row[0])
 
 
 def load_model(path: Path) -> XGBRegressor:
@@ -142,15 +154,22 @@ def store_predictions(
 def run(
     race_id: int,
     model_version_id: int,
-    model_path: Path = ARTIFACTS_DIR / "model_v1.json",
+    model_path: Path | None = None,
     engine: Engine | None = None,
 ) -> pd.DataFrame:
     """End-to-end prediction pipeline for a single race.
 
     Returns a DataFrame with driver_id, constructor_id, and predicted_position.
+
+    When model_path is None, the artifact path is resolved from
+    model_versions.artifact_path in the database. Pass an explicit model_path
+    to override this behaviour.
     """
     if engine is None:
         engine = get_engine()
+
+    if model_path is None:
+        model_path = resolve_artifact_path(engine, model_version_id)
 
     model = load_model(model_path)
     features_df = load_features(engine, race_id)
@@ -195,8 +214,8 @@ def main() -> None:
     parser.add_argument(
         "--model-path",
         type=Path,
-        default=ARTIFACTS_DIR / "model_v1.json",
-        help="Path to the trained model artifact",
+        default=None,
+        help="Path to the trained model artifact (default: resolved from DB via model_version_id)",
     )
     args = parser.parse_args()
 
