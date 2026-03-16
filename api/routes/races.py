@@ -3,7 +3,12 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session, contains_eager, joinedload
 
 from api.database import get_db
-from api.models.orm import EvaluationMetrics, Prediction, Race, RaceResult
+from api.models.orm import (
+    EvaluationMetrics,
+    Prediction,
+    Race,
+    RaceResult,
+)
 from api.schemas.races import (
     AccuracyItem,
     ComparisonItem,
@@ -13,6 +18,12 @@ from api.schemas.races import (
 )
 
 router = APIRouter()
+
+
+@router.get("/seasons", response_model=list[int])
+def list_seasons(db: Session = Depends(get_db)):
+    rows = db.query(Race.season).distinct().order_by(Race.season.desc()).all()
+    return [r.season for r in rows]
 
 
 def _get_race_or_404(race_id: int, db: Session) -> Race:
@@ -163,6 +174,16 @@ def get_season_accuracy(season: int, db: Session = Depends(get_db)):
         .order_by(Race.round)
         .all()
     )
+
+    race_ids = [m.race_id for m in metrics]
+    winners = (
+        db.query(RaceResult)
+        .options(joinedload(RaceResult.driver), joinedload(RaceResult.constructor))
+        .filter(RaceResult.race_id.in_(race_ids), RaceResult.finish_position == 1)
+        .all()
+    )
+    winner_by_race: dict[int, RaceResult] = {w.race_id: w for w in winners}
+
     return [
         AccuracyItem(
             race_id=m.race_id,
@@ -179,6 +200,16 @@ def get_season_accuracy(season: int, db: Session = Depends(get_db)):
             mean_position_error=(
                 float(m.mean_position_error)
                 if m.mean_position_error is not None
+                else None
+            ),
+            winner_name=(
+                winner_by_race[m.race_id].driver.full_name
+                if m.race_id in winner_by_race
+                else None
+            ),
+            winner_constructor=(
+                winner_by_race[m.race_id].constructor.name
+                if m.race_id in winner_by_race
                 else None
             ),
         )
