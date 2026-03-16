@@ -91,22 +91,27 @@ export function DashboardPage() {
   const rows = buildBreakdownRows(accuracyData);
   const winnerCounts = buildWinnerCounts(accuracyData);
 
-  const avgTop3 = accuracyData.length
+  const evaluatedTop3 = accuracyData.filter((r) => r.top3_accuracy != null);
+  const avgTop3 = evaluatedTop3.length
     ? Math.round(
-        (accuracyData.reduce((s, r) => s + (r.top3_accuracy ?? 0), 0) / accuracyData.length) * 100,
+        (evaluatedTop3.reduce((s, r) => s + r.top3_accuracy!, 0) / evaluatedTop3.length) * 100,
       )
     : 0;
-  const avgExact = accuracyData.length
+
+  const evaluatedExact = accuracyData.filter((r) => r.exact_position_accuracy != null);
+  const avgExact = evaluatedExact.length
     ? Math.round(
-        (accuracyData.reduce((s, r) => s + (r.exact_position_accuracy ?? 0), 0) /
-          accuracyData.length) *
+        (evaluatedExact.reduce((s, r) => s + r.exact_position_accuracy!, 0) /
+          evaluatedExact.length) *
           100,
       )
     : 0;
-  const avgMPE = accuracyData.length
-    ? (
-        accuracyData.reduce((s, r) => s + (r.mean_position_error ?? 0), 0) / accuracyData.length
-      ).toFixed(2)
+
+  const evaluatedMPE = accuracyData.filter((r) => r.mean_position_error != null);
+  const avgMPE = evaluatedMPE.length
+    ? (evaluatedMPE.reduce((s, r) => s + r.mean_position_error!, 0) / evaluatedMPE.length).toFixed(
+        2,
+      )
     : '—';
 
   const bestItem = accuracyData.length
