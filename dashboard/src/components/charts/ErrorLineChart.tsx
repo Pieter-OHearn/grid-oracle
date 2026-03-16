@@ -9,6 +9,7 @@ import {
   ReferenceLine,
 } from 'recharts';
 import type { SeasonChartPoint } from '../../types';
+import { MPE_GOOD_THRESHOLD, MPE_POOR_THRESHOLD } from '../../utils/thresholds';
 
 interface Props {
   chartData: SeasonChartPoint[];
@@ -31,7 +32,7 @@ export function ErrorLineChart({ chartData }: Props) {
           tickLine={false}
         />
         <YAxis
-          domain={[0, 5]}
+          domain={[0, (dataMax: number) => Math.ceil(dataMax * 1.1)]}
           tick={{ fill: '#4a4a62', fontSize: 9, fontFamily: "'JetBrains Mono', monospace" }}
           axisLine={false}
           tickLine={false}
@@ -58,7 +59,7 @@ export function ErrorLineChart({ chartData }: Props) {
           }}
         />
         <ReferenceLine
-          y={2.0}
+          y={MPE_GOOD_THRESHOLD}
           stroke="#22c55e"
           strokeDasharray="4 2"
           strokeOpacity={0.5}
@@ -70,7 +71,7 @@ export function ErrorLineChart({ chartData }: Props) {
           }}
         />
         <ReferenceLine
-          y={3.5}
+          y={MPE_POOR_THRESHOLD}
           stroke="#ef4444"
           strokeDasharray="4 2"
           strokeOpacity={0.5}
