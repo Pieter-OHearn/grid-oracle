@@ -75,11 +75,6 @@ def attach_targets(features_df: pd.DataFrame, engine: Engine) -> pd.DataFrame:
     return merged
 
 
-# prepare_features is imported from pipeline.ml.features above and re-exported
-# here so that existing callers (e.g. test_train.py) can still import it from
-# this module without change.
-
-
 def train_model(
     df: pd.DataFrame,
     train_seasons: list[int],
@@ -184,14 +179,28 @@ def run(
     train_seasons: list[int] | None = None,
     test_seasons: list[int] | None = None,
 ) -> int:
-    """End-to-end training pipeline."""
+    """End-to-end training pipeline.
+
+    When train_seasons or test_seasons is None, seasons are derived from the
+    database via get_available_seasons(): all but the last go to training,
+    the last goes to testing. Raises ValueError if seasons overlap or fewer
+    than two completed seasons exist.
+    """
     if engine is None:
         engine = get_engine()
 
-    if train_seasons is None:
-        train_seasons = [2022, 2023]
-    if test_seasons is None:
-        test_seasons = [2024]
+    if train_seasons is None or test_seasons is None:
+        available = get_available_seasons(engine)
+        if len(available) < 2:
+            raise ValueError(f"Need at least 2 completed seasons; found {available}")
+        if train_seasons is None:
+            train_seasons = available[:-1]
+        if test_seasons is None:
+            test_seasons = [available[-1]]
+
+    overlap = set(train_seasons) & set(test_seasons)
+    if overlap:
+        raise ValueError(f"Seasons appear in both train and test splits: {sorted(overlap)}")
 
     features_df = load_feature_parquets(data_dir)
     df = attach_targets(features_df, engine)
