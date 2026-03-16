@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { BarChart2 } from 'lucide-react';
 import { Logo } from './Logo';
 import { SidebarRaceItem } from './SidebarRaceItem';
-import { RACES } from '../../data';
+import { useRaceList } from '../../context/RaceListContext';
 
 interface Props {
   open: boolean;
@@ -13,12 +13,11 @@ export function Sidebar({ open }: Props) {
   const navigate = useNavigate();
   const { raceId } = useParams();
   const location = useLocation();
+  const { races, currentSeason } = useRaceList();
 
-  const handleRaceSelect = (id: string) => {
-    const race = RACES.find((r) => r.id === id);
-    if (!race) return;
+  const handleRaceSelect = (id: number, isCompleted: boolean) => {
     const isResultsPage = location.pathname.includes('/results');
-    if (isResultsPage && race.status === 'completed') {
+    if (isResultsPage && isCompleted) {
       navigate(`/race/${id}/results`);
     } else {
       navigate(`/race/${id}`);
@@ -64,15 +63,15 @@ export function Sidebar({ open }: Props) {
                 className="text-[10px] uppercase tracking-widest text-[#3a3a52]"
                 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600 }}
               >
-                2025 Calendar
+                {currentSeason > 0 ? `${currentSeason} Calendar` : 'Calendar'}
               </span>
             </div>
-            {RACES.map((race) => (
+            {races.map((race) => (
               <SidebarRaceItem
                 key={race.id}
                 race={race}
-                isSelected={race.id === raceId}
-                onClick={() => handleRaceSelect(race.id)}
+                isSelected={race.id === Number(raceId)}
+                onClick={() => handleRaceSelect(race.id, race.is_completed)}
               />
             ))}
           </div>
@@ -82,7 +81,7 @@ export function Sidebar({ open }: Props) {
               className="text-[10px] text-[#2e2e45]"
               style={{ fontFamily: "'JetBrains Mono', monospace" }}
             >
-              MODEL v2.4.1 · 2025 SEASON
+              MODEL v2.4.1 · {currentSeason > 0 ? `${currentSeason} SEASON` : 'SEASON'}
             </p>
           </div>
         </motion.aside>

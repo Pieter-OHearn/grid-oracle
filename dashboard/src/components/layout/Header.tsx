@@ -1,21 +1,35 @@
 import { ChevronLeft, ChevronRight, Menu, X } from 'lucide-react';
-import { useParams, useLocation } from 'react-router';
+import { useParams, useLocation, useNavigate } from 'react-router';
 import { HeaderBreadcrumb } from './HeaderBreadcrumb';
 import { HeaderTabs } from './HeaderTabs';
-import { RACES } from '../../data';
+import { useRaceList } from '../../context/RaceListContext';
 
 interface Props {
   sidebarOpen: boolean;
   onToggleSidebar: () => void;
-  onRaceSelect: (id: string) => void;
 }
 
-export function Header({ sidebarOpen, onToggleSidebar, onRaceSelect }: Props) {
+export function Header({ sidebarOpen, onToggleSidebar }: Props) {
   const { raceId } = useParams();
   const location = useLocation();
+  const navigate = useNavigate();
+  const { races } = useRaceList();
   const isDashboard = location.pathname === '/dashboard';
-  const selectedRace = RACES.find((r) => r.id === raceId);
-  const selectedIdx = selectedRace ? RACES.findIndex((r) => r.id === selectedRace.id) : -1;
+
+  const numericId = raceId != null ? Number(raceId) : undefined;
+  const selectedIdx = numericId != null ? races.findIndex((r) => r.id === numericId) : -1;
+  const selectedRace = selectedIdx >= 0 ? races[selectedIdx] : undefined;
+
+  const goToRace = (idx: number) => {
+    const race = races[idx];
+    if (!race) return;
+    const isResultsPage = location.pathname.includes('/results');
+    if (isResultsPage && race.is_completed) {
+      navigate(`/race/${race.id}/results`);
+    } else {
+      navigate(`/race/${race.id}`);
+    }
+  };
 
   return (
     <header className="flex-shrink-0 h-14 bg-[#0a0a14] border-b border-[#1e1e30] flex items-center px-4 gap-4">
@@ -35,17 +49,15 @@ export function Header({ sidebarOpen, onToggleSidebar, onRaceSelect }: Props) {
       {!isDashboard && selectedRace && (
         <div className="flex items-center gap-1 ml-auto">
           <button
-            onClick={() => selectedIdx > 0 && onRaceSelect(RACES[selectedIdx - 1].id)}
+            onClick={() => goToRace(selectedIdx - 1)}
             disabled={selectedIdx <= 0}
             className="p-1.5 rounded hover:bg-[#1e1e30] text-[#6b7280] hover:text-white disabled:opacity-30 transition-colors"
           >
             <ChevronLeft size={16} />
           </button>
           <button
-            onClick={() =>
-              selectedIdx < RACES.length - 1 && onRaceSelect(RACES[selectedIdx + 1].id)
-            }
-            disabled={selectedIdx >= RACES.length - 1}
+            onClick={() => goToRace(selectedIdx + 1)}
+            disabled={selectedIdx >= races.length - 1}
             className="p-1.5 rounded hover:bg-[#1e1e30] text-[#6b7280] hover:text-white disabled:opacity-30 transition-colors"
           >
             <ChevronRight size={16} />

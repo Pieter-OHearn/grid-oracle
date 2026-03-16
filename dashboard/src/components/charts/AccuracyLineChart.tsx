@@ -12,16 +12,15 @@ import {
 import { TrendingUp } from 'lucide-react';
 import { ChartTooltip } from './ChartTooltip';
 import { ErrorLineChart } from './ErrorLineChart';
-import { SEASON_CHART_DATA } from '../../data';
 import type { SeasonChartPoint } from '../../types';
 
 interface Props {
-  data?: SeasonChartPoint[];
+  data: SeasonChartPoint[];
 }
 
 export function AccuracyLineChart({ data }: Props) {
   const [activeMetric, setActiveMetric] = useState<'accuracy' | 'error'>('accuracy');
-  const chartData = data ?? SEASON_CHART_DATA;
+  const chartData = data;
   const hasTop10 = chartData.some((d) => d.top10 > 0);
 
   return (

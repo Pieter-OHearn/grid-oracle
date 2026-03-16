@@ -1,8 +1,8 @@
 import { CheckCircle, Clock } from 'lucide-react';
-import type { Race } from '../../types';
+import type { AppRace } from '../../context/RaceListContext';
 
 interface Props {
-  race: Race;
+  race: AppRace;
   isSelected: boolean;
   onClick: () => void;
 }

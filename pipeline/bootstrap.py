@@ -1,12 +1,14 @@
 """One-shot bootstrap — ingest all historical data, train, predict, and evaluate.
 
-Run this after starting the database to fully populate it for the 2025 season:
+Run this after starting the database to fully populate it for the 2026 season:
 
     docker-compose run --rm pipeline python -m pipeline.bootstrap
 
 Steps:
-  1. Sync the 2025 race calendar from FastF1 into the races table
-  2. For each past round: ingest qualifying results and race results
+  0. Enable FastF1 cache and sync the 2026 calendar first (avoids rate-limit
+     failures after heavy historical fetching)
+  1. Backfill historical seasons (2022, 2023, 2024) needed to train the model
+  2. For each 2026 past round: ingest qualifying results and race results
   3. Build feature rows and export Parquet files for all completed races
   4. Train the XGBoost model on the exported Parquet files
   5. Generate predictions for every race (completed + next upcoming)
@@ -15,7 +17,10 @@ Steps:
 
 import logging
 import sys
+from datetime import date
 from pathlib import Path
+
+import fastf1
 
 from pipeline.features.builder import build_features_for_race, export_parquet
 from pipeline.ingest.calendar_sync import sync_season_calendar
@@ -32,6 +37,7 @@ for noisy in ("fastf1", "req", "core", "logger", "_api"):
 logger = logging.getLogger(__name__)
 
 SEASON = 2026
+HISTORICAL_SEASONS = [2022, 2023, 2024]
 ARTIFACTS_DIR = Path(__file__).resolve().parent / "ml" / "artifacts"
 MODEL_PATH = ARTIFACTS_DIR / "model_v1.json"
 DATA_DIR = Path(__file__).resolve().parent / "data"
@@ -40,8 +46,16 @@ DATA_DIR = Path(__file__).resolve().parent / "data"
 def main() -> None:
     engine = get_engine()
 
+    # Enable FastF1 cache so session data is persisted across container runs
+    # and we avoid hammering the F1 API for data we already have.
+    cache_dir = DATA_DIR / "fastf1_cache"
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    fastf1.Cache.enable_cache(str(cache_dir))
+    logger.info("FastF1 cache enabled at %s", cache_dir)
+
     # ------------------------------------------------------------------
-    # Step 1 — Sync calendar
+    # Step 1 — Sync 2026 calendar FIRST (before heavy historical fetching
+    # to avoid hitting the API rate limit before we have the 2026 data)
     # ------------------------------------------------------------------
     logger.info("=== Step 1: Syncing %d calendar ===", SEASON)
     events = sync_season_calendar(SEASON, engine)
@@ -50,8 +64,9 @@ def main() -> None:
         sys.exit(1)
     logger.info("Calendar synced — %d events", len(events))
 
-    completed_events = [e for e in events if e.get("is_completed", False)]
-    upcoming_events = [e for e in events if not e.get("is_completed", False)]
+    today = date.today()
+    completed_events = [e for e in events if e["event_date"] < today]
+    upcoming_events = [e for e in events if e["event_date"] >= today]
     next_event = upcoming_events[0] if upcoming_events else None
 
     logger.info(
@@ -60,6 +75,35 @@ def main() -> None:
         len(upcoming_events),
         next_event["name"] if next_event else "none",
     )
+
+    # ------------------------------------------------------------------
+    # Step 0 — Backfill historical seasons for model training
+    # ------------------------------------------------------------------
+    logger.info("=== Step 0: Backfilling historical seasons %s ===", HISTORICAL_SEASONS)
+    for hist_season in HISTORICAL_SEASONS:
+        logger.info("  Syncing %d calendar…", hist_season)
+        hist_events = sync_season_calendar(hist_season, engine)
+        today = date.today()
+        hist_completed = [e for e in hist_events if e["event_date"] < today]
+        logger.info("  %d: %d completed races to ingest", hist_season, len(hist_completed))
+        for event in hist_completed:
+            round_num = event["round"]
+            race_id = event["race_id"]
+            logger.info("    %d R%02d — %s", hist_season, round_num, event["name"])
+            try:
+                ingest_qualifying(hist_season, round_num, engine)
+            except Exception as exc:
+                logger.warning("      Qualifying ingest failed: %s", exc)
+            try:
+                ingest_results(hist_season, round_num, engine)
+            except Exception as exc:
+                logger.warning("      Results ingest failed: %s", exc)
+            try:
+                df = build_features_for_race(race_id, engine)
+                if not df.empty:
+                    export_parquet(df, race_id)
+            except Exception as exc:
+                logger.warning("      Feature build failed: %s", exc)
 
     # ------------------------------------------------------------------
     # Step 2 — Ingest qualifying + results for completed races

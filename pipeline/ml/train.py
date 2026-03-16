@@ -112,7 +112,6 @@ def train_model(
         max_depth=6,
         learning_rate=0.1,
         random_state=42,
-        enable_categorical=True,
     )
     model.fit(X_train, y_train)
 
@@ -173,7 +172,7 @@ def run(
     data_dir: Path = DATA_DIR,
     artifact_path: Path = ARTIFACTS_DIR / "model_v1.json",
     engine: Engine | None = None,
-) -> None:
+) -> int:
     """End-to-end training pipeline."""
     if engine is None:
         engine = get_engine()
@@ -201,6 +200,7 @@ def run(
         test_seasons=test_seasons,
     )
     logger.info("Training complete — model_version_id=%d", model_version_id)
+    return model_version_id
 
 
 def main() -> None:

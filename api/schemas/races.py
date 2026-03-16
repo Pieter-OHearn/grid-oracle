@@ -5,8 +5,10 @@ from pydantic import BaseModel
 
 class RaceListItem(BaseModel):
     id: int
+    round: int
     name: str
     circuit: str
+    country: str
     date: datetime.date
     is_completed: bool
 

@@ -1,9 +1,9 @@
 import { motion } from 'framer-motion';
-import type { Race } from '../../types';
+import type { AppRace } from '../../context/RaceListContext';
 import { formatDate } from '../../utils/results';
 
 interface Props {
-  race: Race;
+  race: AppRace;
 }
 
 export function RaceResultsHeader({ race }: Props) {
