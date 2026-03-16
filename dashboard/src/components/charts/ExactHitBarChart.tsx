@@ -10,6 +10,7 @@ import {
 } from 'recharts';
 import { Zap } from 'lucide-react';
 import type { SeasonChartPoint } from '../../types';
+import { EXACT_HIT_STRONG, EXACT_HIT_ACCEPTABLE } from '../../utils/thresholds';
 
 interface Props {
   data: SeasonChartPoint[];
@@ -18,7 +19,12 @@ interface Props {
 export function ExactHitBarChart({ data }: Props) {
   const chartData = data.map((d) => ({
     ...d,
-    fill: d.exactHit >= 25 ? '#22c55e' : d.exactHit >= 15 ? '#eab308' : '#ef4444',
+    fill:
+      d.exactHit >= EXACT_HIT_STRONG
+        ? '#22c55e'
+        : d.exactHit >= EXACT_HIT_ACCEPTABLE
+          ? '#eab308'
+          : '#ef4444',
   }));
 
   return (
@@ -62,7 +68,7 @@ export function ExactHitBarChart({ data }: Props) {
               tickLine={false}
             />
             <YAxis
-              domain={[0, 40]}
+              domain={[0, (dataMax: number) => Math.ceil(dataMax * 1.1)]}
               tick={{ fill: '#4a4a62', fontSize: 9, fontFamily: "'JetBrains Mono', monospace" }}
               axisLine={false}
               tickLine={false}
