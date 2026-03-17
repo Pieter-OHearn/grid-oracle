@@ -6,6 +6,15 @@ import pandas as pd
 
 ARTIFACTS_DIR = Path(__file__).resolve().parent / "artifacts"
 
+# Fixed mapping for circuit_type encoding. The integer codes must remain
+# stable across training and inference — do not change order or values once
+# models are trained. Add new circuit types here before ingesting them.
+CIRCUIT_TYPE_ENCODING: dict[str, int] = {
+    "high-speed": 0,
+    "road": 1,
+    "street": 2,
+}
+
 
 def prepare_features(df: pd.DataFrame) -> pd.DataFrame:
     """Encode categorical columns and coerce numerics for XGBoost.
@@ -13,15 +22,21 @@ def prepare_features(df: pd.DataFrame) -> pd.DataFrame:
     Used by both the training and prediction pipelines to ensure
     identical pre-processing at train and inference time.
 
-    - circuit_type: label-encoded as integer (avoids XGBoost categorical API)
+    - circuit_type: label-encoded as integer via CIRCUIT_TYPE_ENCODING
     - All numeric features cast to float so no object columns reach the model
     - is_wet_race_forecast: bool → int
     """
     df = df.copy()
 
-    # Label-encode circuit_type as an integer so XGBoost treats it as numeric.
-    # Using category().cat.codes converts unknown/street/permanent/etc. to 0,1,2…
-    df["circuit_type"] = df["circuit_type"].astype("category").cat.codes.astype(float)
+    # Label-encode circuit_type using the fixed CIRCUIT_TYPE_ENCODING dict so
+    # that the same integer is produced at both training and inference time.
+    unknown = set(df["circuit_type"].dropna().unique()) - set(CIRCUIT_TYPE_ENCODING)
+    if unknown:
+        raise ValueError(
+            f"prepare_features: unknown circuit_type value(s): {sorted(unknown)}. "
+            f"Add them to CIRCUIT_TYPE_ENCODING in features.py."
+        )
+    df["circuit_type"] = df["circuit_type"].map(CIRCUIT_TYPE_ENCODING).astype(float)
 
     df["is_wet_race_forecast"] = df["is_wet_race_forecast"].astype(int)
 

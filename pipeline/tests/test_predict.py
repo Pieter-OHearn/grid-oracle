@@ -9,6 +9,7 @@ import pytest
 
 from pipeline.ml.features import prepare_features
 from pipeline.ml.predict import (
+    compute_confidence_scores,
     load_features,
     load_model,
     normalise_positions,
@@ -241,6 +242,59 @@ def test_normalise_positions_stability():
 
 
 # ---------------------------------------------------------------------------
+# compute_confidence_scores
+# ---------------------------------------------------------------------------
+
+
+def test_compute_confidence_scores_single():
+    assert compute_confidence_scores(np.array([5.0])) == [1.0]
+
+
+def test_compute_confidence_scores_range():
+    """All scores should be in [0, 1] and the max gap driver should score 1.0."""
+    raw = np.array([1.0, 2.0, 10.0, 10.5, 11.0])
+    scores = compute_confidence_scores(raw)
+    assert len(scores) == 5
+    assert all(0.0 <= s <= 1.0 for s in scores)
+    assert max(scores) == pytest.approx(1.0)
+
+
+def test_compute_confidence_scores_winner_not_last():
+    """The predicted winner (lowest raw score) should have higher confidence
+    than bunched midfield drivers when clearly separated."""
+    # Driver 0 has a very separated predicted P1; drivers 1-4 are tightly bunched
+    raw = np.array([1.0, 5.0, 5.1, 5.2, 5.3])
+    scores = compute_confidence_scores(raw)
+    # Driver 0 (P1) has gap=4.0 to its only neighbour → normalised to 1.0
+    assert scores[0] == pytest.approx(1.0)
+    # Bunched midfield takes the min gap (0.1) → much lower confidence
+    assert scores[1] < scores[0]
+    assert scores[2] < scores[0]
+
+
+def test_compute_confidence_scores_identical():
+    """Identical raw scores should all return 1.0 (not divide-by-zero)."""
+    raw = np.array([3.0, 3.0, 3.0])
+    scores = compute_confidence_scores(raw)
+    assert scores == pytest.approx([1.0, 1.0, 1.0])
+
+
+def test_compute_confidence_scores_preserves_original_order():
+    """Scores are returned in the original driver order, not sorted order."""
+    raw = np.array([10.0, 1.0, 5.0])
+    scores = compute_confidence_scores(raw)
+    # Driver at index 1 has raw=1.0 (predicted P1) — large gap ahead
+    assert len(scores) == 3
+    # Re-check that aligning back to original order is correct by symmetry
+    # Sorted: 1.0 (idx 1), 5.0 (idx 2), 10.0 (idx 0)
+    # gaps:    4.0,          min(4,5)=4,   5.0  → max_gap=5
+    # normalised: 0.8,       0.8,          1.0
+    assert scores[0] == pytest.approx(1.0)  # raw 10.0 → last, gap=5 → 1.0
+    assert scores[1] == pytest.approx(0.8)  # raw 1.0 → P1, gap=4 → 0.8
+    assert scores[2] == pytest.approx(0.8)  # raw 5.0 → P2, gap=min(4,5)=4 → 0.8
+
+
+# ---------------------------------------------------------------------------
 # store_predictions
 # ---------------------------------------------------------------------------
 
@@ -258,9 +312,73 @@ def test_store_predictions():
     mock_engine.begin.return_value.__enter__ = MagicMock(return_value=mock_conn)
     mock_engine.begin.return_value.__exit__ = MagicMock(return_value=False)
 
-    count = store_predictions(mock_engine, race_id=1, model_version_id=1, predictions=predictions)
+    count = store_predictions(
+        mock_engine,
+        race_id=1,
+        model_version_id=1,
+        predictions=predictions,
+        confidence_scores=[0.9, 0.5, 0.3],
+    )
     assert count == 3
     mock_conn.execute.assert_called_once()
+
+
+def test_store_predictions_no_confidence():
+    """store_predictions still works when confidence_scores is omitted (stores NULL)."""
+    predictions = pd.DataFrame(
+        {
+            "driver_id": [1, 2],
+            "constructor_id": [10, 20],
+            "predicted_position": [1, 2],
+        }
+    )
+    mock_conn = MagicMock()
+    mock_engine = MagicMock()
+    mock_engine.begin.return_value.__enter__ = MagicMock(return_value=mock_conn)
+    mock_engine.begin.return_value.__exit__ = MagicMock(return_value=False)
+
+    count = store_predictions(mock_engine, race_id=1, model_version_id=1, predictions=predictions)
+    assert count == 2
+
+
+def test_store_predictions_short_confidence_raises():
+    """store_predictions raises ValueError when confidence_scores is shorter than predictions."""
+    predictions = pd.DataFrame(
+        {
+            "driver_id": [1, 2, 3],
+            "constructor_id": [10, 20, 30],
+            "predicted_position": [1, 2, 3],
+        }
+    )
+    mock_engine = MagicMock()
+    with pytest.raises(ValueError, match="confidence_scores length"):
+        store_predictions(
+            mock_engine,
+            race_id=1,
+            model_version_id=1,
+            predictions=predictions,
+            confidence_scores=[0.9, 0.5],  # one element short
+        )
+
+
+def test_store_predictions_long_confidence_raises():
+    """store_predictions raises ValueError when confidence_scores is longer than predictions."""
+    predictions = pd.DataFrame(
+        {
+            "driver_id": [1, 2],
+            "constructor_id": [10, 20],
+            "predicted_position": [1, 2],
+        }
+    )
+    mock_engine = MagicMock()
+    with pytest.raises(ValueError, match="confidence_scores length"):
+        store_predictions(
+            mock_engine,
+            race_id=1,
+            model_version_id=1,
+            predictions=predictions,
+            confidence_scores=[0.9, 0.5, 0.3],  # one element too many
+        )
 
 
 # ---------------------------------------------------------------------------
