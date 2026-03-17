@@ -1,4 +1,5 @@
 from sqlalchemy import (
+    JSON,
     Boolean,
     Column,
     Date,
@@ -8,6 +9,7 @@ from sqlalchemy import (
     Numeric,
     Text,
 )
+from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import relationship
 
 from api.database import Base
@@ -88,7 +90,14 @@ class ModelVersion(Base):
     name = Column(Text, nullable=False)
     trained_at = Column(DateTime(timezone=True), nullable=False)
     training_races_count = Column(Integer, nullable=False)
+    mae = Column(Numeric(6, 4))
+    artifact_path = Column(Text)
     notes = Column(Text)
+    train_seasons = Column(ARRAY(Integer).with_variant(JSON, "sqlite"))
+    test_season = Column(Integer)
+    triggered_by_race_id = Column(Integer, ForeignKey("races.id"))
+
+    triggered_by_race = relationship("Race", foreign_keys=[triggered_by_race_id])
 
 
 class Prediction(Base):

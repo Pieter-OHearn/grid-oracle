@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.database import Base, engine
+from api.routes.models import router as models_router
 from api.routes.races import router as races_router
 
 CORS_ORIGIN = os.environ.get("CORS_ORIGIN", "http://localhost:3000")
@@ -28,6 +29,7 @@ app.add_middleware(
 
 
 app.include_router(races_router)
+app.include_router(models_router)
 
 
 @app.get("/health")

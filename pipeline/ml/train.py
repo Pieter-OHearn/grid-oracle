@@ -6,7 +6,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import pandas as pd
-from sqlalchemy import text
+from sqlalchemy import Integer, bindparam, text
+from sqlalchemy.dialects.postgresql import ARRAY as PgArray
 from sqlalchemy.engine import Engine
 from xgboost import XGBRegressor
 
@@ -136,6 +137,7 @@ def insert_model_version(
     mae: float,
     train_seasons: list[int],
     test_seasons: list[int],
+    triggered_by_race_id: int | None = None,
 ) -> int:
     """Insert a row into model_versions and return the new id."""
     with engine.begin() as conn:
@@ -143,17 +145,22 @@ def insert_model_version(
             text(
                 """
                 INSERT INTO model_versions
-                    (name, trained_at, training_races_count, mae, notes)
-                VALUES (:name, :trained_at, :count, :mae, :notes)
+                    (name, trained_at, training_races_count, mae, notes,
+                     train_seasons, test_season, triggered_by_race_id)
+                VALUES (:name, :trained_at, :count, :mae, :notes,
+                        :train_seasons, :test_season, :triggered_by_race_id)
                 RETURNING id
                 """
-            ),
+            ).bindparams(bindparam("train_seasons", type_=PgArray(Integer))),
             {
                 "name": name,
                 "trained_at": datetime.now(timezone.utc),
                 "count": training_races_count,
                 "mae": float(mae),
                 "notes": f"MAE={mae:.4f}; train={train_seasons}, test={test_seasons}",
+                "train_seasons": train_seasons,
+                "test_season": test_seasons[0] if test_seasons else None,
+                "triggered_by_race_id": triggered_by_race_id,
             },
         ).fetchone()
     if row is None:
@@ -200,6 +207,7 @@ def run(
     engine: Engine | None = None,
     train_seasons: list[int] | None = None,
     test_seasons: list[int] | None = None,
+    triggered_by_race_id: int | None = None,
 ) -> int:
     """End-to-end training pipeline.
 
@@ -244,6 +252,7 @@ def run(
         mae=mae,
         train_seasons=train_seasons,
         test_seasons=test_seasons,
+        triggered_by_race_id=triggered_by_race_id,
     )
 
     if artifact_path is None:

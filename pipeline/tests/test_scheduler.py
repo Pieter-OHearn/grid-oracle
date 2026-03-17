@@ -533,7 +533,7 @@ def test_post_race_pipeline_happy_path(
 
     mock_build.assert_called_once_with(10, engine)
     mock_export.assert_called_once()
-    mock_train.assert_called_once_with(engine=engine)
+    mock_train.assert_called_once_with(engine=engine, triggered_by_race_id=10)
     mock_eval.assert_called_once_with(race_id=10, model_version_id=7, engine=engine)
     assert mock_predict.call_count == 2
     mock_predict.assert_any_call(race_id=11, model_version_id=42, engine=engine)

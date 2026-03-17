@@ -144,7 +144,7 @@ def _retrain_model(race_id: int, engine: Engine) -> int:
     df = build_features_for_race(race_id, engine)
     if not df.empty:
         export_parquet(df, race_id)
-    new_model_version_id = ml_train.run(engine=engine)
+    new_model_version_id = ml_train.run(engine=engine, triggered_by_race_id=race_id)
     logger.info("post_race_pipeline: retrain complete — model_version_id=%d", new_model_version_id)
     return new_model_version_id
 
