@@ -6,7 +6,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import pandas as pd
-from sqlalchemy import text
+from sqlalchemy import Integer, bindparam, text
+from sqlalchemy.dialects.postgresql import ARRAY as PgArray
 from sqlalchemy.engine import Engine
 from xgboost import XGBRegressor
 
@@ -150,7 +151,7 @@ def insert_model_version(
                         :train_seasons, :test_season, :triggered_by_race_id)
                 RETURNING id
                 """
-            ),
+            ).bindparams(bindparam("train_seasons", type_=PgArray(Integer))),
             {
                 "name": name,
                 "trained_at": datetime.now(timezone.utc),

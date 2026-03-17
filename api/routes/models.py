@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session, contains_eager
 
 from api.database import get_db
 from api.models.orm import ModelVersion, Race
@@ -12,8 +12,8 @@ router = APIRouter()
 def list_model_versions(season: int, db: Session = Depends(get_db)):
     versions = (
         db.query(ModelVersion)
-        .options(joinedload(ModelVersion.triggered_by_race))
         .join(Race, ModelVersion.triggered_by_race_id == Race.id)
+        .options(contains_eager(ModelVersion.triggered_by_race))
         .filter(Race.season == season)
         .order_by(ModelVersion.trained_at)
         .all()
@@ -23,7 +23,7 @@ def list_model_versions(season: int, db: Session = Depends(get_db)):
             id=mv.id,
             trained_at=mv.trained_at,
             mae=float(mv.mae) if mv.mae is not None else None,
-            round=mv.triggered_by_race.round if mv.triggered_by_race else None,
+            round=mv.triggered_by_race.round,
             train_seasons=mv.train_seasons,
         )
         for mv in versions
