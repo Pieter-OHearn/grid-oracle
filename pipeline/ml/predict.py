@@ -44,8 +44,8 @@ def load_features(engine: Engine, race_id: int) -> pd.DataFrame:
     """Load feature rows from the features table for a given race.
 
     Fetches features and qualifying results separately, then merges them in
-    Python so that any drivers missing from qualifying_results are detected
-    and logged rather than silently dropped.
+    Python so that any drivers missing from qualifying_results are dropped with
+    a warning log, rather than being silently dropped without any notice.
 
     Returns a DataFrame with one row per driver, containing the
     feature columns expected by the model.
@@ -97,7 +97,8 @@ def compute_confidence_scores(raw_preds: np.ndarray) -> list[float]:
     - Sort drivers by raw score (ascending = better predicted position).
     - For each driver: gap = min distance to the adjacent score above or below.
     - Normalise: confidence = gap / max_gap across all drivers.
-    - Edge drivers (P1 / last) only have one neighbour, so gap = that distance.
+    - The driver with the lowest raw score and the driver with the highest raw
+      score each have only one neighbour, so gap = that single distance.
     - If all raw scores are identical, every driver gets confidence = 1.0.
     """
     n = len(raw_preds)
@@ -157,6 +158,10 @@ def store_predictions(
     confidence_scores must be aligned with the row order of predictions when
     provided.  Pass None to store NULL for every row.
     """
+    if confidence_scores is not None and len(confidence_scores) != len(predictions):
+        raise ValueError(
+            f"confidence_scores length ({len(confidence_scores)}) must match predictions length ({len(predictions)})"
+        )
     now = datetime.now(timezone.utc)
     records = predictions.to_dict("records")
     rows = [
@@ -209,6 +214,10 @@ def run(
     """End-to-end prediction pipeline for a single race.
 
     Returns a DataFrame with driver_id, constructor_id, and predicted_position.
+
+    As a side effect, confidence scores are computed for each driver using
+    compute_confidence_scores() and persisted to the predictions table alongside
+    the position predictions via store_predictions().
 
     When model_path is None, the artifact path is resolved from
     model_versions.artifact_path in the database. Pass an explicit model_path

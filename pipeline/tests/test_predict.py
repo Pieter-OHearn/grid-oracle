@@ -341,6 +341,46 @@ def test_store_predictions_no_confidence():
     assert count == 2
 
 
+def test_store_predictions_short_confidence_raises():
+    """store_predictions raises ValueError when confidence_scores is shorter than predictions."""
+    predictions = pd.DataFrame(
+        {
+            "driver_id": [1, 2, 3],
+            "constructor_id": [10, 20, 30],
+            "predicted_position": [1, 2, 3],
+        }
+    )
+    mock_engine = MagicMock()
+    with pytest.raises(ValueError, match="confidence_scores length"):
+        store_predictions(
+            mock_engine,
+            race_id=1,
+            model_version_id=1,
+            predictions=predictions,
+            confidence_scores=[0.9, 0.5],  # one element short
+        )
+
+
+def test_store_predictions_long_confidence_raises():
+    """store_predictions raises ValueError when confidence_scores is longer than predictions."""
+    predictions = pd.DataFrame(
+        {
+            "driver_id": [1, 2],
+            "constructor_id": [10, 20],
+            "predicted_position": [1, 2],
+        }
+    )
+    mock_engine = MagicMock()
+    with pytest.raises(ValueError, match="confidence_scores length"):
+        store_predictions(
+            mock_engine,
+            race_id=1,
+            model_version_id=1,
+            predictions=predictions,
+            confidence_scores=[0.9, 0.5, 0.3],  # one element too many
+        )
+
+
 # ---------------------------------------------------------------------------
 # run (end-to-end with mocks)
 # ---------------------------------------------------------------------------
