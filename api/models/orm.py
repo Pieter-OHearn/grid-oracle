@@ -1,4 +1,5 @@
 from sqlalchemy import (
+    JSON,
     Boolean,
     Column,
     Date,
@@ -92,7 +93,7 @@ class ModelVersion(Base):
     mae = Column(Numeric(6, 4))
     artifact_path = Column(Text)
     notes = Column(Text)
-    train_seasons = Column(ARRAY(Integer))
+    train_seasons = Column(ARRAY(Integer).with_variant(JSON, "sqlite"))
     test_season = Column(Integer)
     triggered_by_race_id = Column(Integer, ForeignKey("races.id"))
 
