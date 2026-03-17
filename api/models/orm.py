@@ -115,6 +115,7 @@ class Prediction(Base):
     race = relationship("Race", back_populates="predictions")
     driver = relationship("Driver")
     constructor = relationship("Constructor")
+    model_version = relationship("ModelVersion")
 
 
 class EvaluationMetrics(Base):

@@ -4,6 +4,7 @@ import { BarChart2 } from 'lucide-react';
 import { Logo } from './Logo';
 import { SidebarRaceItem } from './SidebarRaceItem';
 import { useRaceList } from '../../context/RaceListContext';
+import { useModelVersion } from '../../context/ModelVersionContext';
 
 interface Props {
   open: boolean;
@@ -14,6 +15,7 @@ export function Sidebar({ open }: Props) {
   const { raceId } = useParams();
   const location = useLocation();
   const { races, currentSeason } = useRaceList();
+  const { modelVersion } = useModelVersion();
 
   const handleRaceSelect = (id: number, isCompleted: boolean) => {
     const isResultsPage = location.pathname.includes('/results');
@@ -81,7 +83,11 @@ export function Sidebar({ open }: Props) {
               className="text-[10px] text-[#2e2e45]"
               style={{ fontFamily: "'JetBrains Mono', monospace" }}
             >
-              MODEL v2.4.1 · {currentSeason > 0 ? `${currentSeason} SEASON` : 'SEASON'}
+              {modelVersion
+                ? `${modelVersion.name} · model #${modelVersion.id}`
+                : currentSeason > 0
+                  ? `${currentSeason} SEASON`
+                  : 'SEASON'}
             </p>
           </div>
         </motion.aside>

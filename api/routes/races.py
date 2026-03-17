@@ -80,7 +80,11 @@ def get_predictions(race_id: int, db: Session = Depends(get_db)):
 
     preds = (
         db.query(Prediction)
-        .options(joinedload(Prediction.driver), joinedload(Prediction.constructor))
+        .options(
+            joinedload(Prediction.driver),
+            joinedload(Prediction.constructor),
+            joinedload(Prediction.model_version),
+        )
         .filter(Prediction.race_id == race_id, Prediction.model_version_id == mv_id)
         .order_by(Prediction.predicted_position)
         .all()
@@ -93,6 +97,8 @@ def get_predictions(race_id: int, db: Session = Depends(get_db)):
             confidence_score=(
                 float(p.confidence_score) if p.confidence_score is not None else None
             ),
+            model_version_id=p.model_version_id,
+            model_version_name=p.model_version.name,
         )
         for p in preds
     ]
