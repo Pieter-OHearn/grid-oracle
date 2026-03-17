@@ -45,22 +45,27 @@ export function DashboardPage() {
       });
   }, []);
 
-  // Fetch accuracy + race list when season changes
+  // Fetch accuracy, race list, and model versions when season changes
   useEffect(() => {
     if (season == null) return;
     setLoading(true);
     setError(null);
-    Promise.all([
+    Promise.allSettled([
       api.getSeasonAccuracy(season),
       api.getRaceList(season),
       api.getModelVersions(season),
     ])
-      .then(([accuracy, races, versions]) => {
-        setAccuracyData(accuracy);
-        setRaceList(races);
-        setModelVersions(versions);
+      .then(([accuracyResult, racesResult, versionsResult]) => {
+        if (accuracyResult.status === 'rejected' || racesResult.status === 'rejected') {
+          setError('Failed to load season data');
+          return;
+        }
+        setAccuracyData(accuracyResult.value);
+        setRaceList(racesResult.value);
+        if (versionsResult.status === 'fulfilled') {
+          setModelVersions(versionsResult.value);
+        }
       })
-      .catch(() => setError('Failed to load season data'))
       .finally(() => setLoading(false));
   }, [season]);
 
@@ -171,17 +176,19 @@ export function DashboardPage() {
             <ExactHitBarChart data={chartData} />
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, delay: 0.2 }}
-          >
-            <LearningCurveChart data={learningCurveData} />
-          </motion.div>
-
           <PerRaceBreakdownTable rows={rows} />
           <WinsTally winnerCounts={winnerCounts} />
         </>
+      )}
+
+      {!loading && !error && (
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.2 }}
+        >
+          <LearningCurveChart data={learningCurveData} />
+        </motion.div>
       )}
     </div>
   );

@@ -70,6 +70,7 @@ export function buildWinnerCounts(items: ApiAccuracyItem[]): Record<string, numb
 export function buildLearningCurveData(versions: ApiModelVersionItem[]): LearningCurvePoint[] {
   return versions
     .filter((v) => v.round != null && v.mae != null)
+    .sort((a, b) => a.round! - b.round!)
     .map((v) => ({ round: v.round!, mae: v.mae! }));
 }
 
