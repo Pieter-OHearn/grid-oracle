@@ -51,6 +51,11 @@ export interface Row {
   delta: number | null;
 }
 
+export interface LearningCurvePoint {
+  round: number;
+  mae: number;
+}
+
 export interface SeasonChartPoint {
   race: string;
   round: number;

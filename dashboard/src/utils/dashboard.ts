@@ -1,5 +1,5 @@
-import type { ApiAccuracyItem, ApiRaceListItem } from '../services/api';
-import type { SeasonChartPoint } from '../types';
+import type { ApiAccuracyItem, ApiModelVersionItem, ApiRaceListItem } from '../services/api';
+import type { LearningCurvePoint, SeasonChartPoint } from '../types';
 import type { BreakdownRow } from '../components/dashboard/PerRaceBreakdownTable';
 import { DRIVERS, CONSTRUCTOR_COLORS, DRIVER_BY_NAME } from '../data';
 import { getCountryFlag } from './countryFlags';
@@ -65,6 +65,12 @@ export function buildWinnerCounts(items: ApiAccuracyItem[]): Record<string, numb
     counts[code] = (counts[code] ?? 0) + 1;
   }
   return counts;
+}
+
+export function buildLearningCurveData(versions: ApiModelVersionItem[]): LearningCurvePoint[] {
+  return versions
+    .filter((v) => v.round != null && v.mae != null)
+    .map((v) => ({ round: v.round!, mae: v.mae! }));
 }
 
 export function buildSummaryStats(

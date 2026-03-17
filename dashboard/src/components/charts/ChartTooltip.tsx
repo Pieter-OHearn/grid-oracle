@@ -10,9 +10,10 @@ interface Props {
   payload?: TooltipEntry[];
   label?: string;
   formatValue?: (entry: TooltipEntry) => string;
+  labelFormatter?: (label: string) => string;
 }
 
-export function ChartTooltip({ active, payload, label, formatValue }: Props) {
+export function ChartTooltip({ active, payload, label, formatValue, labelFormatter }: Props) {
   if (!active || !payload?.length) return null;
 
   const defaultFormat = (entry: TooltipEntry) =>
@@ -24,7 +25,7 @@ export function ChartTooltip({ active, payload, label, formatValue }: Props) {
         className="text-[#6b7280] text-[10px] uppercase tracking-wider mb-1.5"
         style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700 }}
       >
-        {label}
+        {labelFormatter ? labelFormatter(label ?? '') : label}
       </p>
       {payload.map((entry) => (
         <div key={entry.dataKey} className="flex items-center gap-2 mb-0.5">

@@ -39,6 +39,14 @@ export interface ApiComparisonItem {
   fastest_lap: boolean;
 }
 
+export interface ApiModelVersionItem {
+  id: number;
+  trained_at: string;
+  mae: number | null;
+  round: number | null;
+  train_seasons: number[] | null;
+}
+
 export interface ApiAccuracyItem {
   race_id: number;
   race_name: string;
@@ -65,4 +73,6 @@ export const api = {
   getResults: (raceId: number) => request<ApiResultItem[]>(`/races/${raceId}/results`),
   getComparison: (raceId: number) => request<ApiComparisonItem[]>(`/races/${raceId}/comparison`),
   getSeasonAccuracy: (season: number) => request<ApiAccuracyItem[]>(`/seasons/${season}/accuracy`),
+  getModelVersions: (season: number) =>
+    request<ApiModelVersionItem[]>(`/model-versions?season=${season}`),
 };

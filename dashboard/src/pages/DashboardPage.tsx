@@ -2,16 +2,18 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { BarChart2 as EmptyIcon } from 'lucide-react';
 import { api } from '../services/api';
-import type { ApiAccuracyItem, ApiRaceListItem } from '../services/api';
+import type { ApiAccuracyItem, ApiModelVersionItem, ApiRaceListItem } from '../services/api';
 import { StatCard } from '../components/common/StatCard';
 import { AccuracyLineChart } from '../components/charts/AccuracyLineChart';
 import { ExactHitBarChart } from '../components/charts/ExactHitBarChart';
+import { LearningCurveChart } from '../components/accuracy/LearningCurveChart';
 import { PerRaceBreakdownTable } from '../components/dashboard/PerRaceBreakdownTable';
 import { WinsTally } from '../components/dashboard/WinsTally';
 import { DashboardHeader } from '../components/dashboard/DashboardHeader';
 import {
   buildChartData,
   buildBreakdownRows,
+  buildLearningCurveData,
   buildWinnerCounts,
   buildSummaryStats,
 } from '../utils/dashboard';
@@ -21,6 +23,7 @@ export function DashboardPage() {
   const [season, setSeason] = useState<number | null>(null);
   const [accuracyData, setAccuracyData] = useState<ApiAccuracyItem[]>([]);
   const [raceList, setRaceList] = useState<ApiRaceListItem[]>([]);
+  const [modelVersions, setModelVersions] = useState<ApiModelVersionItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,16 +50,22 @@ export function DashboardPage() {
     if (season == null) return;
     setLoading(true);
     setError(null);
-    Promise.all([api.getSeasonAccuracy(season), api.getRaceList(season)])
-      .then(([accuracy, races]) => {
+    Promise.all([
+      api.getSeasonAccuracy(season),
+      api.getRaceList(season),
+      api.getModelVersions(season),
+    ])
+      .then(([accuracy, races, versions]) => {
         setAccuracyData(accuracy);
         setRaceList(races);
+        setModelVersions(versions);
       })
       .catch(() => setError('Failed to load season data'))
       .finally(() => setLoading(false));
   }, [season]);
 
   const chartData = buildChartData(accuracyData);
+  const learningCurveData = buildLearningCurveData(modelVersions);
   const rows = buildBreakdownRows(accuracyData, raceList);
   const winnerCounts = buildWinnerCounts(accuracyData);
   const summaryStats = buildSummaryStats(accuracyData, raceList.length);
@@ -160,6 +169,14 @@ export function DashboardPage() {
             transition={{ duration: 0.35, delay: 0.15 }}
           >
             <ExactHitBarChart data={chartData} />
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: 0.2 }}
+          >
+            <LearningCurveChart data={learningCurveData} />
           </motion.div>
 
           <PerRaceBreakdownTable rows={rows} />
