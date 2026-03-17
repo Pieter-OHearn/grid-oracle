@@ -56,6 +56,7 @@ export function PredictionPage() {
     load();
     return () => {
       cancelled = true;
+      setModelVersion(null);
     };
   }, [numericId, setModelVersion]);
 

@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session, contains_eager, joinedload
 from api.database import get_db
 from api.models.orm import (
     EvaluationMetrics,
+    ModelVersion,
     Prediction,
     Race,
     RaceResult,
@@ -77,14 +78,12 @@ def list_races(season: int, db: Session = Depends(get_db)):
 def get_predictions(race_id: int, db: Session = Depends(get_db)):
     _get_race_or_404(race_id, db)
     mv_id = _latest_model_version_id(race_id, db)
+    mv = db.query(ModelVersion).filter(ModelVersion.id == mv_id).first()
+    mv_name = mv.name if mv else "unknown"
 
     preds = (
         db.query(Prediction)
-        .options(
-            joinedload(Prediction.driver),
-            joinedload(Prediction.constructor),
-            joinedload(Prediction.model_version),
-        )
+        .options(joinedload(Prediction.driver), joinedload(Prediction.constructor))
         .filter(Prediction.race_id == race_id, Prediction.model_version_id == mv_id)
         .order_by(Prediction.predicted_position)
         .all()
@@ -97,8 +96,8 @@ def get_predictions(race_id: int, db: Session = Depends(get_db)):
             confidence_score=(
                 float(p.confidence_score) if p.confidence_score is not None else None
             ),
-            model_version_id=p.model_version_id,
-            model_version_name=p.model_version.name,
+            model_version_id=mv_id,
+            model_version_name=mv_name,
         )
         for p in preds
     ]
