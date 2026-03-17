@@ -4,6 +4,7 @@ import { AlertCircle } from 'lucide-react';
 import { DRIVER_BY_NAME } from '../data';
 import { api } from '../services/api';
 import { useRaceList } from '../context/RaceListContext';
+import { useModelVersion } from '../context/ModelVersionContext';
 import { RaceHero } from '../components/prediction/RaceHero';
 import { PodiumPreview } from '../components/prediction/PodiumPreview';
 import { FullGridTable } from '../components/prediction/FullGridTable';
@@ -14,6 +15,7 @@ export function PredictionPage() {
   const { races } = useRaceList();
   const numericId = raceId != null ? Number(raceId) : undefined;
   const race = numericId != null ? races.find((r) => r.id === numericId) : undefined;
+  const { setModelVersion } = useModelVersion();
   const [predictions, setPredictions] = useState<PredictionEntry[] | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -37,6 +39,12 @@ export function PredictionPage() {
               confidence: Math.round((p.confidence_score ?? 0) * 100),
             })),
           );
+          if (apiPreds.length > 0) {
+            setModelVersion({
+              id: apiPreds[0].model_version_id,
+              name: apiPreds[0].model_version_name,
+            });
+          }
         }
       } catch {
         if (!cancelled) setPredictions(null);
@@ -48,8 +56,9 @@ export function PredictionPage() {
     load();
     return () => {
       cancelled = true;
+      setModelVersion(null);
     };
-  }, [numericId]);
+  }, [numericId, setModelVersion]);
 
   if (numericId == null || (!loading && !race)) {
     return (

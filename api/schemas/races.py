@@ -19,6 +19,8 @@ class PredictionItem(BaseModel):
     constructor: str
     predicted_position: int
     confidence_score: float | None = None
+    model_version_id: int
+    model_version_name: str
 
 
 class ResultItem(BaseModel):

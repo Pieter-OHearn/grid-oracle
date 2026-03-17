@@ -16,6 +16,8 @@ export interface ApiPredictionItem {
   constructor: string;
   predicted_position: number;
   confidence_score: number | null;
+  model_version_id: number;
+  model_version_name: string;
 }
 
 export interface ApiResultItem {
