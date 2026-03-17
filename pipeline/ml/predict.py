@@ -86,6 +86,50 @@ def load_features(engine: Engine, race_id: int) -> pd.DataFrame:
     return result
 
 
+def compute_confidence_scores(raw_preds: np.ndarray) -> list[float]:
+    """Compute a normalised confidence score [0, 1] for each driver's prediction.
+
+    Confidence reflects how clearly separated a driver's raw score is from its
+    nearest neighbour in the sorted ranking.  A large gap to the next-closest
+    driver means the model is more certain about that position.
+
+    Algorithm:
+    - Sort drivers by raw score (ascending = better predicted position).
+    - For each driver: gap = min distance to the adjacent score above or below.
+    - Normalise: confidence = gap / max_gap across all drivers.
+    - Edge drivers (P1 / last) only have one neighbour, so gap = that distance.
+    - If all raw scores are identical, every driver gets confidence = 1.0.
+    """
+    n = len(raw_preds)
+    if n == 1:
+        return [1.0]
+
+    sorted_indices = np.argsort(raw_preds, kind="stable")
+    sorted_scores = raw_preds[sorted_indices]
+
+    gaps = np.empty(n)
+    for i in range(n):
+        if i == 0:
+            gaps[i] = abs(sorted_scores[1] - sorted_scores[0])
+        elif i == n - 1:
+            gaps[i] = abs(sorted_scores[n - 1] - sorted_scores[n - 2])
+        else:
+            gaps[i] = min(
+                abs(sorted_scores[i] - sorted_scores[i - 1]),
+                abs(sorted_scores[i + 1] - sorted_scores[i]),
+            )
+
+    max_gap = float(gaps.max())
+    normalised = gaps / max_gap if max_gap > 0 else np.ones(n)
+
+    # Map back to original (unsorted) driver order
+    result = np.empty(n)
+    for rank_idx, orig_idx in enumerate(sorted_indices):
+        result[orig_idx] = normalised[rank_idx]
+
+    return [float(c) for c in result]
+
+
 def normalise_positions(raw_predictions: np.ndarray) -> list[int]:
     """Convert raw model outputs to unique integer positions 1..N.
 
@@ -103,13 +147,18 @@ def store_predictions(
     race_id: int,
     model_version_id: int,
     predictions: pd.DataFrame,
+    confidence_scores: list[float] | None = None,
 ) -> int:
     """Insert prediction rows into the predictions table.
 
     Uses ON CONFLICT to allow re-running without creating duplicates.
     Returns the number of rows upserted.
+
+    confidence_scores must be aligned with the row order of predictions when
+    provided.  Pass None to store NULL for every row.
     """
     now = datetime.now(timezone.utc)
+    records = predictions.to_dict("records")
     rows = [
         {
             "race_id": race_id,
@@ -117,10 +166,10 @@ def store_predictions(
             "driver_id": int(rec["driver_id"]),
             "constructor_id": int(rec["constructor_id"]),
             "predicted_position": int(rec["predicted_position"]),
-            "confidence_score": None,
+            "confidence_score": confidence_scores[i] if confidence_scores is not None else None,
             "created_at": now,
         }
-        for rec in predictions.to_dict("records")
+        for i, rec in enumerate(records)
     ]
 
     with engine.begin() as conn:
@@ -181,12 +230,13 @@ def run(
 
     raw_preds = model.predict(prepared[FEATURE_COLS])
     positions = normalise_positions(raw_preds)
+    confidence_scores = compute_confidence_scores(raw_preds)
 
     features_df = features_df.reset_index(drop=True)
     features_df["predicted_position"] = positions
 
     result = features_df[["driver_id", "constructor_id", "predicted_position"]]
-    store_predictions(engine, race_id, model_version_id, result)
+    store_predictions(engine, race_id, model_version_id, result, confidence_scores)
 
     logger.info("Predictions complete for race_id=%d", race_id)
     return result
