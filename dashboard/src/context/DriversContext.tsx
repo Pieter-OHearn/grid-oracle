@@ -17,15 +17,17 @@ function toDriver(item: ApiDriverItem): Driver {
   };
 }
 
+type RoundKey = number | null;
+
 interface DriversContextValue {
-  getDriver: (code: string, season?: number) => Driver | undefined;
-  ensureSeason: (season: number) => void;
-  isLoading: (season: number) => boolean;
+  getDriver: (code: string, season?: number, round?: number) => Driver | undefined;
+  ensureDrivers: (season: number, round?: number) => void;
+  isLoading: (season: number, round?: number) => boolean;
 }
 
 const DriversContext = createContext<DriversContextValue>({
   getDriver: () => undefined,
-  ensureSeason: () => {},
+  ensureDrivers: () => {},
   isLoading: () => false,
 });
 
@@ -34,23 +36,32 @@ export function useDrivers() {
   return useContext(DriversContext);
 }
 
+function makeKey(season: number, round?: number): string {
+  return `${season}:${round ?? 'latest'}`;
+}
+
+function roundKey(round?: number): RoundKey {
+  return round ?? null;
+}
+
 export function DriversProvider({ children }: { children: React.ReactNode }) {
   const { currentSeason } = useRaceList();
-  const [driversBySeason, setDriversBySeason] = useState<Map<number, Map<string, Driver>>>(
-    new Map(),
-  );
-  const [loadingSeasons, setLoadingSeasons] = useState<Set<number>>(new Set());
+  const [driversBySeason, setDriversBySeason] = useState<
+    Map<number, Map<RoundKey, Map<string, Driver>>>
+  >(new Map());
+  const [loadingKeys, setLoadingKeys] = useState<Set<string>>(new Set());
 
-  const fetchSeason = useCallback((season: number) => {
-    setLoadingSeasons((prev) => {
-      if (prev.has(season)) return prev;
+  const fetchDrivers = useCallback((season: number, round?: number) => {
+    const key = makeKey(season, round);
+    setLoadingKeys((prev) => {
+      if (prev.has(key)) return prev;
       const next = new Set(prev);
-      next.add(season);
+      next.add(key);
       return next;
     });
 
     api
-      .getDrivers(season)
+      .getDrivers(season, round)
       .then((items) => {
         const map = new Map<string, Driver>();
         for (const item of items) {
@@ -58,48 +69,61 @@ export function DriversProvider({ children }: { children: React.ReactNode }) {
         }
         setDriversBySeason((prev) => {
           const next = new Map(prev);
-          next.set(season, map);
+          const seasonMap = new Map(next.get(season) ?? new Map());
+          seasonMap.set(roundKey(round), map);
+          next.set(season, seasonMap);
           return next;
         });
       })
-      .catch(() => {
-        // Ignore for now; components can retry ensureSeason
+      .catch((err) => {
+        console.error('Failed to load drivers', season, round, err);
       })
       .finally(() => {
-        setLoadingSeasons((prev) => {
+        setLoadingKeys((prev) => {
           const next = new Set(prev);
-          next.delete(season);
+          next.delete(key);
           return next;
         });
       });
   }, []);
 
-  const ensureSeason = useCallback(
-    (season: number) => {
+  const ensureDrivers = useCallback(
+    (season: number, round?: number) => {
       if (!season) return;
-      if (driversBySeason.has(season) || loadingSeasons.has(season)) return;
-      fetchSeason(season);
+      const key = makeKey(season, round);
+      const seasonMap = driversBySeason.get(season);
+      if (seasonMap?.has(roundKey(round)) || loadingKeys.has(key)) return;
+      fetchDrivers(season, round);
     },
-    [driversBySeason, fetchSeason, loadingSeasons],
+    [driversBySeason, fetchDrivers, loadingKeys],
   );
 
   useEffect(() => {
-    ensureSeason(currentSeason);
-  }, [currentSeason, ensureSeason]);
+    ensureDrivers(currentSeason);
+  }, [currentSeason, ensureDrivers]);
 
   const getDriver = useCallback(
-    (code: string, season?: number) => {
+    (code: string, season?: number, round?: number) => {
       const targetSeason = season ?? currentSeason;
       if (!targetSeason) return undefined;
-      return driversBySeason.get(targetSeason)?.get(code);
+      const seasonMap = driversBySeason.get(targetSeason);
+      const roundMap = seasonMap?.get(roundKey(round));
+      if (roundMap?.has(code)) {
+        return roundMap.get(code);
+      }
+      const fallback = seasonMap?.get(null);
+      return fallback?.get(code);
     },
     [currentSeason, driversBySeason],
   );
 
-  const isLoading = useCallback((season: number) => loadingSeasons.has(season), [loadingSeasons]);
+  const isLoading = useCallback(
+    (season: number, round?: number) => loadingKeys.has(makeKey(season, round)),
+    [loadingKeys],
+  );
 
   return (
-    <DriversContext.Provider value={{ getDriver, ensureSeason, isLoading }}>
+    <DriversContext.Provider value={{ getDriver, ensureDrivers, isLoading }}>
       {children}
     </DriversContext.Provider>
   );

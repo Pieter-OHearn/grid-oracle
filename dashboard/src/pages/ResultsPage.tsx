@@ -3,6 +3,7 @@ import { useParams, Navigate } from 'react-router';
 import { AlertCircle, Target, Zap } from 'lucide-react';
 import { api } from '../services/api';
 import { useRaceList } from '../context/RaceListContext';
+import { useDrivers } from '../context/DriversContext';
 import { AccuracyMetricsGrid } from '../components/results/AccuracyMetricsGrid';
 import { ComparisonRows } from '../components/results/ComparisonRows';
 import { RaceResultsHeader } from '../components/results/RaceResultsHeader';
@@ -13,13 +14,20 @@ import type { Row, AccuracyMetrics } from '../types';
 
 export function ResultsPage() {
   const { raceId } = useParams();
-  const { races, racesLoaded } = useRaceList();
+  const { races, racesLoaded, currentSeason } = useRaceList();
+  const { ensureDrivers } = useDrivers();
   const numericId = raceId != null ? Number(raceId) : undefined;
   const race = numericId != null ? races.find((r) => r.id === numericId) : undefined;
 
   const [rows, setRows] = useState<Row[] | null>(null);
   const [accuracy, setAccuracy] = useState<AccuracyMetrics | null>(null);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (race) {
+      ensureDrivers(currentSeason, race.round);
+    }
+  }, [race, currentSeason, ensureDrivers]);
 
   useEffect(() => {
     if (numericId == null) {
@@ -113,7 +121,7 @@ export function ResultsPage() {
         </div>
       </div>
 
-      <ComparisonRows rows={rows} />
+      <ComparisonRows rows={rows} season={currentSeason} round={race?.round} />
 
       <ModelNote
         text="Delta = Predicted position minus Actual position · Positive = predicted too high · Negative = predicted too low · Exact match = correct call"

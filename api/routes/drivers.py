@@ -35,24 +35,8 @@ _NATIONALITY: dict[str, tuple[str, str]] = {
     "RUS": ("Russia", "🇷🇺"),
 }
 
-# Constructor name → colour hex (authoritative; overrides whatever is in the DB)
-_CONSTRUCTOR_COLORS: dict[str, str] = {
-    "Red Bull": "#3671C6",
-    "Ferrari": "#E8002D",
-    "Mercedes": "#27F4D2",
-    "McLaren": "#FF8000",
-    "Aston Martin": "#229971",
-    "Alpine": "#FF87BC",
-    "Williams": "#64C4FF",
-    "Racing Bulls": "#6692FF",
-    "Haas": "#B6BABD",
-    "Audi": "#52E252",
-    "Cadillac": "#CC0000",
-}
-
-
 @router.get("/drivers", response_model=list[DriverItem])
-def list_drivers(season: int, db: Session = Depends(get_db)) -> list[DriverItem]:
+def list_drivers(season: int, round: int | None = None, db: Session = Depends(get_db)) -> list[DriverItem]:
     rows = db.execute(
         text(
             """
@@ -61,25 +45,30 @@ def list_drivers(season: int, db: Session = Depends(get_db)) -> list[DriverItem]
             FROM drivers d
             JOIN driver_contracts dc ON dc.driver_id = d.id AND dc.season = :season
             JOIN constructors c ON c.id = dc.constructor_id
+            WHERE
+                (:round IS NULL AND dc.end_round IS NULL)
+                OR (
+                    :round IS NOT NULL
+                    AND dc.start_round <= :round
+                    AND (dc.end_round IS NULL OR dc.end_round >= :round)
+                )
             ORDER BY d.code
             """
         ),
-        {"season": season},
+        {"season": season, "round": round},
     ).fetchall()
 
     items: list[DriverItem] = []
     for row in rows:
         nat_code: str = row.nationality or ""
         nat_name, flag = _NATIONALITY.get(nat_code, (nat_code, "🏁"))
-        constructor_name: str = row.constructor_name or ""
-        color = _CONSTRUCTOR_COLORS.get(constructor_name, row.color_hex or "#6b7280")
         items.append(
             DriverItem(
                 code=row.code,
                 full_name=row.full_name,
                 number=row.number,
-                constructor=constructor_name,
-                constructor_color=color,
+                constructor=row.constructor_name,
+                constructor_color=row.color_hex or "#6b7280",
                 nationality=nat_name,
                 flag=flag,
             )

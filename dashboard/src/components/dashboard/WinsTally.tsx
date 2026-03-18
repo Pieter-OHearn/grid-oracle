@@ -10,10 +10,10 @@ interface Props {
 }
 
 export function WinsTally({ winnerCounts, season }: Props) {
-  const { getDriver, ensureSeason } = useDrivers();
+  const { getDriver, ensureDrivers } = useDrivers();
   useEffect(() => {
-    if (season) ensureSeason(season);
-  }, [ensureSeason, season]);
+    if (season) ensureDrivers(season);
+  }, [ensureDrivers, season]);
 
   const entries = Object.entries(winnerCounts).sort((a, b) => b[1] - a[1]);
 

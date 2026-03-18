@@ -83,7 +83,10 @@ async function request<T>(path: string): Promise<T> {
 export const api = {
   getSeasons: () => request<number[]>('/seasons'),
   getRaceList: (season: number) => request<ApiRaceListItem[]>(`/races/${season}`),
-  getDrivers: (season: number) => request<ApiDriverItem[]>(`/drivers?season=${season}`),
+  getDrivers: (season: number, round?: number) =>
+    request<ApiDriverItem[]>(
+      round != null ? `/drivers?season=${season}&round=${round}` : `/drivers?season=${season}`,
+    ),
   getPredictions: (raceId: number) => request<ApiPredictionItem[]>(`/races/${raceId}/predictions`),
   getResults: (raceId: number) => request<ApiResultItem[]>(`/races/${raceId}/results`),
   getComparison: (raceId: number) => request<ApiComparisonItem[]>(`/races/${raceId}/comparison`),

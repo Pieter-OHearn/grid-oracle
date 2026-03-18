@@ -55,13 +55,17 @@ def _get_entered_drivers(conn: Connection, race_id: int) -> list[dict]:
             """
             SELECT DISTINCT d.id AS driver_id, dc.constructor_id
             FROM (
-                SELECT driver_id, constructor_id FROM qualifying_results WHERE race_id = :rid
+                SELECT driver_id FROM qualifying_results WHERE race_id = :rid
                 UNION
-                SELECT driver_id, constructor_id FROM race_results WHERE race_id = :rid
+                SELECT driver_id FROM race_results WHERE race_id = :rid
             ) sub
             JOIN drivers d ON d.id = sub.driver_id
-            JOIN driver_contracts dc ON dc.driver_id = d.id
-                AND dc.season = (SELECT season FROM races WHERE id = :rid)
+            JOIN races r ON r.id = :rid
+            JOIN driver_contracts dc
+              ON dc.driver_id = d.id
+             AND dc.season = r.season
+             AND dc.start_round <= r.round
+             AND (dc.end_round IS NULL OR dc.end_round >= r.round)
             """
         ),
         {"rid": race_id},

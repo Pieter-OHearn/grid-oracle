@@ -7,16 +7,16 @@ import { ModelNote } from '../common/ModelNote';
 import { MEDAL_COLORS, getConfidenceColor, getConfidenceLabel } from '../../utils/predictions';
 import { useModelVersion } from '../../context/ModelVersionContext';
 import { useDrivers } from '../../context/DriversContext';
-import { useRaceList } from '../../context/RaceListContext';
 
 interface Props {
   predictions: PredictionEntry[];
+  season?: number;
+  round?: number;
 }
 
-export function FullGridTable({ predictions }: Props) {
+export function FullGridTable({ predictions, season, round }: Props) {
   const { modelVersion } = useModelVersion();
   const { getDriver } = useDrivers();
-  const { currentSeason } = useRaceList();
   const modelLabel = modelVersion
     ? `${modelVersion.name} · model #${modelVersion.id}`
     : 'GridOracle ML';
@@ -55,7 +55,7 @@ export function FullGridTable({ predictions }: Props) {
 
       <div className="space-y-1">
         {predictions.map((entry, idx) => {
-          const driver = getDriver(entry.driverCode, currentSeason);
+          const driver = getDriver(entry.driverCode, season, round);
           const teamName = driver?.constructor ?? entry.constructor ?? 'Unknown';
           const teamColor = driver?.constructorColor ?? CONSTRUCTOR_COLORS[teamName] ?? '#6b7280';
           const confColor = getConfidenceColor(entry.confidence);

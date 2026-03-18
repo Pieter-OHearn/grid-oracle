@@ -9,15 +9,15 @@ import {
   getConfidenceLabel,
 } from '../../utils/predictions';
 import { useDrivers } from '../../context/DriversContext';
-import { useRaceList } from '../../context/RaceListContext';
 
 interface Props {
   predictions: PredictionEntry[];
+  season?: number;
+  round?: number;
 }
 
-export function PodiumPreview({ predictions }: Props) {
+export function PodiumPreview({ predictions, season, round }: Props) {
   const { getDriver } = useDrivers();
-  const { currentSeason } = useRaceList();
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -28,7 +28,7 @@ export function PodiumPreview({ predictions }: Props) {
       {PODIUM_ORDER.map((offset, idx) => {
         const entry = predictions[offset];
         if (!entry) return null;
-        const driver = getDriver(entry.driverCode, currentSeason);
+        const driver = getDriver(entry.driverCode, season, round);
         const teamName = driver?.constructor ?? entry.constructor ?? 'Unknown';
         const teamColor = driver?.constructorColor ?? CONSTRUCTOR_COLORS[teamName] ?? '#6b7280';
         const podiumPos = offset + 1;

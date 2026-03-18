@@ -4,21 +4,21 @@ import { CONSTRUCTOR_COLORS, CONSTRUCTOR_SHORT } from '../../data';
 import { DeltaIndicator } from '../common/DeltaIndicator';
 import { getDeltaBg, getDeltaBorder } from '../../utils/results';
 import { useDrivers } from '../../context/DriversContext';
-import { useRaceList } from '../../context/RaceListContext';
 
 const MEDAL_COLORS = ['#FFD700', '#C0C0C0', '#CD7F32'];
 
 interface Props {
   rows: Row[];
+  season?: number;
+  round?: number;
 }
 
-export function ComparisonRows({ rows }: Props) {
+export function ComparisonRows({ rows, season, round }: Props) {
   const { getDriver } = useDrivers();
-  const { currentSeason } = useRaceList();
   return (
     <div className="space-y-1.5">
       {rows.map(({ result, prediction, predictedPos, delta }, idx) => {
-        const driver = getDriver(result.driverCode, currentSeason);
+        const driver = getDriver(result.driverCode, season, round);
         const teamName = driver?.constructor ?? prediction?.constructor ?? 'Unknown';
         const teamColor = driver?.constructorColor ?? CONSTRUCTOR_COLORS[teamName] ?? '#6b7280';
         const constructorShort = CONSTRUCTOR_SHORT[teamName] ?? teamName.slice(0, 3).toUpperCase();

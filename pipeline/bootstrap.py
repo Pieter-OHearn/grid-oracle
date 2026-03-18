@@ -27,6 +27,7 @@ from pipeline.ingest.calendar_sync import sync_season_calendar
 from pipeline.ingest.fetch_qualifying import ingest_event as ingest_qualifying
 from pipeline.ingest.fetch_results import ingest_event as ingest_results
 from pipeline.ingest.upsert_helpers import get_engine
+from pipeline.maintenance.driver_metadata import backfill_driver_numbers
 from pipeline.ml.predict import run as predict
 from pipeline.ml.train import run as train
 from pipeline.ml.workflow import post_race_pipeline, predict_remaining_races
@@ -53,6 +54,8 @@ def main() -> None:
     fastf1.Cache.enable_cache(str(cache_dir))
     logger.info("FastF1 cache enabled at %s", cache_dir)
 
+    backfill_driver_numbers(engine)
+
     # ------------------------------------------------------------------
     # Step 1 — Sync 2026 calendar FIRST (before heavy historical fetching
     # to avoid hitting the API rate limit before we have the 2026 data)
@@ -65,8 +68,8 @@ def main() -> None:
     logger.info("Calendar synced — %d events", len(events))
 
     today = date.today()
-    completed_events = [e for e in events if e["event_date"] < today]
-    upcoming_events = [e for e in events if e["event_date"] >= today]
+    completed_events = sorted((e for e in events if e["event_date"] < today), key=lambda e: e["round"])
+    upcoming_events = sorted((e for e in events if e["event_date"] >= today), key=lambda e: e["round"])
     next_event = upcoming_events[0] if upcoming_events else None
 
     logger.info(
@@ -84,7 +87,7 @@ def main() -> None:
         logger.info("  Syncing %d calendar…", hist_season)
         hist_events = sync_season_calendar(hist_season, engine)
         today = date.today()
-        hist_completed = [e for e in hist_events if e["event_date"] < today]
+        hist_completed = sorted((e for e in hist_events if e["event_date"] < today), key=lambda e: e["round"])
         logger.info("  %d: %d completed races to ingest", hist_season, len(hist_completed))
         for event in hist_completed:
             round_num = event["round"]

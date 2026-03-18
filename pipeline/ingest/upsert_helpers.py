@@ -156,15 +156,70 @@ def upsert_constructor(conn, name: str, nationality: str) -> int:
     return conn.execute(text("SELECT id FROM constructors WHERE name = :name"), {"name": name}).scalar_one()
 
 
-def upsert_driver_contract(conn, driver_id: int, constructor_id: int, season: int) -> None:
+def upsert_driver_contract(conn, driver_id: int, constructor_id: int, season: int, round_num: int) -> None:
+    """Ensure driver_contracts has a row covering the given round for this driver."""
+    current = conn.execute(
+        text(
+            """
+            SELECT id, constructor_id, start_round, end_round
+            FROM driver_contracts
+            WHERE driver_id = :driver_id
+              AND season = :season
+              AND start_round <= :round
+              AND (end_round IS NULL OR end_round >= :round)
+            ORDER BY start_round DESC
+            LIMIT 1
+            """
+        ),
+        {"driver_id": driver_id, "season": season, "round": round_num},
+    ).fetchone()
+
+    if current:
+        if current.constructor_id == constructor_id:
+            return
+        if current.start_round == round_num:
+            conn.execute(
+                text("UPDATE driver_contracts SET constructor_id = :constructor_id WHERE id = :id"),
+                {"constructor_id": constructor_id, "id": current.id},
+            )
+            return
+        conn.execute(
+            text("UPDATE driver_contracts SET end_round = :end_round WHERE id = :id"),
+            {"end_round": max(round_num - 1, current.start_round), "id": current.id},
+        )
+
+    next_row = conn.execute(
+        text(
+            """
+            SELECT start_round
+            FROM driver_contracts
+            WHERE driver_id = :driver_id
+              AND season = :season
+              AND start_round > :round
+            ORDER BY start_round ASC
+            LIMIT 1
+            """
+        ),
+        {"driver_id": driver_id, "season": season, "round": round_num},
+    ).fetchone()
+
+    end_round = (next_row.start_round - 1) if next_row else None
+
     conn.execute(
         text(
             """
-            INSERT INTO driver_contracts (driver_id, constructor_id, season)
-            VALUES (:driver_id, :constructor_id, :season)
-            ON CONFLICT (driver_id, season) DO UPDATE
-                SET constructor_id = EXCLUDED.constructor_id
+            INSERT INTO driver_contracts (driver_id, constructor_id, season, start_round, end_round)
+            VALUES (:driver_id, :constructor_id, :season, :start_round, :end_round)
+            ON CONFLICT (driver_id, season, start_round) DO UPDATE
+                SET constructor_id = EXCLUDED.constructor_id,
+                    end_round      = EXCLUDED.end_round
             """
         ),
-        {"driver_id": driver_id, "constructor_id": constructor_id, "season": season},
+        {
+            "driver_id": driver_id,
+            "constructor_id": constructor_id,
+            "season": season,
+            "start_round": round_num,
+            "end_round": end_round,
+        },
     )

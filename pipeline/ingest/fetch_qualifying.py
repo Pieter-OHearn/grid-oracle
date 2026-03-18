@@ -121,7 +121,7 @@ def ingest_event(season: int, round_num: int, engine: Engine) -> bool:
 
             driver_id = upsert_driver(conn, driver_code, full_name, nationality, driver_number)
             constructor_id = upsert_constructor(conn, constructor_name, constructor_nationality)
-            upsert_driver_contract(conn, driver_id, constructor_id, season)
+            upsert_driver_contract(conn, driver_id, constructor_id, season, round_num)
 
             upsert_qualifying_result(
                 conn,
