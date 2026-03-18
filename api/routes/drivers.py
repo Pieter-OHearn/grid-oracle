@@ -35,8 +35,13 @@ _NATIONALITY: dict[str, tuple[str, str]] = {
     "RUS": ("Russia", "🇷🇺"),
 }
 
+
 @router.get("/drivers", response_model=list[DriverItem])
-def list_drivers(season: int, round: int | None = None, db: Session = Depends(get_db)) -> list[DriverItem]:
+def list_drivers(
+    season: int,
+    round: int | None = None,
+    db: Session = Depends(get_db),
+) -> list[DriverItem]:
     rows = db.execute(
         text(
             """

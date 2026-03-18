@@ -22,6 +22,13 @@ post_race_pipeline = ml_workflow.post_race_pipeline
 _get_latest_model_version_id_for_race = ml_workflow._get_latest_model_version_id_for_race
 _get_remaining_race_ids = ml_workflow._get_remaining_race_ids
 
+# Back-compat aliases for unit tests that patch scheduler-level names.
+build_features_for_race = ml_workflow.build_features_for_race
+export_parquet = ml_workflow.export_parquet
+ml_train = ml_workflow.ml_train
+ml_evaluate = ml_workflow.ml_evaluate
+ml_predict = ml_workflow.ml_predict
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 for _noisy in ("fastf1", "req", "core", "logger", "_api", "apscheduler"):
     logging.getLogger(_noisy).setLevel(logging.CRITICAL)

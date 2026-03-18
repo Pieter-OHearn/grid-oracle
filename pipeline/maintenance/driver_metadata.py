@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from collections import defaultdict
 
 import fastf1
 from sqlalchemy import text
@@ -23,10 +22,7 @@ def backfill_driver_numbers(engine: Engine) -> None:
         if not missing:
             logger.info("Driver number backfill: no missing numbers detected")
             return
-        seasons = [
-            row[0]
-            for row in conn.execute(text("SELECT DISTINCT season FROM races ORDER BY season")).fetchall()
-        ]
+        seasons = [row[0] for row in conn.execute(text("SELECT DISTINCT season FROM races ORDER BY season")).fetchall()]
 
     missing_codes = {row[0] for row in missing}
     logger.info("Driver number backfill: %d drivers missing numbers", len(missing_codes))

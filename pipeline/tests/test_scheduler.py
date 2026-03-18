@@ -514,13 +514,13 @@ def test_get_remaining_race_ids_empty():
 # ---------------------------------------------------------------------------
 
 
-@patch("pipeline.scheduler.ml_predict.run")
-@patch("pipeline.scheduler.ml_evaluate.run")
-@patch("pipeline.scheduler.ml_train.run", return_value=42)
-@patch("pipeline.scheduler._get_remaining_race_ids", return_value=[11, 12])
-@patch("pipeline.scheduler._get_latest_model_version_id_for_race", return_value=7)
-@patch("pipeline.scheduler.export_parquet")
-@patch("pipeline.scheduler.build_features_for_race")
+@patch("pipeline.ml.workflow.ml_predict.run")
+@patch("pipeline.ml.workflow.ml_evaluate.run")
+@patch("pipeline.ml.workflow.ml_train.run", return_value=42)
+@patch("pipeline.ml.workflow._get_remaining_race_ids", return_value=[11, 12])
+@patch("pipeline.ml.workflow._get_latest_model_version_id_for_race", return_value=7)
+@patch("pipeline.ml.workflow.export_parquet")
+@patch("pipeline.ml.workflow.build_features_for_race")
 def test_post_race_pipeline_happy_path(
     mock_build, mock_export, mock_old_id, mock_remaining, mock_train, mock_eval, mock_predict
 ):
@@ -540,13 +540,13 @@ def test_post_race_pipeline_happy_path(
     mock_predict.assert_any_call(race_id=12, model_version_id=42, engine=engine)
 
 
-@patch("pipeline.scheduler.ml_predict.run")
-@patch("pipeline.scheduler.ml_evaluate.run")
-@patch("pipeline.scheduler.ml_train.run", side_effect=ValueError("not enough seasons"))
-@patch("pipeline.scheduler._get_remaining_race_ids", return_value=[11])
-@patch("pipeline.scheduler._get_latest_model_version_id_for_race", return_value=7)
-@patch("pipeline.scheduler.export_parquet")
-@patch("pipeline.scheduler.build_features_for_race")
+@patch("pipeline.ml.workflow.ml_predict.run")
+@patch("pipeline.ml.workflow.ml_evaluate.run")
+@patch("pipeline.ml.workflow.ml_train.run", side_effect=ValueError("not enough seasons"))
+@patch("pipeline.ml.workflow._get_remaining_race_ids", return_value=[11])
+@patch("pipeline.ml.workflow._get_latest_model_version_id_for_race", return_value=7)
+@patch("pipeline.ml.workflow.export_parquet")
+@patch("pipeline.ml.workflow.build_features_for_race")
 def test_post_race_pipeline_training_failure_does_not_raise(
     mock_build, mock_export, mock_old_id, mock_remaining, mock_train, mock_eval, mock_predict, caplog
 ):
@@ -565,13 +565,13 @@ def test_post_race_pipeline_training_failure_does_not_raise(
     assert "skipping retrain" in caplog.text
 
 
-@patch("pipeline.scheduler.ml_predict.run")
-@patch("pipeline.scheduler.ml_evaluate.run")
-@patch("pipeline.scheduler.ml_train.run", return_value=42)
-@patch("pipeline.scheduler._get_remaining_race_ids", return_value=[11, 12])
-@patch("pipeline.scheduler._get_latest_model_version_id_for_race", return_value=None)
-@patch("pipeline.scheduler.export_parquet")
-@patch("pipeline.scheduler.build_features_for_race")
+@patch("pipeline.ml.workflow.ml_predict.run")
+@patch("pipeline.ml.workflow.ml_evaluate.run")
+@patch("pipeline.ml.workflow.ml_train.run", return_value=42)
+@patch("pipeline.ml.workflow._get_remaining_race_ids", return_value=[11, 12])
+@patch("pipeline.ml.workflow._get_latest_model_version_id_for_race", return_value=None)
+@patch("pipeline.ml.workflow.export_parquet")
+@patch("pipeline.ml.workflow.build_features_for_race")
 def test_post_race_pipeline_skips_eval_when_no_prior_predictions(
     mock_build, mock_export, mock_old_id, mock_remaining, mock_train, mock_eval, mock_predict
 ):
@@ -587,13 +587,13 @@ def test_post_race_pipeline_skips_eval_when_no_prior_predictions(
     assert mock_predict.call_count == 2  # predictions still attempted for remaining races
 
 
-@patch("pipeline.scheduler.ml_predict.run", side_effect=[None, ValueError("no features")])
-@patch("pipeline.scheduler.ml_evaluate.run")
-@patch("pipeline.scheduler.ml_train.run", return_value=42)
-@patch("pipeline.scheduler._get_remaining_race_ids", return_value=[11, 12])
-@patch("pipeline.scheduler._get_latest_model_version_id_for_race", return_value=7)
-@patch("pipeline.scheduler.export_parquet")
-@patch("pipeline.scheduler.build_features_for_race")
+@patch("pipeline.ml.workflow.ml_predict.run", side_effect=[None, ValueError("no features")])
+@patch("pipeline.ml.workflow.ml_evaluate.run")
+@patch("pipeline.ml.workflow.ml_train.run", return_value=42)
+@patch("pipeline.ml.workflow._get_remaining_race_ids", return_value=[11, 12])
+@patch("pipeline.ml.workflow._get_latest_model_version_id_for_race", return_value=7)
+@patch("pipeline.ml.workflow.export_parquet")
+@patch("pipeline.ml.workflow.build_features_for_race")
 def test_post_race_pipeline_prediction_failure_continues(
     mock_build, mock_export, mock_old_id, mock_remaining, mock_train, mock_eval, mock_predict
 ):
