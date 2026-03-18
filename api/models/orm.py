@@ -53,6 +53,7 @@ class Driver(Base):
     code = Column(Text, nullable=False, unique=True)
     full_name = Column(Text, nullable=False)
     nationality = Column(Text, nullable=False)
+    number = Column(Integer)
 
 
 class Constructor(Base):

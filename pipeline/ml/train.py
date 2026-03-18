@@ -9,10 +9,10 @@ import pandas as pd
 from sqlalchemy import Integer, bindparam, text
 from sqlalchemy.dialects.postgresql import ARRAY as PgArray
 from sqlalchemy.engine import Engine
-from xgboost import XGBRegressor
 
 from pipeline.ingest.upsert_helpers import get_engine
 from pipeline.ml.features import ARTIFACTS_DIR, prepare_features
+from pipeline.ml.xgb_compat import XGBRegressor
 
 logger = logging.getLogger(__name__)
 

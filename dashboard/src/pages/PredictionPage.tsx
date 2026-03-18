@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router';
 import { AlertCircle } from 'lucide-react';
-import { DRIVER_BY_NAME } from '../data';
 import { api } from '../services/api';
 import { useRaceList } from '../context/RaceListContext';
 import { useModelVersion } from '../context/ModelVersionContext';
+import { useDrivers } from '../context/DriversContext';
 import { RaceHero } from '../components/prediction/RaceHero';
 import { PodiumPreview } from '../components/prediction/PodiumPreview';
 import { FullGridTable } from '../components/prediction/FullGridTable';
@@ -12,12 +12,19 @@ import type { PredictionEntry } from '../types';
 
 export function PredictionPage() {
   const { raceId } = useParams();
-  const { races } = useRaceList();
+  const { races, currentSeason } = useRaceList();
+  const { ensureDrivers } = useDrivers();
   const numericId = raceId != null ? Number(raceId) : undefined;
   const race = numericId != null ? races.find((r) => r.id === numericId) : undefined;
   const { setModelVersion } = useModelVersion();
   const [predictions, setPredictions] = useState<PredictionEntry[] | null>(null);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (race) {
+      ensureDrivers(currentSeason, race.round);
+    }
+  }, [race, ensureDrivers, currentSeason]);
 
   useEffect(() => {
     if (numericId == null) {
@@ -35,7 +42,8 @@ export function PredictionPage() {
           setPredictions(
             apiPreds.map((p) => ({
               position: p.predicted_position,
-              driverId: DRIVER_BY_NAME[p.driver] ?? p.driver,
+              driverCode: p.driver_code,
+              constructor: p.constructor,
               confidence: Math.round((p.confidence_score ?? 0) * 100),
             })),
           );
@@ -93,8 +101,8 @@ export function PredictionPage() {
   return (
     <div className="p-6 max-w-5xl mx-auto">
       {race && <RaceHero race={race} predictions={predictions} />}
-      <PodiumPreview predictions={predictions} />
-      <FullGridTable predictions={predictions} />
+      <PodiumPreview predictions={predictions} season={currentSeason} round={race?.round} />
+      <FullGridTable predictions={predictions} season={currentSeason} round={race?.round} />
     </div>
   );
 }

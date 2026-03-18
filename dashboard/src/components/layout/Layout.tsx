@@ -5,6 +5,7 @@ import { Header } from './Header';
 import { api } from '../../services/api';
 import { RaceListContext, deriveRaceStatus, type AppRace } from '../../context/RaceListContext';
 import { ModelVersionProvider } from '../../context/ModelVersionContext';
+import { DriversProvider } from '../../context/DriversContext';
 import { getCountryFlag } from '../../utils/countryFlags';
 
 function raceShortName(name: string): string {
@@ -48,21 +49,23 @@ export function Layout() {
 
   return (
     <RaceListContext.Provider value={{ races, currentSeason, racesLoaded }}>
-      <ModelVersionProvider>
-        <div
-          className="flex h-screen bg-[#08080e] text-white overflow-hidden"
-          style={{ fontFamily: "'Barlow', sans-serif" }}
-        >
-          <Sidebar open={sidebarOpen} />
+      <DriversProvider>
+        <ModelVersionProvider>
+          <div
+            className="flex h-screen bg-[#08080e] text-white overflow-hidden"
+            style={{ fontFamily: "'Barlow', sans-serif" }}
+          >
+            <Sidebar open={sidebarOpen} />
 
-          <div className="flex-1 flex flex-col h-full overflow-hidden">
-            <Header sidebarOpen={sidebarOpen} onToggleSidebar={() => setSidebarOpen((v) => !v)} />
-            <main className="flex-1 overflow-y-auto">
-              <Outlet />
-            </main>
+            <div className="flex-1 flex flex-col h-full overflow-hidden">
+              <Header sidebarOpen={sidebarOpen} onToggleSidebar={() => setSidebarOpen((v) => !v)} />
+              <main className="flex-1 overflow-y-auto">
+                <Outlet />
+              </main>
+            </div>
           </div>
-        </div>
-      </ModelVersionProvider>
+        </ModelVersionProvider>
+      </DriversProvider>
     </RaceListContext.Provider>
   );
 }

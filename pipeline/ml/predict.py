@@ -9,11 +9,11 @@ import numpy as np
 import pandas as pd
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
-from xgboost import XGBRegressor
 
 from pipeline.ingest.upsert_helpers import get_engine
 from pipeline.ml.features import prepare_features
 from pipeline.ml.train import FEATURE_COLS
+from pipeline.ml.xgb_compat import XGBRegressor
 
 logger = logging.getLogger(__name__)
 

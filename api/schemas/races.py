@@ -16,6 +16,7 @@ class RaceListItem(BaseModel):
 
 class PredictionItem(BaseModel):
     driver: str
+    driver_code: str
     constructor: str
     predicted_position: int
     confidence_score: float | None = None
@@ -25,6 +26,7 @@ class PredictionItem(BaseModel):
 
 class ResultItem(BaseModel):
     driver: str
+    driver_code: str
     constructor: str
     finish_position: int | None = None
     grid_position: int | None = None
@@ -33,6 +35,7 @@ class ResultItem(BaseModel):
 
 class ComparisonItem(BaseModel):
     driver: str
+    driver_code: str
     constructor: str
     predicted_position: int
     confidence_score: float | None = None
@@ -51,4 +54,5 @@ class AccuracyItem(BaseModel):
     exact_position_accuracy: float | None = None
     mean_position_error: float | None = None
     winner_name: str | None = None
+    winner_code: str | None = None
     winner_constructor: str | None = None

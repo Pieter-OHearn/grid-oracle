@@ -118,10 +118,12 @@ def ingest_event(season: int, round_num: int, engine: Engine) -> bool:
             nationality = str(row.get("CountryCode", ""))
             constructor_name = str(row.get("TeamName", "Unknown"))
             constructor_nationality = str(row.get("TeamNationality", ""))
+            driver_number_raw = row.get("DriverNumber")
+            driver_number = int(driver_number_raw) if driver_number_raw is not None else None
 
-            driver_id = upsert_driver(conn, driver_code, full_name, nationality)
+            driver_id = upsert_driver(conn, driver_code, full_name, nationality, driver_number)
             constructor_id = upsert_constructor(conn, constructor_name, constructor_nationality)
-            upsert_driver_contract(conn, driver_id, constructor_id, season)
+            upsert_driver_contract(conn, driver_id, constructor_id, season, round_num)
 
             upsert_race_result(
                 conn,

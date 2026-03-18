@@ -1,19 +1,23 @@
 import { motion } from 'framer-motion';
 import type { PredictionEntry } from '../../types';
 import { ConfidenceBar } from '../common/ConfidenceBar';
-import { DRIVERS, CONSTRUCTOR_COLORS } from '../../data';
+import { CONSTRUCTOR_COLORS } from '../../data';
 import {
   PODIUM_ORDER,
   MEDAL_COLORS,
   getConfidenceColor,
   getConfidenceLabel,
 } from '../../utils/predictions';
+import { useDrivers } from '../../context/DriversContext';
 
 interface Props {
   predictions: PredictionEntry[];
+  season?: number;
+  round?: number;
 }
 
-export function PodiumPreview({ predictions }: Props) {
+export function PodiumPreview({ predictions, season, round }: Props) {
+  const { getDriver } = useDrivers();
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -24,14 +28,14 @@ export function PodiumPreview({ predictions }: Props) {
       {PODIUM_ORDER.map((offset, idx) => {
         const entry = predictions[offset];
         if (!entry) return null;
-        const driver = DRIVERS[entry.driverId];
-        if (!driver) return null;
-        const teamColor = CONSTRUCTOR_COLORS[driver.constructor] ?? '#6b7280';
+        const driver = getDriver(entry.driverCode, season, round);
+        const teamName = driver?.constructor ?? entry.constructor ?? 'Unknown';
+        const teamColor = driver?.constructorColor ?? CONSTRUCTOR_COLORS[teamName] ?? '#6b7280';
         const podiumPos = offset + 1;
         const heightClass = offset === 0 ? 'pt-0' : offset === 1 ? 'pt-4' : 'pt-8';
         return (
           <motion.div
-            key={entry.driverId}
+            key={entry.driverCode}
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.1 + idx * 0.07 }}
@@ -63,7 +67,7 @@ export function PodiumPreview({ predictions }: Props) {
                     lineHeight: 1.1,
                   }}
                 >
-                  {driver.name}
+                  {driver?.name ?? entry.driverCode}
                 </div>
                 <div className="flex items-center justify-center gap-1.5 mb-3">
                   <div className="w-2 h-2 rounded-full" style={{ background: teamColor }} />
@@ -71,7 +75,7 @@ export function PodiumPreview({ predictions }: Props) {
                     className="text-[#6b7280] text-[10px]"
                     style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600 }}
                   >
-                    {driver.constructor}
+                    {teamName}
                   </span>
                 </div>
                 <ConfidenceBar

@@ -1,7 +1,7 @@
 import type { ApiAccuracyItem, ApiModelVersionItem, ApiRaceListItem } from '../services/api';
 import type { LearningCurvePoint, SeasonChartPoint } from '../types';
 import type { BreakdownRow } from '../components/dashboard/PerRaceBreakdownTable';
-import { DRIVERS, CONSTRUCTOR_COLORS, DRIVER_BY_NAME } from '../data';
+import { CONSTRUCTOR_COLORS } from '../data';
 import { getCountryFlag } from './countryFlags';
 
 export interface SummaryStatItem {
@@ -32,8 +32,6 @@ export function buildBreakdownRows(
   return items.map((item, idx) => {
     const raceInfo = raceById.get(item.race_id);
     const country = raceInfo?.country ?? item.race_name.replace(' Grand Prix', '');
-    const driverCode = item.winner_name ? (DRIVER_BY_NAME[item.winner_name] ?? null) : null;
-    const driver = driverCode ? DRIVERS[driverCode] : null;
     return {
       raceId: item.race_id,
       round: raceInfo?.round ?? idx + 1,
@@ -47,12 +45,10 @@ export function buildBreakdownRows(
           ? Math.round(item.exact_position_accuracy * 100)
           : undefined,
       meanPositionError: item.mean_position_error ?? undefined,
-      winnerShortName: driver?.shortName ?? item.winner_name ?? undefined,
-      winnerColor: driver
-        ? (CONSTRUCTOR_COLORS[driver.constructor] ?? '#6b7280')
-        : item.winner_constructor
-          ? (CONSTRUCTOR_COLORS[item.winner_constructor] ?? '#6b7280')
-          : undefined,
+      winnerShortName: item.winner_code ?? item.winner_name ?? undefined,
+      winnerColor: item.winner_constructor
+        ? (CONSTRUCTOR_COLORS[item.winner_constructor] ?? '#6b7280')
+        : undefined,
     };
   });
 }
@@ -60,8 +56,8 @@ export function buildBreakdownRows(
 export function buildWinnerCounts(items: ApiAccuracyItem[]): Record<string, number> {
   const counts: Record<string, number> = {};
   for (const item of items) {
-    if (!item.winner_name) continue;
-    const code = DRIVER_BY_NAME[item.winner_name] ?? item.winner_name;
+    const code = item.winner_code ?? item.winner_name;
+    if (!code) continue;
     counts[code] = (counts[code] ?? 0) + 1;
   }
   return counts;

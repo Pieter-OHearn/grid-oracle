@@ -1,5 +1,4 @@
 import type { ApiComparisonItem } from '../services/api';
-import { DRIVER_BY_NAME } from '../data';
 import type { PredictionEntry, ActualResult, AccuracyMetrics, Row } from '../types';
 
 export function computeAccuracy(items: ApiComparisonItem[]): AccuracyMetrics {
@@ -39,11 +38,11 @@ export function computeAccuracy(items: ApiComparisonItem[]): AccuracyMetrics {
 
 export function mapApiToRows(items: ApiComparisonItem[]): Row[] {
   return items.map((item) => {
-    const driverId = DRIVER_BY_NAME[item.driver] ?? item.driver;
+    const driverCode = item.driver_code ?? item.driver;
     const isDnf = item.finish_position === null;
     const result: ActualResult = {
       position: item.finish_position ?? 20,
-      driverId,
+      driverCode,
       fastestLap: item.fastest_lap,
       dnf: isDnf,
       dnfReason: isDnf ? (item.status ?? 'DNF') : undefined,
@@ -51,7 +50,8 @@ export function mapApiToRows(items: ApiComparisonItem[]): Row[] {
     };
     const prediction: PredictionEntry = {
       position: item.predicted_position,
-      driverId,
+      driverCode,
+      constructor: item.constructor,
       confidence: Math.round((item.confidence_score ?? 0) * 100),
     };
     return {

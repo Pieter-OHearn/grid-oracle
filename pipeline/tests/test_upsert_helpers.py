@@ -1,5 +1,6 @@
 """Unit tests for pipeline.ingest.upsert_helpers."""
 
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 from pipeline.ingest.upsert_helpers import (
@@ -88,13 +89,21 @@ def test_upsert_driver_falls_back_to_select():
 
 def test_upsert_driver_passes_correct_params():
     conn = _conn(returning_id=1)
-    upsert_driver(conn, "HAM", "Lewis Hamilton", "GBR")
+    upsert_driver(conn, "HAM", "Lewis Hamilton", "GBR", 44)
     _, _kwargs = conn.execute.call_args
     # params are passed as the second positional arg
     params = conn.execute.call_args[0][1]
     assert params["code"] == "HAM"
     assert params["full_name"] == "Lewis Hamilton"
     assert params["nationality"] == "GBR"
+    assert params["number"] == 44
+
+
+def test_upsert_driver_number_defaults_to_none():
+    conn = _conn(returning_id=1)
+    upsert_driver(conn, "HAM", "Lewis Hamilton", "GBR")
+    params = conn.execute.call_args[0][1]
+    assert params["number"] is None
 
 
 # ---------------------------------------------------------------------------
@@ -147,9 +156,60 @@ def test_upsert_race_falls_back_to_select():
 # ---------------------------------------------------------------------------
 
 
-def test_upsert_driver_contract_executes():
+def test_upsert_driver_contract_inserts_segment_when_missing():
     conn = MagicMock()
-    upsert_driver_contract(conn, driver_id=1, constructor_id=2, season=2023)
-    conn.execute.assert_called_once()
-    params = conn.execute.call_args[0][1]
-    assert params == {"driver_id": 1, "constructor_id": 2, "season": 2023}
+    result_covering = MagicMock()
+    result_covering.fetchone.return_value = None
+    result_next = MagicMock()
+    result_next.fetchone.return_value = None
+    conn.execute.side_effect = [result_covering, result_next, MagicMock()]
+
+    upsert_driver_contract(conn, driver_id=1, constructor_id=2, season=2023, round_num=5)
+
+    # Third execute call inserts the new segment
+    insert_params = conn.execute.call_args_list[2][0][1]
+    assert insert_params["driver_id"] == 1
+    assert insert_params["constructor_id"] == 2
+    assert insert_params["season"] == 2023
+    assert insert_params["start_round"] == 5
+    assert insert_params["end_round"] is None
+
+
+def test_upsert_driver_contract_updates_existing_segment_when_same_round_changes():
+    conn = MagicMock()
+    current_row = SimpleNamespace(id=7, constructor_id=3, start_round=8, end_round=None)
+    result_covering = MagicMock()
+    result_covering.fetchone.return_value = current_row
+    conn.execute.side_effect = [result_covering, MagicMock()]
+
+    upsert_driver_contract(conn, driver_id=1, constructor_id=4, season=2024, round_num=8)
+
+    # Second execute updates constructor_id on same segment instead of inserting a duplicate
+    update_call = conn.execute.call_args_list[1]
+    params = update_call[0][1]
+    assert params == {"constructor_id": 4, "id": 7}
+
+
+def test_upsert_driver_contract_closes_previous_segment_and_inserts_new_when_switching():
+    conn = MagicMock()
+    current_row = SimpleNamespace(id=10, constructor_id=5, start_round=1, end_round=None)
+    result_covering = MagicMock()
+    result_covering.fetchone.return_value = current_row
+    result_next = MagicMock()
+    result_next.fetchone.return_value = None
+    conn.execute.side_effect = [
+        result_covering,  # covering select
+        MagicMock(),  # update end_round
+        result_next,  # next segment select
+        MagicMock(),  # insert new segment
+    ]
+
+    upsert_driver_contract(conn, driver_id=2, constructor_id=6, season=2025, round_num=4)
+
+    # update call sets end_round to previous round
+    update_params = conn.execute.call_args_list[1][0][1]
+    assert update_params["end_round"] == 3
+    assert update_params["id"] == 10
+    # insert call starts new segment at round 4
+    insert_params = conn.execute.call_args_list[3][0][1]
+    assert insert_params["start_round"] == 4
