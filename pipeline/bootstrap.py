@@ -10,9 +10,9 @@ Steps:
   1. Backfill historical seasons (2022, 2023, 2024) needed to train the model
   2. For each 2026 past round: ingest qualifying results and race results
   3. Build feature rows and export Parquet files for all completed races
-  4. Train the XGBoost model on the exported Parquet files
-  5. Generate predictions for every race (completed + next upcoming)
-  6. Evaluate predictions for every completed race
+  4. Train the pre-season XGBoost model on the exported Parquet files
+  5. Replay each completed race to retrain/evaluate/predict as if the scheduler
+     had been running since pre-season
 """
 
 import logging
@@ -27,9 +27,9 @@ from pipeline.ingest.calendar_sync import sync_season_calendar
 from pipeline.ingest.fetch_qualifying import ingest_event as ingest_qualifying
 from pipeline.ingest.fetch_results import ingest_event as ingest_results
 from pipeline.ingest.upsert_helpers import get_engine
-from pipeline.ml.evaluate import run as evaluate
 from pipeline.ml.predict import run as predict
 from pipeline.ml.train import run as train
+from pipeline.ml.workflow import post_race_pipeline, predict_remaining_races
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 for noisy in ("fastf1", "req", "core", "logger", "_api"):
@@ -155,47 +155,48 @@ def main() -> None:
         sys.exit(1)
 
     # ------------------------------------------------------------------
-    # Step 4 — Train model
+    # Step 4 — Train baseline model
     # ------------------------------------------------------------------
-    logger.info("=== Step 4: Training model ===")
+    logger.info("=== Step 4: Training baseline model ===")
     ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
     try:
-        model_version_id = train(data_dir=DATA_DIR, artifact_path=MODEL_PATH, engine=engine)
-        logger.info("Model trained — model_version_id=%d", model_version_id)
+        current_model_version_id = train(data_dir=DATA_DIR, artifact_path=MODEL_PATH, engine=engine)
+        logger.info("Baseline model trained — model_version_id=%d", current_model_version_id)
     except Exception as exc:
         logger.error("Training failed: %s", exc)
         sys.exit(1)
 
     # ------------------------------------------------------------------
-    # Step 5 — Generate predictions
+    # Step 5 — Replay completed races to mimic scheduler retrains
     # ------------------------------------------------------------------
-    logger.info("=== Step 5: Generating predictions ===")
-    all_predict_races = completed_events + ([next_event] if next_event else [])
-    for event in all_predict_races:
-        race_id = event["race_id"]
-        logger.info("  Race %d — %s", race_id, event["name"])
-        try:
-            predict(race_id=race_id, model_version_id=model_version_id, model_path=MODEL_PATH, engine=engine)
-        except Exception as exc:
-            logger.warning("    Prediction failed: %s", exc)
+    completed_events_sorted = sorted(completed_events, key=lambda e: e["round"])
+    if not completed_events_sorted:
+        logger.info("No completed races to replay — seeding predictions for upcoming events.")
+        predict_remaining_races(SEASON, current_model_version_id, engine)
+    else:
+        logger.info("=== Step 5: Replaying %d completed races ===", len(completed_events_sorted))
+        for event in completed_events_sorted:
+            race_id = event["race_id"]
+            logger.info("  Round %02d — %s: regenerating pre-race predictions", event["round"], event["name"])
+            try:
+                predict(
+                    race_id=race_id,
+                    model_version_id=current_model_version_id,
+                    model_path=MODEL_PATH,
+                    engine=engine,
+                )
+            except Exception as exc:
+                logger.warning("    Prediction failed: %s", exc)
 
-    # ------------------------------------------------------------------
-    # Step 6 — Evaluate completed races
-    # ------------------------------------------------------------------
-    logger.info("=== Step 6: Evaluating predictions ===")
-    for event in completed_events:
-        race_id = event["race_id"]
-        logger.info("  Race %d — %s", race_id, event["name"])
-        try:
-            evaluate(race_id=race_id, model_version_id=model_version_id, engine=engine)
-        except Exception as exc:
-            logger.warning("    Evaluation failed: %s", exc)
+            new_model_id = post_race_pipeline(race_id, SEASON, engine)
+            if new_model_id:
+                current_model_version_id = new_model_id
 
     logger.info("=== Bootstrap complete ===")
     logger.info(
-        "Ingested %d completed races, trained model v%d, generated predictions and evaluations.",
-        len(completed_events),
-        model_version_id,
+        "Replayed %d completed races; latest model_version_id=%d.",
+        len(completed_events_sorted),
+        current_model_version_id,
     )
 
 

@@ -1,11 +1,13 @@
 import { motion } from 'framer-motion';
 import { TrendingUp, Zap } from 'lucide-react';
 import type { PredictionEntry } from '../../types';
-import { DRIVERS, CONSTRUCTOR_COLORS, CONSTRUCTOR_SHORT } from '../../data';
+import { CONSTRUCTOR_COLORS, CONSTRUCTOR_SHORT } from '../../data';
 import { ConfidenceBar } from '../common/ConfidenceBar';
 import { ModelNote } from '../common/ModelNote';
 import { MEDAL_COLORS, getConfidenceColor, getConfidenceLabel } from '../../utils/predictions';
 import { useModelVersion } from '../../context/ModelVersionContext';
+import { useDrivers } from '../../context/DriversContext';
+import { useRaceList } from '../../context/RaceListContext';
 
 interface Props {
   predictions: PredictionEntry[];
@@ -13,6 +15,8 @@ interface Props {
 
 export function FullGridTable({ predictions }: Props) {
   const { modelVersion } = useModelVersion();
+  const { getDriver } = useDrivers();
+  const { currentSeason } = useRaceList();
   const modelLabel = modelVersion
     ? `${modelVersion.name} · model #${modelVersion.id}`
     : 'GridOracle ML';
@@ -51,13 +55,15 @@ export function FullGridTable({ predictions }: Props) {
 
       <div className="space-y-1">
         {predictions.map((entry, idx) => {
-          const driver = DRIVERS[entry.driverId];
-          if (!driver) return null;
-          const teamColor = CONSTRUCTOR_COLORS[driver.constructor] ?? '#6b7280';
+          const driver = getDriver(entry.driverCode, currentSeason);
+          const teamName = driver?.constructor ?? entry.constructor ?? 'Unknown';
+          const teamColor = driver?.constructorColor ?? CONSTRUCTOR_COLORS[teamName] ?? '#6b7280';
           const confColor = getConfidenceColor(entry.confidence);
+          const constructorShort =
+            CONSTRUCTOR_SHORT[teamName] ?? teamName.slice(0, 3).toUpperCase();
           return (
             <motion.div
-              key={entry.driverId}
+              key={entry.driverCode}
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.3, delay: 0.18 + idx * 0.025 }}
@@ -83,7 +89,7 @@ export function FullGridTable({ predictions }: Props) {
                   color: teamColor,
                 }}
               >
-                {driver.number}
+                {driver?.number ?? '—'}
               </span>
               <div className="min-w-0">
                 <span
@@ -94,14 +100,16 @@ export function FullGridTable({ predictions }: Props) {
                     letterSpacing: '0.03em',
                   }}
                 >
-                  {driver.name}
+                  {driver?.name ?? entry.driverCode}
                 </span>
-                <span
-                  className="text-[#3a3a52] text-[10px]"
-                  style={{ fontFamily: "'JetBrains Mono', monospace" }}
-                >
-                  {driver.flag} {driver.nationality}
-                </span>
+                {driver && (
+                  <span
+                    className="text-[#3a3a52] text-[10px]"
+                    style={{ fontFamily: "'JetBrains Mono', monospace" }}
+                  >
+                    {driver.flag} {driver.nationality}
+                  </span>
+                )}
               </div>
               <div className="flex items-center gap-1.5 min-w-0">
                 <div
@@ -112,7 +120,7 @@ export function FullGridTable({ predictions }: Props) {
                   className="text-[#6b7280] text-[10px] truncate"
                   style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600 }}
                 >
-                  {CONSTRUCTOR_SHORT[driver.constructor]}
+                  {constructorShort}
                 </span>
               </div>
               <ConfidenceBar

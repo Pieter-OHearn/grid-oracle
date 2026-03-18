@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router';
 import { AlertCircle } from 'lucide-react';
-import { DRIVER_BY_NAME } from '../data';
 import { api } from '../services/api';
 import { useRaceList } from '../context/RaceListContext';
 import { useModelVersion } from '../context/ModelVersionContext';
@@ -35,7 +34,8 @@ export function PredictionPage() {
           setPredictions(
             apiPreds.map((p) => ({
               position: p.predicted_position,
-              driverId: DRIVER_BY_NAME[p.driver] ?? p.driver,
+              driverCode: p.driver_code,
+              constructor: p.constructor,
               confidence: Math.round((p.confidence_score ?? 0) * 100),
             })),
           );

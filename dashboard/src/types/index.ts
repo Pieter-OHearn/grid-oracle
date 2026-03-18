@@ -1,9 +1,10 @@
 export interface Driver {
-  id: string;
+  code: string;
   name: string;
   shortName: string;
-  number: number;
+  number: number | null;
   constructor: string;
+  constructorColor: string;
   nationality: string;
   flag: string;
 }
@@ -22,13 +23,14 @@ export interface Race {
 
 export interface PredictionEntry {
   position: number;
-  driverId: string;
+  driverCode: string;
+  constructor: string;
   confidence: number;
 }
 
 export interface ActualResult {
   position: number;
-  driverId: string;
+  driverCode: string;
   fastestLap: boolean;
   dnf: boolean;
   dnfReason?: string;

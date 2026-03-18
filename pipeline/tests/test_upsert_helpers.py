@@ -88,13 +88,21 @@ def test_upsert_driver_falls_back_to_select():
 
 def test_upsert_driver_passes_correct_params():
     conn = _conn(returning_id=1)
-    upsert_driver(conn, "HAM", "Lewis Hamilton", "GBR")
+    upsert_driver(conn, "HAM", "Lewis Hamilton", "GBR", 44)
     _, _kwargs = conn.execute.call_args
     # params are passed as the second positional arg
     params = conn.execute.call_args[0][1]
     assert params["code"] == "HAM"
     assert params["full_name"] == "Lewis Hamilton"
     assert params["nationality"] == "GBR"
+    assert params["number"] == 44
+
+
+def test_upsert_driver_number_defaults_to_none():
+    conn = _conn(returning_id=1)
+    upsert_driver(conn, "HAM", "Lewis Hamilton", "GBR")
+    params = conn.execute.call_args[0][1]
+    assert params["number"] is None
 
 
 # ---------------------------------------------------------------------------

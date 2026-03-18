@@ -13,6 +13,7 @@ CIRCUIT_TYPE_ENCODING: dict[str, int] = {
     "high-speed": 0,
     "road": 1,
     "street": 2,
+    "unknown": 3,
 }
 
 

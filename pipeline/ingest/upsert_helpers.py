@@ -118,19 +118,20 @@ def upsert_race(
     ).scalar_one()
 
 
-def upsert_driver(conn, code: str, full_name: str, nationality: str) -> int:
+def upsert_driver(conn, code: str, full_name: str, nationality: str, number: int | None = None) -> int:
     row = conn.execute(
         text(
             """
-            INSERT INTO drivers (code, full_name, nationality)
-            VALUES (:code, :full_name, :nationality)
+            INSERT INTO drivers (code, full_name, nationality, number)
+            VALUES (:code, :full_name, :nationality, :number)
             ON CONFLICT (code) DO UPDATE
                 SET full_name   = EXCLUDED.full_name,
-                    nationality = EXCLUDED.nationality
+                    nationality = EXCLUDED.nationality,
+                    number      = COALESCE(EXCLUDED.number, drivers.number)
             RETURNING id
             """
         ),
-        {"code": code, "full_name": full_name, "nationality": nationality},
+        {"code": code, "full_name": full_name, "nationality": nationality, "number": number},
     ).fetchone()
     if row:
         return row[0]

@@ -91,6 +91,7 @@ def get_predictions(race_id: int, db: Session = Depends(get_db)):
     return [
         PredictionItem(
             driver=p.driver.full_name,
+            driver_code=p.driver.code,
             constructor=p.constructor.name,
             predicted_position=p.predicted_position,
             confidence_score=(
@@ -123,6 +124,7 @@ def get_results(race_id: int, db: Session = Depends(get_db)):
     return [
         ResultItem(
             driver=r.driver.full_name,
+            driver_code=r.driver.code,
             constructor=r.constructor.name,
             finish_position=r.finish_position,
             grid_position=r.grid_position,
@@ -156,6 +158,7 @@ def get_comparison(race_id: int, db: Session = Depends(get_db)):
         items.append(
             ComparisonItem(
                 driver=p.driver.full_name,
+                driver_code=p.driver.code,
                 constructor=p.constructor.name,
                 predicted_position=p.predicted_position,
                 confidence_score=(
@@ -212,6 +215,11 @@ def get_season_accuracy(season: int, db: Session = Depends(get_db)):
             ),
             winner_name=(
                 winner_by_race[m.race_id].driver.full_name
+                if m.race_id in winner_by_race
+                else None
+            ),
+            winner_code=(
+                winner_by_race[m.race_id].driver.code
                 if m.race_id in winner_by_race
                 else None
             ),

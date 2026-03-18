@@ -19,12 +19,13 @@ def _make_df(circuit_types: list[str]) -> pd.DataFrame:
 
 
 def test_circuit_type_encoding_known_types():
-    """All three known circuit types map to their expected float codes."""
-    df = _make_df(["high-speed", "road", "street"])
+    """All declared circuit types map to their expected float codes."""
+    df = _make_df(["high-speed", "road", "street", "unknown"])
     result = prepare_features(df)
     assert result.loc[0, "circuit_type"] == float(CIRCUIT_TYPE_ENCODING["high-speed"])
     assert result.loc[1, "circuit_type"] == float(CIRCUIT_TYPE_ENCODING["road"])
     assert result.loc[2, "circuit_type"] == float(CIRCUIT_TYPE_ENCODING["street"])
+    assert result.loc[3, "circuit_type"] == float(CIRCUIT_TYPE_ENCODING["unknown"])
 
 
 def test_circuit_type_encoding_unknown_raises():
