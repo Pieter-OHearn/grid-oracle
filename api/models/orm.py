@@ -126,7 +126,7 @@ class EvaluationMetrics(Base):
     race_id = Column(Integer, ForeignKey("races.id"), nullable=False)
     model_version_id = Column(Integer, ForeignKey("model_versions.id"), nullable=False)
     evaluated_at = Column(DateTime(timezone=True), nullable=False)
-    top3_accuracy = Column(Numeric(5, 4))
+    top3_accuracy = Column(Numeric(6, 4))
     top5_accuracy = Column(Numeric(6, 4))
     top10_accuracy = Column(Numeric(6, 4))
     exact_position_accuracy = Column(Numeric(5, 4))

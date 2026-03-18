@@ -83,20 +83,6 @@ export function buildSummaryStats(
     : 0;
 
   const evaluatedExact = accuracyData.filter((r) => r.exact_position_accuracy != null);
-  const evaluatedTop5 = accuracyData.filter((r) => r.top5_accuracy != null);
-  const avgTop5 = evaluatedTop5.length
-    ? Math.round(
-        (evaluatedTop5.reduce((s, r) => s + r.top5_accuracy!, 0) / evaluatedTop5.length) * 100,
-      )
-    : 0;
-
-  const evaluatedTop10 = accuracyData.filter((r) => r.top10_accuracy != null);
-  const avgTop10 = evaluatedTop10.length
-    ? Math.round(
-        (evaluatedTop10.reduce((s, r) => s + r.top10_accuracy!, 0) / evaluatedTop10.length) * 100,
-      )
-    : 0;
-
   const avgExact = evaluatedExact.length
     ? Math.round(
         (evaluatedExact.reduce((s, r) => s + r.exact_position_accuracy!, 0) /
@@ -135,20 +121,6 @@ export function buildSummaryStats(
       icon: '🏆',
       color: '#FFD700',
       sub: 'top 3 correct',
-    },
-    {
-      label: 'Avg Top 5 Accuracy',
-      value: `${avgTop5}%`,
-      icon: '🎯',
-      color: '#22c55e',
-      sub: 'drivers in top 5',
-    },
-    {
-      label: 'Avg Top 10 Accuracy',
-      value: `${avgTop10}%`,
-      icon: '📊',
-      color: '#3b82f6',
-      sub: 'points positions',
     },
     {
       label: 'Avg Exact Hit Rate',

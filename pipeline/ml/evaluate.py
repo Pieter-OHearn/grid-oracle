@@ -84,11 +84,8 @@ def compute_metrics(df: pd.DataFrame) -> dict[str, float]:
     exact_position_accuracy = exact_matches / n
 
     def top_n_accuracy(n: int) -> float:
-        actual_top_n = classified[classified["finish_position"] <= n]
-        if actual_top_n.empty:
-            return 0.0
-        correct_top_n = (actual_top_n["predicted_position"] <= n).sum()
-        return float(correct_top_n / len(actual_top_n))
+        correct_top_n = ((classified["predicted_position"] <= n) & (classified["finish_position"] <= n)).sum()
+        return float(correct_top_n / n)
 
     top3_accuracy = top_n_accuracy(3)
     top5_accuracy = top_n_accuracy(5)

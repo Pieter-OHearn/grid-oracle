@@ -71,7 +71,7 @@ def test_compute_metrics_perfect_predictions():
     assert metrics["exact_position_accuracy"] == 1.0
     assert metrics["top3_accuracy"] == 1.0
     assert metrics["top5_accuracy"] == 1.0
-    assert metrics["top10_accuracy"] == 1.0
+    assert metrics["top10_accuracy"] == 0.5
     assert metrics["mean_position_error"] == 0.0
 
 
@@ -84,7 +84,7 @@ def test_compute_metrics_mostly_wrong():
     # Top-3 actual finishers (pos 1,2,3) were predicted as 5,4,3 — only driver at pos 3 is correct
     assert metrics["top3_accuracy"] == pytest.approx(1 / 3, abs=1e-4)
     assert metrics["top5_accuracy"] == 1.0
-    assert metrics["top10_accuracy"] == 1.0
+    assert metrics["top10_accuracy"] == 0.5
     # Errors: |5-1|+|4-2|+|3-3|+|2-4|+|1-5| = 4+2+0+2+4 = 12, mean = 2.4
     assert metrics["mean_position_error"] == pytest.approx(2.4, abs=1e-4)
 
@@ -102,9 +102,9 @@ def test_compute_metrics_with_dnf():
     assert metrics["exact_position_accuracy"] == 1.0
     # Actual top-3 finishers among classified: positions 1 and 2
     # Both predicted correctly in top 3
-    assert metrics["top3_accuracy"] == 1.0
-    assert metrics["top5_accuracy"] == 1.0
-    assert metrics["top10_accuracy"] == 1.0
+    assert metrics["top3_accuracy"] == pytest.approx(2 / 3, abs=1e-4)
+    assert metrics["top5_accuracy"] == pytest.approx(3 / 5, abs=1e-4)
+    assert metrics["top10_accuracy"] == pytest.approx(3 / 10, abs=1e-4)
     assert metrics["mean_position_error"] == 0.0
 
 
@@ -138,7 +138,22 @@ def test_compute_metrics_partial_top3():
     # Driver finishing 3rd was predicted 2nd (correct)
     assert metrics["top3_accuracy"] == pytest.approx(2 / 3, abs=1e-4)
     assert metrics["top5_accuracy"] == 1.0
-    assert metrics["top10_accuracy"] == 1.0
+    assert metrics["top10_accuracy"] == 0.5
+
+
+def test_compute_metrics_top_n_fixed_denominator_with_few_finishers():
+    """Top-N accuracy uses fixed denominators even when fewer than N drivers finish."""
+    df = _make_comparison_df(
+        [1, 2, 6, 7, 8, 9],
+        [1, 2, None, None, None, None],
+        ["Finished", "Finished", "DNF", "DNF", "DNF", "DNF"],
+    )
+
+    metrics = compute_metrics(df)
+
+    assert metrics["top3_accuracy"] == pytest.approx(2 / 3, abs=1e-4)
+    assert metrics["top5_accuracy"] == pytest.approx(2 / 5, abs=1e-4)
+    assert metrics["top10_accuracy"] == pytest.approx(2 / 10, abs=1e-4)
 
 
 # ---------------------------------------------------------------------------
