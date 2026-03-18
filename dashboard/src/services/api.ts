@@ -65,6 +65,8 @@ export interface ApiAccuracyItem {
   race_name: string;
   evaluated_at: string;
   top3_accuracy: number | null;
+  top5_accuracy: number | null;
+  top10_accuracy: number | null;
   exact_position_accuracy: number | null;
   mean_position_error: number | null;
   winner_name: string | null;

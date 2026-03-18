@@ -203,6 +203,12 @@ def get_season_accuracy(season: int, db: Session = Depends(get_db)):
             top3_accuracy=(
                 float(m.top3_accuracy) if m.top3_accuracy is not None else None
             ),
+            top5_accuracy=(
+                float(m.top5_accuracy) if m.top5_accuracy is not None else None
+            ),
+            top10_accuracy=(
+                float(m.top10_accuracy) if m.top10_accuracy is not None else None
+            ),
             exact_position_accuracy=(
                 float(m.exact_position_accuracy)
                 if m.exact_position_accuracy is not None

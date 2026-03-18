@@ -140,7 +140,7 @@ export function DashboardPage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, delay: 0.05 }}
-            className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6"
+            className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3 mb-6"
           >
             {summaryStats.map((s, i) => (
               <motion.div

@@ -62,7 +62,8 @@ def compute_metrics(df: pd.DataFrame) -> dict[str, float]:
     accuracy metrics.
 
     Returns a dict with keys:
-        exact_position_accuracy, top3_accuracy, mean_position_error
+        exact_position_accuracy, top3_accuracy, top5_accuracy,
+        top10_accuracy, mean_position_error
     """
     classified = df.dropna(subset=["finish_position"]).copy()
 
@@ -71,6 +72,8 @@ def compute_metrics(df: pd.DataFrame) -> dict[str, float]:
         return {
             "exact_position_accuracy": 0.0,
             "top3_accuracy": 0.0,
+            "top5_accuracy": 0.0,
+            "top10_accuracy": 0.0,
             "mean_position_error": 0.0,
         }
 
@@ -80,13 +83,16 @@ def compute_metrics(df: pd.DataFrame) -> dict[str, float]:
     exact_matches = (classified["predicted_position"] == classified["finish_position"]).sum()
     exact_position_accuracy = exact_matches / n
 
-    # Top-3 accuracy: % of actual top-3 finishers that were predicted top 3
-    actual_top3 = classified[classified["finish_position"] <= 3]
-    if len(actual_top3) == 0:
-        top3_accuracy = 0.0
-    else:
-        correct_top3 = (actual_top3["predicted_position"] <= 3).sum()
-        top3_accuracy = correct_top3 / len(actual_top3)
+    def top_n_accuracy(n: int) -> float:
+        actual_top_n = classified[classified["finish_position"] <= n]
+        if actual_top_n.empty:
+            return 0.0
+        correct_top_n = (actual_top_n["predicted_position"] <= n).sum()
+        return float(correct_top_n / len(actual_top_n))
+
+    top3_accuracy = top_n_accuracy(3)
+    top5_accuracy = top_n_accuracy(5)
+    top10_accuracy = top_n_accuracy(10)
 
     # Mean position error: average |predicted - actual|
     errors = (classified["predicted_position"] - classified["finish_position"]).abs()
@@ -95,6 +101,8 @@ def compute_metrics(df: pd.DataFrame) -> dict[str, float]:
     return {
         "exact_position_accuracy": round(float(exact_position_accuracy), 4),
         "top3_accuracy": round(float(top3_accuracy), 4),
+        "top5_accuracy": round(float(top5_accuracy), 4),
+        "top10_accuracy": round(float(top10_accuracy), 4),
         "mean_position_error": round(float(mean_position_error), 4),
     }
 
@@ -115,6 +123,8 @@ def store_metrics(
         "evaluated_at": datetime.now(timezone.utc),
         "exact_position_accuracy": metrics["exact_position_accuracy"],
         "top3_accuracy": metrics["top3_accuracy"],
+        "top5_accuracy": metrics["top5_accuracy"],
+        "top10_accuracy": metrics["top10_accuracy"],
         "mean_position_error": metrics["mean_position_error"],
     }
 
@@ -124,14 +134,18 @@ def store_metrics(
                 """
                 INSERT INTO evaluation_metrics
                     (race_id, model_version_id, evaluated_at,
-                     exact_position_accuracy, top3_accuracy, mean_position_error)
+                     exact_position_accuracy, top3_accuracy, top5_accuracy,
+                     top10_accuracy, mean_position_error)
                 VALUES
                     (:race_id, :model_version_id, :evaluated_at,
-                     :exact_position_accuracy, :top3_accuracy, :mean_position_error)
+                     :exact_position_accuracy, :top3_accuracy, :top5_accuracy,
+                     :top10_accuracy, :mean_position_error)
                 ON CONFLICT (race_id, model_version_id) DO UPDATE
                     SET evaluated_at             = EXCLUDED.evaluated_at,
                         exact_position_accuracy  = EXCLUDED.exact_position_accuracy,
                         top3_accuracy            = EXCLUDED.top3_accuracy,
+                        top5_accuracy            = EXCLUDED.top5_accuracy,
+                        top10_accuracy           = EXCLUDED.top10_accuracy,
                         mean_position_error      = EXCLUDED.mean_position_error
                 """
             ),
@@ -162,6 +176,8 @@ def log_summary(
         f" ({dnf_count} DNF excluded)\n"
         f"  Exact position    : {metrics['exact_position_accuracy']:.1%}\n"
         f"  Top-3 accuracy    : {metrics['top3_accuracy']:.1%}\n"
+        f"  Top-5 accuracy    : {metrics['top5_accuracy']:.1%}\n"
+        f"  Top-10 accuracy   : {metrics['top10_accuracy']:.1%}\n"
         f"  Mean position err : {metrics['mean_position_error']:.2f}\n"
         f"{'=' * 50}\n"
     )
