@@ -7,7 +7,7 @@ Run this after starting the database to fully populate it for the 2026 season:
 Steps:
   0. Enable FastF1 cache and sync the 2026 calendar first (avoids rate-limit
      failures after heavy historical fetching)
-  1. Backfill historical seasons (2022, 2023, 2024) needed to train the model
+  1. Backfill historical seasons (2022, 2023, 2024, 2025) needed to train the model
   2. For each 2026 past round: ingest qualifying results and race results
   3. Build feature rows and export Parquet files for all completed races
   4. Train the pre-season XGBoost model on the exported Parquet files
@@ -38,7 +38,7 @@ for noisy in ("fastf1", "req", "core", "logger", "_api"):
 logger = logging.getLogger(__name__)
 
 SEASON = 2026
-HISTORICAL_SEASONS = [2022, 2023, 2024]
+HISTORICAL_SEASONS = [2022, 2023, 2024, 2025]
 ARTIFACTS_DIR = Path(__file__).resolve().parent / "ml" / "artifacts"
 MODEL_PATH = ARTIFACTS_DIR / "model_v1.json"
 DATA_DIR = Path(__file__).resolve().parent / "data"
@@ -86,7 +86,6 @@ def main() -> None:
     for hist_season in HISTORICAL_SEASONS:
         logger.info("  Syncing %d calendar…", hist_season)
         hist_events = sync_season_calendar(hist_season, engine)
-        today = date.today()
         hist_completed = sorted((e for e in hist_events if e["event_date"] < today), key=lambda e: e["round"])
         logger.info("  %d: %d completed races to ingest", hist_season, len(hist_completed))
         for event in hist_completed:

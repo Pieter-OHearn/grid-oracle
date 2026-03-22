@@ -289,13 +289,13 @@ def test_catch_up_qualifying_data_present():
 
 
 def test_catch_up_race_data_absent_not_completed():
-    engine, _conn = _mock_engine_with_fetchone((False, 0))
+    engine, _conn = _mock_engine_with_fetchone((False, 0, 0))
     event = _make_conventional_event()
     assert _should_catch_up(JOB_RACE, event, engine) is True
 
 
 def test_catch_up_race_already_completed():
-    engine, _conn = _mock_engine_with_fetchone((True, 20))
+    engine, _conn = _mock_engine_with_fetchone((True, 20, 5))
     event = _make_conventional_event()
     assert _should_catch_up(JOB_RACE, event, engine) is False
 

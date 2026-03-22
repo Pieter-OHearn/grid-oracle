@@ -294,7 +294,7 @@ def main() -> None:
         nargs="+",
         default=None,
         metavar="YEAR",
-        help="Seasons to use for training (default: 2022 2023)",
+        help="Seasons to use for training (default: auto-derived from DB — all but the most recent completed season)",
     )
     parser.add_argument(
         "--test-seasons",
@@ -302,7 +302,7 @@ def main() -> None:
         nargs="+",
         default=None,
         metavar="YEAR",
-        help="Seasons to use for evaluation (default: 2024)",
+        help="Seasons to use for evaluation (default: auto-derived from DB — the most recent completed season)",
     )
     args = parser.parse_args()
 
