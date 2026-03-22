@@ -100,8 +100,8 @@ def test_compute_metrics_with_dnf():
 
     # 3 classified finishers: (1,1), (2,2), (4,4) — all exact matches
     assert metrics["exact_position_accuracy"] == 1.0
-    # Actual top-3 finishers among classified: positions 1 and 2
-    # Both predicted correctly in top 3
+    # Classified finishers at positions 1 and 2 are both predicted in the top 3.
+    # Fixed denominator is 3, so accuracy = 2/3 (not 2/2).
     assert metrics["top3_accuracy"] == pytest.approx(2 / 3, abs=1e-4)
     assert metrics["top5_accuracy"] == pytest.approx(3 / 5, abs=1e-4)
     assert metrics["top10_accuracy"] == pytest.approx(3 / 10, abs=1e-4)
