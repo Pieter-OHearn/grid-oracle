@@ -6,7 +6,7 @@ scikit-learn==1.8.0
 sqlalchemy==2.0.36
 psycopg2-binary==2.9.10
 apscheduler==3.10.4
-requests==2.32.3
+requests==2.32.4
 pyarrow==23.0.1
 ruff==0.9.6
 pytest==8.3.5
