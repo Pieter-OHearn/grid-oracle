@@ -7,11 +7,12 @@ import pandas as pd
 import pytest
 
 from pipeline.features.builder import (
-    _championship_position,
+    _constructor_championship_position,
     _constructor_dnf_rate_last_season,
     _driver_avg_position_at_circuit,
     _driver_avg_position_last_n,
     _driver_avg_qualifying_position_at_circuit,
+    _driver_championship_position,
     _driver_podium_rate_at_circuit,
     _driver_season_avg_position,
     _driver_wet_race_avg_position,
@@ -119,32 +120,64 @@ def test_driver_season_avg_position():
     assert result == 2.0
 
 
-def test_championship_position_found():
+def test_driver_championship_position_found():
     conn = MagicMock()
     conn.execute.return_value.fetchall.return_value = [
         (10, 100),  # driver 10 — 100 pts
         (5, 80),  # driver 5 — 80 pts
         (1, 60),  # driver 1 — 60 pts
     ]
-    result = _championship_position(conn, driver_id=5, season=2024, race_date=date(2024, 5, 1))
+    result = _driver_championship_position(conn, driver_id=5, season=2024, race_date=date(2024, 5, 1))
     assert result == 2
 
 
-def test_championship_position_not_scored():
+def test_driver_championship_position_not_scored():
+    """A driver who hasn't scored is ranked one place below last scorer."""
     conn = MagicMock()
     conn.execute.return_value.fetchall.return_value = [
         (10, 100),
         (5, 80),
     ]
-    result = _championship_position(conn, driver_id=99, season=2024, race_date=date(2024, 5, 1))
-    assert result is None
+    result = _driver_championship_position(conn, driver_id=99, season=2024, race_date=date(2024, 5, 1))
+    assert result == 3  # 2 scorers + 1
 
 
-def test_championship_position_no_prior_races():
+def test_driver_championship_position_first_race():
+    """All drivers are position 1 before any races have been run."""
     conn = MagicMock()
     conn.execute.return_value.fetchall.return_value = []
-    result = _championship_position(conn, driver_id=1, season=2024, race_date=date(2024, 3, 1))
-    assert result is None
+    result = _driver_championship_position(conn, driver_id=1, season=2024, race_date=date(2024, 3, 1))
+    assert result == 1
+
+
+def test_constructor_championship_position_found():
+    conn = MagicMock()
+    conn.execute.return_value.fetchall.return_value = [
+        (3, 200),  # constructor 3 — 200 pts
+        (7, 150),  # constructor 7 — 150 pts
+        (1, 80),  # constructor 1 — 80 pts
+    ]
+    result = _constructor_championship_position(conn, constructor_id=7, season=2024, race_date=date(2024, 5, 1))
+    assert result == 2
+
+
+def test_constructor_championship_position_not_scored():
+    """A constructor who hasn't scored is ranked one place below last scorer."""
+    conn = MagicMock()
+    conn.execute.return_value.fetchall.return_value = [
+        (3, 200),
+        (7, 150),
+    ]
+    result = _constructor_championship_position(conn, constructor_id=99, season=2024, race_date=date(2024, 5, 1))
+    assert result == 3  # 2 scorers + 1
+
+
+def test_constructor_championship_position_first_race():
+    """All constructors are position 1 before any races have been run."""
+    conn = MagicMock()
+    conn.execute.return_value.fetchall.return_value = []
+    result = _constructor_championship_position(conn, constructor_id=1, season=2024, race_date=date(2024, 3, 1))
+    assert result == 1
 
 
 def test_constructor_dnf_rate_last_season_with_dnfs():
@@ -268,8 +301,11 @@ def test_build_features_pre_weekend_fallback():
         elif "FROM qualifying_results WHERE race_id" in sql:
             result.scalar.return_value = 0  # no qualifying data
         elif "GROUP BY rr.driver_id" in sql:
-            # _championship_position
+            # _driver_championship_position
             result.fetchall.return_value = [(1, 50)]
+        elif "GROUP BY rr.constructor_id" in sql:
+            # _constructor_championship_position
+            result.fetchall.return_value = [(2, 80)]
         elif "COUNT(DISTINCT rr.race_id) FILTER" in sql:
             # _constructor_dnf_rate_last_season
             result.fetchone.return_value = (1, 10)
@@ -285,4 +321,6 @@ def test_build_features_pre_weekend_fallback():
     df = build_features_for_race(race_id=1, engine=engine)
     assert len(df) == 1
     assert df.iloc[0]["driver_id"] == 1
+    assert df.iloc[0]["driver_championship_position"] == 1
+    assert df.iloc[0]["constructor_championship_position"] == 1
     assert df.iloc[0]["constructor_dnf_rate_last_season"] == pytest.approx(0.1)

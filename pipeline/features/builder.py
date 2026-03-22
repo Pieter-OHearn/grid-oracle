@@ -357,11 +357,14 @@ def _driver_season_avg_position(conn: Connection, driver_id: int, season: int, r
     return float(val) if val is not None else None
 
 
-def _championship_position(conn: Connection, driver_id: int, season: int, race_date: object) -> int | None:
-    """Driver's championship standing at the time of the race.
+def _driver_championship_position(conn: Connection, driver_id: int, season: int, race_date: object) -> int:
+    """Driver's championship standing going into this race.
 
-    Computed by summing points from all completed races in the season
-    that occurred before the given race date, then ranking all drivers.
+    Computed by summing points from all completed races in the season that
+    occurred before ``race_date``.  Returns 1 when no prior races exist
+    (all drivers tied at zero, which is correct for round 1).  A driver
+    who has entered the season but has not yet scored is ranked one place
+    below the last points scorer.
     """
     rows = conn.execute(
         text(
@@ -379,12 +382,44 @@ def _championship_position(conn: Connection, driver_id: int, season: int, race_d
         {"season": season, "race_date": race_date},
     ).fetchall()
     if not rows:
-        return None
+        return 1  # First race of the season — all drivers tied at zero
     for position, row in enumerate(rows, start=1):
         if row[0] == driver_id:
             return position
-    # Driver hasn't scored in any prior race this season
-    return None
+    # Driver hasn't scored yet but others have — rank one below last scorer
+    return len(rows) + 1
+
+
+def _constructor_championship_position(conn: Connection, constructor_id: int, season: int, race_date: object) -> int:
+    """Constructor's championship standing going into this race.
+
+    Computed by summing points for all drivers of each constructor from
+    completed races before ``race_date``.  Returns 1 when no prior races
+    exist.  A constructor with no points yet is ranked one below the last
+    points scorer.
+    """
+    rows = conn.execute(
+        text(
+            """
+            SELECT rr.constructor_id, SUM(rr.points) AS total_points
+            FROM race_results rr
+            JOIN races r ON r.id = rr.race_id
+            WHERE r.season = :season
+              AND r.date < :race_date
+              AND r.is_completed = TRUE
+            GROUP BY rr.constructor_id
+            ORDER BY total_points DESC
+            """
+        ),
+        {"season": season, "race_date": race_date},
+    ).fetchall()
+    if not rows:
+        return 1  # First race of the season — all constructors tied at zero
+    for position, row in enumerate(rows, start=1):
+        if row[0] == constructor_id:
+            return position
+    # Constructor hasn't scored yet but others have — rank one below last scorer
+    return len(rows) + 1
 
 
 # ---------------------------------------------------------------------------
@@ -467,7 +502,10 @@ def build_features_for_race(race_id: int, engine: Engine) -> pd.DataFrame:
                 "driver_wet_race_avg_position": _driver_wet_race_avg_position(conn, did, race["date"]),
                 "constructor_wet_race_avg_position": _constructor_wet_race_avg_position(conn, cid, race["date"]),
                 "driver_season_avg_position": _driver_season_avg_position(conn, did, race["season"], race["date"]),
-                "championship_position": _championship_position(conn, did, race["season"], race["date"]),
+                "driver_championship_position": _driver_championship_position(conn, did, race["season"], race["date"]),
+                "constructor_championship_position": _constructor_championship_position(
+                    conn, cid, race["season"], race["date"]
+                ),
                 "constructor_dnf_rate_last_season": _constructor_dnf_rate_last_season(conn, cid, race["season"]),
             }
 
