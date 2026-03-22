@@ -44,22 +44,24 @@ def upsert_qualifying_result(
     q2_time,
     q3_time,
     grid_position,
+    grid_penalty: int | None = None,
 ) -> None:
     conn.execute(
         text(
             """
             INSERT INTO qualifying_results
-                (race_id, driver_id, constructor_id, q1_time, q2_time, q3_time, grid_position)
+                (race_id, driver_id, constructor_id, q1_time, q2_time, q3_time, grid_position, grid_penalty)
             VALUES
                 (:race_id, :driver_id, :constructor_id,
                  CAST(:q1_time AS interval), CAST(:q2_time AS interval), CAST(:q3_time AS interval),
-                 :grid_position)
+                 :grid_position, :grid_penalty)
             ON CONFLICT (race_id, driver_id) DO UPDATE
                 SET constructor_id = EXCLUDED.constructor_id,
                     q1_time        = EXCLUDED.q1_time,
                     q2_time        = EXCLUDED.q2_time,
                     q3_time        = EXCLUDED.q3_time,
-                    grid_position  = EXCLUDED.grid_position
+                    grid_position  = EXCLUDED.grid_position,
+                    grid_penalty   = EXCLUDED.grid_penalty
             """
         ),
         {
@@ -70,6 +72,7 @@ def upsert_qualifying_result(
             "q2_time": _interval_or_none(q2_time),
             "q3_time": _interval_or_none(q3_time),
             "grid_position": int(grid_position) if pd.notna(grid_position) else None,
+            "grid_penalty": grid_penalty,
         },
     )
 
@@ -123,6 +126,14 @@ def ingest_event(season: int, round_num: int, engine: Engine) -> bool:
             constructor_id = upsert_constructor(conn, constructor_name, constructor_nationality)
             upsert_driver_contract(conn, driver_id, constructor_id, season, round_num)
 
+            qual_pos = row.get("Position")
+            actual_grid = row.get("GridPosition")
+            grid_penalty: int | None = None
+            if pd.notna(qual_pos) and pd.notna(actual_grid):
+                penalty = int(actual_grid) - int(qual_pos)
+                if penalty != 0:
+                    grid_penalty = penalty
+
             upsert_qualifying_result(
                 conn,
                 race_id,
@@ -131,7 +142,8 @@ def ingest_event(season: int, round_num: int, engine: Engine) -> bool:
                 row.get("Q1"),
                 row.get("Q2"),
                 row.get("Q3"),
-                row.get("Position"),
+                qual_pos,
+                grid_penalty,
             )
 
     logger.info("Round %d — %s: ingested %d qualifying results", round_num, event_name, len(results))

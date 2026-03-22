@@ -99,9 +99,15 @@ def _get_entered_drivers(conn: Connection, race_id: int) -> list[dict]:
 
 
 def _grid_position(conn: Connection, race_id: int, driver_id: int) -> int | None:
-    """Grid position from qualifying results."""
+    """Actual starting grid position (post-penalty) from qualifying results."""
     return conn.execute(
-        text("SELECT grid_position FROM qualifying_results WHERE race_id = :rid AND driver_id = :did"),
+        text(
+            """
+            SELECT grid_position + COALESCE(grid_penalty, 0)
+            FROM qualifying_results
+            WHERE race_id = :rid AND driver_id = :did
+            """
+        ),
         {"rid": race_id, "did": driver_id},
     ).scalar()
 
@@ -109,11 +115,11 @@ def _grid_position(conn: Connection, race_id: int, driver_id: int) -> int | None
 def _driver_avg_qualifying_position_at_circuit(
     conn: Connection, driver_id: int, circuit_id: int, race_date: object
 ) -> float | None:
-    """Historical average qualifying (grid) position at a circuit before race_date."""
+    """Historical average actual starting position at a circuit before race_date."""
     val = conn.execute(
         text(
             """
-            SELECT AVG(qr.grid_position)
+            SELECT AVG(qr.grid_position + COALESCE(qr.grid_penalty, 0))
             FROM qualifying_results qr
             JOIN races r ON r.id = qr.race_id
             WHERE qr.driver_id = :did
