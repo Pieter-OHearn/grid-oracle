@@ -8,6 +8,7 @@ import pytest
 
 from pipeline.features.builder import (
     _championship_position,
+    _constructor_dnf_rate_last_season,
     _driver_avg_position_at_circuit,
     _driver_avg_position_last_n,
     _driver_avg_qualifying_position_at_circuit,
@@ -143,6 +144,44 @@ def test_championship_position_no_prior_races():
     conn = MagicMock()
     conn.execute.return_value.fetchall.return_value = []
     result = _championship_position(conn, driver_id=1, season=2024, race_date=date(2024, 3, 1))
+    assert result is None
+
+
+def test_constructor_dnf_rate_last_season_with_dnfs():
+    conn = MagicMock()
+    # 3 DNF races out of 10 total races in previous season
+    conn.execute.return_value.fetchone.return_value = (3, 10)
+    result = _constructor_dnf_rate_last_season(conn, constructor_id=1, season=2023)
+    assert result == pytest.approx(0.3)
+
+
+def test_constructor_dnf_rate_last_season_no_dnfs():
+    conn = MagicMock()
+    # 0 DNF races out of 10 total
+    conn.execute.return_value.fetchone.return_value = (0, 10)
+    result = _constructor_dnf_rate_last_season(conn, constructor_id=1, season=2023)
+    assert result == pytest.approx(0.0)
+
+
+def test_constructor_dnf_rate_last_season_no_races():
+    conn = MagicMock()
+    conn.execute.return_value.fetchone.return_value = (0, 0)
+    result = _constructor_dnf_rate_last_season(conn, constructor_id=1, season=2023)
+    assert result is None
+
+
+def test_constructor_dnf_rate_last_season_all_dnfs():
+    conn = MagicMock()
+    # Every race had a DNF
+    conn.execute.return_value.fetchone.return_value = (10, 10)
+    result = _constructor_dnf_rate_last_season(conn, constructor_id=1, season=2023)
+    assert result == pytest.approx(1.0)
+
+
+def test_constructor_dnf_rate_last_season_none_row():
+    conn = MagicMock()
+    conn.execute.return_value.fetchone.return_value = None
+    result = _constructor_dnf_rate_last_season(conn, constructor_id=1, season=2023)
     assert result is None
 
 

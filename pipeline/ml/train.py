@@ -31,6 +31,7 @@ FEATURE_COLS = [
     "constructor_wet_race_avg_position",
     "driver_season_avg_position",
     "championship_position",
+    "constructor_dnf_rate_last_season",
 ]
 
 TARGET_COL = "finish_position"

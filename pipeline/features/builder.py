@@ -307,6 +307,34 @@ def _constructor_wet_race_avg_position(conn: Connection, constructor_id: int, ra
     return float(val) if val is not None else None
 
 
+def _constructor_dnf_rate_last_season(conn: Connection, constructor_id: int, season: int) -> float | None:
+    """Proportion of races where the constructor had at least one DNF in the previous season.
+
+    A DNF is any result where status != 'Finished' and status NOT LIKE 'Lapped%'.
+    Returns None if the constructor has no results in the previous season.
+    """
+    row = conn.execute(
+        text(
+            """
+            SELECT
+                COUNT(DISTINCT rr.race_id) FILTER (
+                    WHERE rr.status != 'Finished' AND rr.status NOT LIKE 'Lapped%%'
+                ) AS dnf_races,
+                COUNT(DISTINCT rr.race_id) AS total_races
+            FROM race_results rr
+            JOIN races r ON r.id = rr.race_id
+            WHERE rr.constructor_id = :cid
+              AND r.season = :prev_season
+              AND r.is_completed = TRUE
+            """
+        ),
+        {"cid": constructor_id, "prev_season": season - 1},
+    ).fetchone()
+    if row is None or row[1] == 0:
+        return None
+    return float(row[0]) / float(row[1])
+
+
 def _driver_season_avg_position(conn: Connection, driver_id: int, season: int, race_date: object) -> float | None:
     val = conn.execute(
         text(
@@ -437,6 +465,7 @@ def build_features_for_race(race_id: int, engine: Engine) -> pd.DataFrame:
                 "constructor_wet_race_avg_position": _constructor_wet_race_avg_position(conn, cid, race["date"]),
                 "driver_season_avg_position": _driver_season_avg_position(conn, did, race["season"], race["date"]),
                 "championship_position": _championship_position(conn, did, race["season"], race["date"]),
+                "constructor_dnf_rate_last_season": _constructor_dnf_rate_last_season(conn, cid, race["season"]),
             }
 
             _upsert_feature(conn, race_id, did, feature_data)
