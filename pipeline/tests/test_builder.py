@@ -8,6 +8,7 @@ import pytest
 
 from pipeline.features.builder import (
     _championship_position,
+    _constructor_dnf_rate_last_season,
     _driver_avg_position_at_circuit,
     _driver_avg_position_last_n,
     _driver_avg_qualifying_position_at_circuit,
@@ -146,6 +147,44 @@ def test_championship_position_no_prior_races():
     assert result is None
 
 
+def test_constructor_dnf_rate_last_season_with_dnfs():
+    conn = MagicMock()
+    # 3 DNF races out of 10 total races in previous season
+    conn.execute.return_value.fetchone.return_value = (3, 10)
+    result = _constructor_dnf_rate_last_season(conn, constructor_id=1, season=2023)
+    assert result == pytest.approx(0.3)
+
+
+def test_constructor_dnf_rate_last_season_no_dnfs():
+    conn = MagicMock()
+    # 0 DNF races out of 10 total
+    conn.execute.return_value.fetchone.return_value = (0, 10)
+    result = _constructor_dnf_rate_last_season(conn, constructor_id=1, season=2023)
+    assert result == pytest.approx(0.0)
+
+
+def test_constructor_dnf_rate_last_season_no_races():
+    conn = MagicMock()
+    conn.execute.return_value.fetchone.return_value = (0, 0)
+    result = _constructor_dnf_rate_last_season(conn, constructor_id=1, season=2023)
+    assert result is None
+
+
+def test_constructor_dnf_rate_last_season_all_dnfs():
+    conn = MagicMock()
+    # Every race had a DNF
+    conn.execute.return_value.fetchone.return_value = (10, 10)
+    result = _constructor_dnf_rate_last_season(conn, constructor_id=1, season=2023)
+    assert result == pytest.approx(1.0)
+
+
+def test_constructor_dnf_rate_last_season_none_row():
+    conn = MagicMock()
+    conn.execute.return_value.fetchone.return_value = None
+    result = _constructor_dnf_rate_last_season(conn, constructor_id=1, season=2023)
+    assert result is None
+
+
 # ---------------------------------------------------------------------------
 # Upsert
 # ---------------------------------------------------------------------------
@@ -195,9 +234,55 @@ def test_build_features_no_drivers():
             result.fetchone.return_value = (1, 2024, 5, date(2024, 5, 1), 10, "street")
         elif "DISTINCT d.id" in sql:
             result.fetchall.return_value = []
+        elif "SELECT dc.driver_id" in sql:
+            result.fetchall.return_value = []
         return result
 
     conn.execute.side_effect = side_effect
 
     df = build_features_for_race(race_id=1, engine=engine)
     assert df.empty
+
+
+def test_build_features_pre_weekend_fallback():
+    """When no session data exists, driver lineup falls back to driver_contracts."""
+    engine = MagicMock()
+    conn = MagicMock()
+    engine.begin.return_value.__enter__ = MagicMock(return_value=conn)
+    engine.begin.return_value.__exit__ = MagicMock(return_value=False)
+
+    def side_effect(stmt, params=None):
+        sql = str(stmt)
+        result = MagicMock()
+        if "JOIN circuits c" in sql:
+            # _get_race_info
+            result.fetchone.return_value = (1, 2024, 5, date(2024, 5, 1), 10, "street")
+        elif "DISTINCT d.id" in sql:
+            # primary session-data query — empty triggers fallback
+            result.fetchall.return_value = []
+        elif "SELECT dc.driver_id" in sql:
+            # driver_contracts fallback — returns one driver
+            result.fetchall.return_value = [(1, 2)]
+        elif "FROM weather_snapshots" in sql:
+            result.scalar.return_value = None
+        elif "FROM qualifying_results WHERE race_id" in sql:
+            result.scalar.return_value = 0  # no qualifying data
+        elif "GROUP BY rr.driver_id" in sql:
+            # _championship_position
+            result.fetchall.return_value = [(1, 50)]
+        elif "COUNT(DISTINCT rr.race_id) FILTER" in sql:
+            # _constructor_dnf_rate_last_season
+            result.fetchone.return_value = (1, 10)
+        elif "COUNT(*) FILTER" in sql:
+            # _driver_podium_rate_at_circuit
+            result.fetchone.return_value = (0, 5)
+        else:
+            result.scalar.return_value = 5.0
+        return result
+
+    conn.execute.side_effect = side_effect
+
+    df = build_features_for_race(race_id=1, engine=engine)
+    assert len(df) == 1
+    assert df.iloc[0]["driver_id"] == 1
+    assert df.iloc[0]["constructor_dnf_rate_last_season"] == pytest.approx(0.1)
