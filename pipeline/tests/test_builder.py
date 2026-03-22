@@ -7,11 +7,13 @@ import pandas as pd
 import pytest
 
 from pipeline.features.builder import (
+    _constructor_avg_fp2_pace_at_circuit,
     _constructor_dnf_rate_last_season,
     _constructor_standings,
     _driver_avg_position_at_circuit,
     _driver_avg_position_last_n,
     _driver_avg_qualifying_position_at_circuit,
+    _driver_avg_sector2_time_at_circuit,
     _driver_podium_rate_at_circuit,
     _driver_season_avg_position,
     _driver_standings,
@@ -193,6 +195,42 @@ def test_constructor_dnf_rate_last_season_none_row():
     conn = MagicMock()
     conn.execute.return_value.fetchone.return_value = None
     result = _constructor_dnf_rate_last_season(conn, constructor_id=1, season=2023)
+    assert result is None
+
+
+# ---------------------------------------------------------------------------
+# Sector time and FP2 pace features
+# ---------------------------------------------------------------------------
+
+
+def test_driver_avg_sector2_time_at_circuit_returns_value():
+    conn = _mock_conn_scalar(1.05)
+    result = _driver_avg_sector2_time_at_circuit(conn, driver_id=1, circuit_id=3, race_date=date(2024, 5, 1))
+    assert result == pytest.approx(1.05)
+
+
+def test_driver_avg_sector2_time_at_circuit_returns_none():
+    conn = _mock_conn_scalar(None)
+    result = _driver_avg_sector2_time_at_circuit(conn, driver_id=1, circuit_id=3, race_date=date(2024, 5, 1))
+    assert result is None
+
+
+def test_driver_avg_sector2_time_at_circuit_fastest_driver_is_one():
+    """A driver who is always fastest should have a ratio of 1.0."""
+    conn = _mock_conn_scalar(1.0)
+    result = _driver_avg_sector2_time_at_circuit(conn, driver_id=1, circuit_id=3, race_date=date(2024, 5, 1))
+    assert result == pytest.approx(1.0)
+
+
+def test_constructor_avg_fp2_pace_at_circuit_returns_value():
+    conn = _mock_conn_scalar(1.02)
+    result = _constructor_avg_fp2_pace_at_circuit(conn, constructor_id=2, circuit_id=3, race_date=date(2024, 5, 1))
+    assert result == pytest.approx(1.02)
+
+
+def test_constructor_avg_fp2_pace_at_circuit_returns_none():
+    conn = _mock_conn_scalar(None)
+    result = _constructor_avg_fp2_pace_at_circuit(conn, constructor_id=2, circuit_id=3, race_date=date(2024, 5, 1))
     assert result is None
 
 
