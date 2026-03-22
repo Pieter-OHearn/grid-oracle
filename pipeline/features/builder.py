@@ -310,8 +310,9 @@ def _constructor_wet_race_avg_position(conn: Connection, constructor_id: int, ra
 def _constructor_dnf_rate_last_season(conn: Connection, constructor_id: int, season: int) -> float | None:
     """Proportion of races where the constructor had at least one DNF in the previous season.
 
-    A DNF is any result where status != 'Finished' and not a lapped finish.
-    FastF1 encodes lapped finishers as '+1 Lap', '+2 Laps', etc., so we
+    ``season`` is the current race season; the function queries ``season - 1``
+    internally. A DNF is any result where status != 'Finished' and not a lapped
+    finish. FastF1 encodes lapped finishers as '+1 Lap', '+2 Laps', etc., so we
     exclude those with NOT LIKE '+% Lap%'.
     Returns None if the constructor has no results in the previous season.
     """
