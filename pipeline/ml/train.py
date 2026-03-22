@@ -233,7 +233,7 @@ def resolve_season_split(engine: Engine) -> tuple[list[int], list[int]]:
                 f"(test holdout + training history + current); found {available}"
             )
         test_seasons = [available[-2]]
-        train_seasons = available[:-2] + [latest]
+        train_seasons = [*available[:-2], latest]
     else:
         # All seasons are fully complete: hold out the last season, train on rest.
         test_seasons = [available[-1]]
