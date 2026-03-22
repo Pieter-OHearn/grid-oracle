@@ -1,129 +1,196 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { BarChart2 } from 'lucide-react';
-import { RACE_ACCURACY } from '../data';
+import { BarChart2 as EmptyIcon } from 'lucide-react';
+import { api } from '../services/api';
+import type { ApiAccuracyItem, ApiModelVersionItem, ApiRaceListItem } from '../services/api';
 import { StatCard } from '../components/common/StatCard';
 import { AccuracyLineChart } from '../components/charts/AccuracyLineChart';
 import { ExactHitBarChart } from '../components/charts/ExactHitBarChart';
+import { LearningCurveChart } from '../components/accuracy/LearningCurveChart';
 import { PerRaceBreakdownTable } from '../components/dashboard/PerRaceBreakdownTable';
 import { WinsTally } from '../components/dashboard/WinsTally';
+import { DashboardHeader } from '../components/dashboard/DashboardHeader';
 import {
-  completedRaces,
-  winnerCounts,
-  seasonAvgTop3,
-  seasonAvgExact,
-  seasonAvgMPE,
-  bestRace,
-} from '../utils/season';
+  buildChartData,
+  buildBreakdownRows,
+  buildLearningCurveData,
+  buildWinnerCounts,
+  buildSummaryStats,
+} from '../utils/dashboard';
 
 export function DashboardPage() {
-  const summaryStats = [
-    {
-      label: 'Races Analysed',
-      value: completedRaces.length.toString(),
-      icon: '🏎️',
-      color: '#e10600',
-      sub: 'of 24 total',
-    },
-    {
-      label: 'Avg Podium Accuracy',
-      value: `${seasonAvgTop3}%`,
-      icon: '🏆',
-      color: '#FFD700',
-      sub: 'top 3 correct',
-    },
-    {
-      label: 'Avg Exact Hit Rate',
-      value: `${seasonAvgExact}%`,
-      icon: '⚡',
-      color: '#22c55e',
-      sub: 'exact position',
-    },
-    {
-      label: 'Avg Position Error',
-      value: seasonAvgMPE,
-      icon: '📐',
-      color: '#f97316',
-      sub: 'positions off',
-    },
-    {
-      label: 'Best Race',
-      value: bestRace?.shortName ?? '—',
-      icon: '🎯',
-      color: '#3b82f6',
-      sub: bestRace ? `${RACE_ACCURACY[bestRace.id]?.top3Accuracy ?? 0}% podium` : '—',
-    },
-  ];
+  const [availableSeasons, setAvailableSeasons] = useState<number[]>([]);
+  const [season, setSeason] = useState<number | null>(null);
+  const [accuracyData, setAccuracyData] = useState<ApiAccuracyItem[]>([]);
+  const [raceList, setRaceList] = useState<ApiRaceListItem[]>([]);
+  const [modelVersions, setModelVersions] = useState<ApiModelVersionItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch available seasons on mount
+  useEffect(() => {
+    api
+      .getSeasons()
+      .then((seasons) => {
+        setAvailableSeasons(seasons);
+        if (seasons.length) {
+          setSeason(seasons[0]);
+        } else {
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        setError('Failed to load seasons');
+        setLoading(false);
+      });
+  }, []);
+
+  // Fetch accuracy, race list, and model versions when season changes
+  useEffect(() => {
+    if (season == null) return;
+    setLoading(true);
+    setError(null);
+    Promise.allSettled([
+      api.getSeasonAccuracy(season),
+      api.getRaceList(season),
+      api.getModelVersions(season),
+    ])
+      .then(([accuracyResult, racesResult, versionsResult]) => {
+        if (accuracyResult.status === 'rejected' || racesResult.status === 'rejected') {
+          setError('Failed to load season data');
+          return;
+        }
+        setAccuracyData(accuracyResult.value);
+        setRaceList(racesResult.value);
+        if (versionsResult.status === 'fulfilled') {
+          setModelVersions(versionsResult.value);
+        }
+      })
+      .finally(() => setLoading(false));
+  }, [season]);
+
+  const chartData = buildChartData(accuracyData);
+  const learningCurveData = buildLearningCurveData(modelVersions);
+  const rows = buildBreakdownRows(accuracyData, raceList);
+  const winnerCounts = buildWinnerCounts(accuracyData);
+  const summaryStats = buildSummaryStats(accuracyData, raceList.length);
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className="flex items-center gap-3 mb-6"
-      >
-        <div className="w-8 h-8 rounded-lg bg-[#e10600]/15 border border-[#e10600]/30 flex items-center justify-center">
-          <BarChart2 size={15} className="text-[#e10600]" />
-        </div>
-        <div>
-          <h1
-            className="text-white"
-            style={{
-              fontFamily: "'Barlow Condensed', sans-serif",
-              fontSize: '1.5rem',
-              fontWeight: 800,
-              lineHeight: 1.1,
-            }}
-          >
-            Season Accuracy Dashboard
-          </h1>
-          <p
-            className="text-[#3a3a52] text-xs"
+      <DashboardHeader
+        season={season}
+        completedCount={accuracyData.length}
+        availableSeasons={availableSeasons}
+        onSeasonChange={setSeason}
+      />
+
+      {loading && (
+        <div className="flex items-center justify-center py-24">
+          <div
+            className="text-[#3a3a52] text-sm"
             style={{ fontFamily: "'JetBrains Mono', monospace" }}
           >
-            2025 F1 Season · Rounds 1–{completedRaces.length} completed
-          </p>
+            Loading season data…
+          </div>
         </div>
-      </motion.div>
+      )}
 
-      {/* Summary Stats */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, delay: 0.05 }}
-        className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6"
-      >
-        {summaryStats.map((s, i) => (
-          <motion.div
-            key={s.label}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3, delay: 0.08 + i * 0.05 }}
+      {error && !loading && (
+        <div className="flex items-center justify-center py-24">
+          <div
+            className="text-[#ef4444] text-sm"
+            style={{ fontFamily: "'JetBrains Mono', monospace" }}
           >
-            <StatCard label={s.label} value={s.value} sub={s.sub} icon={s.icon} color={s.color} />
+            {error}
+          </div>
+        </div>
+      )}
+
+      {!loading && !error && accuracyData.length === 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="flex flex-col items-center justify-center py-24 gap-4"
+        >
+          <div className="w-12 h-12 rounded-xl bg-[#0f0f1a] border border-[#1e1e30] flex items-center justify-center">
+            <EmptyIcon size={20} className="text-[#3a3a52]" />
+          </div>
+          <div className="text-center">
+            <p
+              className="text-[#6b7280] text-sm mb-1"
+              style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700 }}
+            >
+              No races evaluated yet
+            </p>
+            <p
+              className="text-[#3a3a52] text-xs"
+              style={{ fontFamily: "'JetBrains Mono', monospace" }}
+            >
+              Accuracy data will appear here after races are completed and evaluated.
+            </p>
+          </div>
+        </motion.div>
+      )}
+
+      {!loading && !error && accuracyData.length > 0 && (
+        <>
+          {/* Summary Stats */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: 0.05 }}
+            className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6"
+          >
+            {summaryStats.map((s, i) => (
+              <motion.div
+                key={s.label}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3, delay: 0.08 + i * 0.05 }}
+              >
+                <StatCard
+                  label={s.label}
+                  value={s.value}
+                  sub={s.sub}
+                  icon={s.icon}
+                  color={s.color}
+                />
+              </motion.div>
+            ))}
           </motion.div>
-        ))}
-      </motion.div>
 
-      {/* Charts */}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, delay: 0.1 }}
-      >
-        <AccuracyLineChart />
-      </motion.div>
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, delay: 0.15 }}
-      >
-        <ExactHitBarChart />
-      </motion.div>
+          {/* Charts */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: 0.1 }}
+          >
+            <AccuracyLineChart data={chartData} />
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: 0.15 }}
+          >
+            <ExactHitBarChart data={chartData} />
+          </motion.div>
 
-      <PerRaceBreakdownTable completedRaces={completedRaces} />
-      <WinsTally winnerCounts={winnerCounts} />
+          <PerRaceBreakdownTable rows={rows} />
+          <WinsTally winnerCounts={winnerCounts} season={season} />
+        </>
+      )}
+
+      {!loading && !error && (
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.2 }}
+          className="mt-6"
+        >
+          <LearningCurveChart data={learningCurveData} />
+        </motion.div>
+      )}
     </div>
   );
 }

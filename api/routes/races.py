@@ -3,7 +3,13 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session, contains_eager, joinedload
 
 from api.database import get_db
-from api.models.orm import EvaluationMetrics, Prediction, Race, RaceResult
+from api.models.orm import (
+    EvaluationMetrics,
+    ModelVersion,
+    Prediction,
+    Race,
+    RaceResult,
+)
 from api.schemas.races import (
     AccuracyItem,
     ComparisonItem,
@@ -13,6 +19,12 @@ from api.schemas.races import (
 )
 
 router = APIRouter()
+
+
+@router.get("/seasons", response_model=list[int])
+def list_seasons(db: Session = Depends(get_db)):
+    rows = db.query(Race.season).distinct().order_by(Race.season.desc()).all()
+    return [r.season for r in rows]
 
 
 def _get_race_or_404(race_id: int, db: Session) -> Race:
@@ -50,8 +62,11 @@ def list_races(season: int, db: Session = Depends(get_db)):
     return [
         RaceListItem(
             id=r.id,
+            round=r.round,
             name=r.name,
             circuit=r.circuit.name,
+            city=r.circuit.city,
+            country=r.circuit.country,
             date=r.date,
             is_completed=r.is_completed,
         )
@@ -63,6 +78,8 @@ def list_races(season: int, db: Session = Depends(get_db)):
 def get_predictions(race_id: int, db: Session = Depends(get_db)):
     _get_race_or_404(race_id, db)
     mv_id = _latest_model_version_id(race_id, db)
+    mv = db.query(ModelVersion).filter(ModelVersion.id == mv_id).first()
+    mv_name = mv.name if mv else "unknown"
 
     preds = (
         db.query(Prediction)
@@ -74,11 +91,14 @@ def get_predictions(race_id: int, db: Session = Depends(get_db)):
     return [
         PredictionItem(
             driver=p.driver.full_name,
+            driver_code=p.driver.code,
             constructor=p.constructor.name,
             predicted_position=p.predicted_position,
             confidence_score=(
                 float(p.confidence_score) if p.confidence_score is not None else None
             ),
+            model_version_id=mv_id,
+            model_version_name=mv_name,
         )
         for p in preds
     ]
@@ -104,6 +124,7 @@ def get_results(race_id: int, db: Session = Depends(get_db)):
     return [
         ResultItem(
             driver=r.driver.full_name,
+            driver_code=r.driver.code,
             constructor=r.constructor.name,
             finish_position=r.finish_position,
             grid_position=r.grid_position,
@@ -137,10 +158,18 @@ def get_comparison(race_id: int, db: Session = Depends(get_db)):
         items.append(
             ComparisonItem(
                 driver=p.driver.full_name,
+                driver_code=p.driver.code,
                 constructor=p.constructor.name,
                 predicted_position=p.predicted_position,
+                confidence_score=(
+                    float(p.confidence_score)
+                    if p.confidence_score is not None
+                    else None
+                ),
                 finish_position=finish_pos,
                 position_delta=delta,
+                status=result.status if result else None,
+                fastest_lap=result.fastest_lap if result else False,
             )
         )
     return items
@@ -156,6 +185,16 @@ def get_season_accuracy(season: int, db: Session = Depends(get_db)):
         .order_by(Race.round)
         .all()
     )
+
+    race_ids = [m.race_id for m in metrics]
+    winners = (
+        db.query(RaceResult)
+        .options(joinedload(RaceResult.driver), joinedload(RaceResult.constructor))
+        .filter(RaceResult.race_id.in_(race_ids), RaceResult.finish_position == 1)
+        .all()
+    )
+    winner_by_race: dict[int, RaceResult] = {w.race_id: w for w in winners}
+
     return [
         AccuracyItem(
             race_id=m.race_id,
@@ -163,6 +202,12 @@ def get_season_accuracy(season: int, db: Session = Depends(get_db)):
             evaluated_at=m.evaluated_at,
             top3_accuracy=(
                 float(m.top3_accuracy) if m.top3_accuracy is not None else None
+            ),
+            top5_accuracy=(
+                float(m.top5_accuracy) if m.top5_accuracy is not None else None
+            ),
+            top10_accuracy=(
+                float(m.top10_accuracy) if m.top10_accuracy is not None else None
             ),
             exact_position_accuracy=(
                 float(m.exact_position_accuracy)
@@ -172,6 +217,21 @@ def get_season_accuracy(season: int, db: Session = Depends(get_db)):
             mean_position_error=(
                 float(m.mean_position_error)
                 if m.mean_position_error is not None
+                else None
+            ),
+            winner_name=(
+                winner_by_race[m.race_id].driver.full_name
+                if m.race_id in winner_by_race
+                else None
+            ),
+            winner_code=(
+                winner_by_race[m.race_id].driver.code
+                if m.race_id in winner_by_race
+                else None
+            ),
+            winner_constructor=(
+                winner_by_race[m.race_id].constructor.name
+                if m.race_id in winner_by_race
                 else None
             ),
         )

@@ -1,19 +1,26 @@
+import {
+  CONFIDENCE_HIGH,
+  CONFIDENCE_STRONG,
+  CONFIDENCE_MODERATE,
+  CONFIDENCE_LOW,
+} from './thresholds';
+
 export const PODIUM_ORDER = [1, 0, 2];
 export const MEDAL_COLORS = ['#FFD700', '#C0C0C0', '#CD7F32'];
 
 export function getConfidenceColor(confidence: number): string {
-  if (confidence >= 70) return '#22c55e';
-  if (confidence >= 55) return '#84cc16';
-  if (confidence >= 40) return '#eab308';
-  if (confidence >= 25) return '#f97316';
+  if (confidence >= CONFIDENCE_HIGH) return '#22c55e';
+  if (confidence >= CONFIDENCE_STRONG) return '#84cc16';
+  if (confidence >= CONFIDENCE_MODERATE) return '#eab308';
+  if (confidence >= CONFIDENCE_LOW) return '#f97316';
   return '#ef4444';
 }
 
 export function getConfidenceLabel(confidence: number): string {
-  if (confidence >= 70) return 'HIGH';
-  if (confidence >= 55) return 'STRONG';
-  if (confidence >= 40) return 'MODERATE';
-  if (confidence >= 25) return 'LOW';
+  if (confidence >= CONFIDENCE_HIGH) return 'HIGH';
+  if (confidence >= CONFIDENCE_STRONG) return 'STRONG';
+  if (confidence >= CONFIDENCE_MODERATE) return 'MODERATE';
+  if (confidence >= CONFIDENCE_LOW) return 'LOW';
   return 'VERY LOW';
 }
 

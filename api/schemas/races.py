@@ -5,21 +5,28 @@ from pydantic import BaseModel
 
 class RaceListItem(BaseModel):
     id: int
+    round: int
     name: str
     circuit: str
+    city: str
+    country: str
     date: datetime.date
     is_completed: bool
 
 
 class PredictionItem(BaseModel):
     driver: str
+    driver_code: str
     constructor: str
     predicted_position: int
     confidence_score: float | None = None
+    model_version_id: int
+    model_version_name: str
 
 
 class ResultItem(BaseModel):
     driver: str
+    driver_code: str
     constructor: str
     finish_position: int | None = None
     grid_position: int | None = None
@@ -28,11 +35,15 @@ class ResultItem(BaseModel):
 
 class ComparisonItem(BaseModel):
     driver: str
+    driver_code: str
     constructor: str
     predicted_position: int
+    confidence_score: float | None = None
     finish_position: int | None = None
     # predicted_position - finish_position; positive = predicted too high
     position_delta: int | None = None
+    status: str | None = None
+    fastest_lap: bool = False
 
 
 class AccuracyItem(BaseModel):
@@ -40,5 +51,10 @@ class AccuracyItem(BaseModel):
     race_name: str
     evaluated_at: datetime.datetime
     top3_accuracy: float | None = None
+    top5_accuracy: float | None = None
+    top10_accuracy: float | None = None
     exact_position_accuracy: float | None = None
     mean_position_error: float | None = None
+    winner_name: str | None = None
+    winner_code: str | None = None
+    winner_constructor: str | None = None

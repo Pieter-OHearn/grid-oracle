@@ -1,4 +1,4 @@
-fastf1==3.4.4
+fastf1==3.8.1
 xgboost==3.2.0
 pandas==2.2.3
 numpy==2.2.0

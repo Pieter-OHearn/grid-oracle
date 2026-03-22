@@ -1,9 +1,9 @@
 import { BarChart2 } from 'lucide-react';
-import type { Race } from '../../types';
+import type { AppRace } from '../../context/RaceListContext';
 
 interface Props {
   isDashboard: boolean;
-  selectedRace?: Race;
+  selectedRace?: AppRace;
 }
 
 export function HeaderBreadcrumb({ isDashboard, selectedRace }: Props) {

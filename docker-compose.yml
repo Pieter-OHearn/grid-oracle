@@ -35,6 +35,8 @@ services:
     environment:
       DATABASE_URL: ${DATABASE_URL}
       OPENWEATHER_API_KEY: ${OPENWEATHER_API_KEY}
+    volumes:
+      - fastf1_cache:/app/pipeline/data/fastf1_cache
     depends_on:
       db:
         condition: service_healthy
@@ -49,3 +51,4 @@ services:
 
 volumes:
   pgdata:
+  fastf1_cache:

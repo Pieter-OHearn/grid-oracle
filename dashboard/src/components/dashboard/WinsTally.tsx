@@ -1,12 +1,22 @@
 import { motion } from 'framer-motion';
 import { Award } from 'lucide-react';
-import { DRIVERS, CONSTRUCTOR_COLORS } from '../../data';
+import { CONSTRUCTOR_COLORS } from '../../data';
+import { useEffect } from 'react';
+import { useDrivers } from '../../context/DriversContext';
 
 interface Props {
   winnerCounts: Record<string, number>;
+  season?: number | null;
 }
 
-export function WinsTally({ winnerCounts }: Props) {
+export function WinsTally({ winnerCounts, season }: Props) {
+  const { getDriver, ensureDrivers } = useDrivers();
+  useEffect(() => {
+    if (season) ensureDrivers(season);
+  }, [ensureDrivers, season]);
+
+  const entries = Object.entries(winnerCounts).sort((a, b) => b[1] - a[1]);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -27,16 +37,19 @@ export function WinsTally({ winnerCounts }: Props) {
           Race Wins So Far
         </h2>
       </div>
-      <div className="flex flex-wrap gap-3">
-        {Object.entries(winnerCounts)
-          .sort((a, b) => b[1] - a[1])
-          .map(([driverId, wins]) => {
-            const driver = DRIVERS[driverId];
-            if (!driver) return null;
-            const teamColor = CONSTRUCTOR_COLORS[driver.constructor] ?? '#6b7280';
+      {entries.length === 0 ? (
+        <p className="text-[#3a3a52] text-xs" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+          No winner data available
+        </p>
+      ) : (
+        <div className="flex flex-wrap gap-3">
+          {entries.map(([driverCode, wins]) => {
+            const driver = getDriver(driverCode, season ?? undefined);
+            const teamName = driver?.constructor ?? 'Unknown';
+            const teamColor = driver?.constructorColor ?? CONSTRUCTOR_COLORS[teamName] ?? '#6b7280';
             return (
               <div
-                key={driverId}
+                key={driverCode}
                 className="flex items-center gap-2 px-3 py-2 bg-[#131320] border border-[#1e1e30] rounded-lg"
               >
                 <div className="w-2 h-2 rounded-full" style={{ background: teamColor }} />
@@ -44,13 +57,13 @@ export function WinsTally({ winnerCounts }: Props) {
                   className="text-white text-xs"
                   style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700 }}
                 >
-                  {driver.shortName}
+                  {driver?.shortName ?? driverCode}
                 </span>
                 <span
                   className="text-[#3a3a52] text-[10px]"
                   style={{ fontFamily: "'JetBrains Mono', monospace" }}
                 >
-                  {driver.constructor}
+                  {teamName}
                 </span>
                 <span
                   className="text-[#FFD700] ml-1"
@@ -65,7 +78,8 @@ export function WinsTally({ winnerCounts }: Props) {
               </div>
             );
           })}
-      </div>
+        </div>
+      )}
     </motion.div>
   );
 }

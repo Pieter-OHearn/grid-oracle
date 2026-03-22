@@ -82,7 +82,7 @@ single component file exceeds ~150 lines.
 - Database: PostgreSQL 16
 - Backend: FastAPI + SQLAlchemy + Pydantic
 - Pipeline: Python, FastF1, XGBoost, APScheduler
-- Frontend: React + Vite + Tailwind + Recharts
+- Frontend: React + Vite + Tailwind + Recharts (package manager: **Bun**)
 - Infrastructure: Docker + Docker Compose
 
 ## Environment variables
@@ -100,15 +100,20 @@ See `.env.example` for all required variables. Never hardcode credentials.
 Run these checks and fix any failures before every commit:
 
 ```bash
-# Lint and format (pipeline)
-ruff check pipeline/
-ruff format --check pipeline/
+# Lint, format check, and build (frontend — run from dashboard/)
+bun run lint
+bun run format:check   # if it fails, run: bun run format
+bun run build
+
+# Lint and format (pipeline + api)
+ruff check pipeline/ api/
+ruff format --check pipeline/ api/
 
 # Tests (pipeline)
 python -m pytest pipeline/tests/ -v
 ```
 
-All three must pass cleanly. If `ruff format --check` fails, run `ruff format pipeline/` to auto-fix, then re-stage the reformatted files before committing.
+All checks must pass cleanly. If `ruff format --check` fails, run `ruff format pipeline/ api/` to auto-fix. If `bun run format:check` fails, run `bun run format` to auto-fix. Re-stage any reformatted files before committing.
 
 ## Data sources
 - FastF1 library for historical race and qualifying data

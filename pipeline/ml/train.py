@@ -6,12 +6,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import pandas as pd
-from sqlalchemy import text
+from sqlalchemy import Integer, bindparam, text
+from sqlalchemy.dialects.postgresql import ARRAY as PgArray
 from sqlalchemy.engine import Engine
-from xgboost import XGBRegressor
 
 from pipeline.ingest.upsert_helpers import get_engine
 from pipeline.ml.features import ARTIFACTS_DIR, prepare_features
+from pipeline.ml.xgb_compat import XGBRegressor
 
 logger = logging.getLogger(__name__)
 
@@ -75,11 +76,6 @@ def attach_targets(features_df: pd.DataFrame, engine: Engine) -> pd.DataFrame:
     return merged
 
 
-# prepare_features is imported from pipeline.ml.features above and re-exported
-# here so that existing callers (e.g. test_train.py) can still import it from
-# this module without change.
-
-
 def train_model(
     df: pd.DataFrame,
     train_seasons: list[int],
@@ -112,7 +108,6 @@ def train_model(
         max_depth=6,
         learning_rate=0.1,
         random_state=42,
-        enable_categorical=True,
     )
     model.fit(X_train, y_train)
 
@@ -142,6 +137,7 @@ def insert_model_version(
     mae: float,
     train_seasons: list[int],
     test_seasons: list[int],
+    triggered_by_race_id: int | None = None,
 ) -> int:
     """Insert a row into model_versions and return the new id."""
     with engine.begin() as conn:
@@ -149,17 +145,22 @@ def insert_model_version(
             text(
                 """
                 INSERT INTO model_versions
-                    (name, trained_at, training_races_count, mae, notes)
-                VALUES (:name, :trained_at, :count, :mae, :notes)
+                    (name, trained_at, training_races_count, mae, notes,
+                     train_seasons, test_season, triggered_by_race_id)
+                VALUES (:name, :trained_at, :count, :mae, :notes,
+                        :train_seasons, :test_season, :triggered_by_race_id)
                 RETURNING id
                 """
-            ),
+            ).bindparams(bindparam("train_seasons", type_=PgArray(Integer))),
             {
                 "name": name,
                 "trained_at": datetime.now(timezone.utc),
                 "count": training_races_count,
                 "mae": float(mae),
                 "notes": f"MAE={mae:.4f}; train={train_seasons}, test={test_seasons}",
+                "train_seasons": train_seasons,
+                "test_season": test_seasons[0] if test_seasons else None,
+                "triggered_by_race_id": triggered_by_race_id,
             },
         ).fetchone()
     if row is None:
@@ -169,28 +170,80 @@ def insert_model_version(
     return model_version_id
 
 
+def update_artifact_path(engine: Engine, model_version_id: int, artifact_path: Path) -> None:
+    """Record the artifact path for a model_versions row."""
+    with engine.begin() as conn:
+        result = conn.execute(
+            text("UPDATE model_versions SET artifact_path = :path WHERE id = :id"),
+            {"path": str(artifact_path), "id": model_version_id},
+        )
+    if result.rowcount == 0:
+        raise RuntimeError(f"update_artifact_path: no model_versions row found with id={model_version_id}")
+    logger.info("Recorded artifact_path=%s for model_version_id=%d", artifact_path, model_version_id)
+
+
+def _delete_model_version(engine: Engine, model_version_id: int) -> None:
+    """Delete a model_versions row. Used to roll back an orphaned insert on failure."""
+    with engine.begin() as conn:
+        conn.execute(
+            text("DELETE FROM model_versions WHERE id = :id"),
+            {"id": model_version_id},
+        )
+    logger.warning("Rolled back model_versions row id=%d after artifact save failure", model_version_id)
+
+
+def get_available_seasons(engine: Engine) -> list[int]:
+    """Return all seasons that have at least one completed race in the DB."""
+    with engine.connect() as conn:
+        rows = conn.execute(
+            text("SELECT DISTINCT season FROM races WHERE is_completed = TRUE ORDER BY season")
+        ).fetchall()
+    return [row[0] for row in rows]
+
+
 def run(
     data_dir: Path = DATA_DIR,
-    artifact_path: Path = ARTIFACTS_DIR / "model_v1.json",
+    artifact_path: Path | None = None,
     engine: Engine | None = None,
-) -> None:
-    """End-to-end training pipeline."""
+    train_seasons: list[int] | None = None,
+    test_seasons: list[int] | None = None,
+    triggered_by_race_id: int | None = None,
+) -> int:
+    """End-to-end training pipeline.
+
+    When train_seasons or test_seasons is None, seasons are derived from the
+    database via get_available_seasons(): all but the last go to training,
+    the last goes to testing. Raises ValueError if seasons overlap or fewer
+    than two completed seasons exist.
+
+    When artifact_path is None, the path is auto-derived as
+    ``ARTIFACTS_DIR/model_v{model_version_id}.json`` after the DB row is
+    inserted. Pass an explicit artifact_path to override this behaviour.
+    """
     if engine is None:
         engine = get_engine()
 
+    if train_seasons is None or test_seasons is None:
+        available = get_available_seasons(engine)
+        if len(available) < 2:
+            raise ValueError(f"Need at least 2 completed seasons; found {available}")
+        if train_seasons is None:
+            train_seasons = available[:-1]
+        if test_seasons is None:
+            test_seasons = [available[-1]]
+
+    overlap = set(train_seasons) & set(test_seasons)
+    if overlap:
+        raise ValueError(f"Seasons appear in both train and test splits: {sorted(overlap)}")
+
     features_df = load_feature_parquets(data_dir)
     df = attach_targets(features_df, engine)
-
-    train_seasons = [2022, 2023]
-    test_seasons = [2024]
 
     model, mae, training_races_count = train_model(
         df,
         train_seasons=train_seasons,
         test_seasons=test_seasons,
     )
-
-    save_model(model, artifact_path)
 
     model_version_id = insert_model_version(
         engine,
@@ -199,8 +252,21 @@ def run(
         mae=mae,
         train_seasons=train_seasons,
         test_seasons=test_seasons,
+        triggered_by_race_id=triggered_by_race_id,
     )
+
+    if artifact_path is None:
+        artifact_path = ARTIFACTS_DIR / f"model_v{model_version_id}.json"
+
+    try:
+        save_model(model, artifact_path)
+        update_artifact_path(engine, model_version_id, artifact_path)
+    except Exception:
+        _delete_model_version(engine, model_version_id)
+        raise
+
     logger.info("Training complete — model_version_id=%d", model_version_id)
+    return model_version_id
 
 
 def main() -> None:
@@ -219,12 +285,33 @@ def main() -> None:
     parser.add_argument(
         "--output",
         type=Path,
-        default=ARTIFACTS_DIR / "model_v1.json",
-        help="Path to save the trained model",
+        default=None,
+        help="Path to save the trained model (default: auto-derived from model_version_id)",
+    )
+    parser.add_argument(
+        "--train-seasons",
+        type=int,
+        nargs="+",
+        default=None,
+        metavar="YEAR",
+        help="Seasons to use for training (default: 2022 2023)",
+    )
+    parser.add_argument(
+        "--test-seasons",
+        type=int,
+        nargs="+",
+        default=None,
+        metavar="YEAR",
+        help="Seasons to use for evaluation (default: 2024)",
     )
     args = parser.parse_args()
 
-    run(data_dir=args.data_dir, artifact_path=args.output)
+    run(
+        data_dir=args.data_dir,
+        artifact_path=args.output,
+        train_seasons=args.train_seasons,
+        test_seasons=args.test_seasons,
+    )
 
 
 if __name__ == "__main__":

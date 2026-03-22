@@ -144,6 +144,8 @@ def seed_data(db):
         model_version_id=model_version.id,
         evaluated_at=datetime.datetime(2024, 3, 3, 10, 0, tzinfo=datetime.UTC),
         top3_accuracy=1.0000,
+        top5_accuracy=1.0000,
+        top10_accuracy=1.0000,
         exact_position_accuracy=1.0000,
         mean_position_error=0.0000,
     )
@@ -331,6 +333,8 @@ def test_get_season_accuracy_contains_metrics(client, seed_data):
     item = data[0]
     assert item["race_name"] == "Bahrain Grand Prix"
     assert item["top3_accuracy"] == 1.0
+    assert item["top5_accuracy"] == 1.0
+    assert item["top10_accuracy"] == 1.0
     assert item["exact_position_accuracy"] == 1.0
     assert item["mean_position_error"] == 0.0
 
@@ -339,3 +343,24 @@ def test_get_season_accuracy_empty_season(client, seed_data):
     response = client.get("/seasons/1900/accuracy")
     assert response.status_code == 200
     assert response.json() == []
+
+
+def test_get_season_accuracy_includes_winner(client, seed_data):
+    response = client.get(f"/seasons/{seed_data['season']}/accuracy")
+    assert response.status_code == 200
+    item = response.json()[0]
+    assert item["winner_name"] == "Max Verstappen"
+    assert item["winner_constructor"] == "Red Bull Racing"
+
+
+# --- /seasons ---
+
+
+def test_list_seasons_returns_200(client, seed_data):
+    response = client.get("/seasons")
+    assert response.status_code == 200
+
+
+def test_list_seasons_returns_expected_year(client, seed_data):
+    response = client.get("/seasons")
+    assert seed_data["season"] in response.json()

@@ -1,33 +1,31 @@
 import { motion } from 'framer-motion';
-import type { PredictionEntry, ActualResult } from '../../types';
-import { DRIVERS, CONSTRUCTOR_COLORS, CONSTRUCTOR_SHORT } from '../../data';
+import type { Row } from '../../types';
+import { CONSTRUCTOR_COLORS, CONSTRUCTOR_SHORT } from '../../data';
 import { DeltaIndicator } from '../common/DeltaIndicator';
 import { getDeltaBg, getDeltaBorder } from '../../utils/results';
+import { useDrivers } from '../../context/DriversContext';
 
 const MEDAL_COLORS = ['#FFD700', '#C0C0C0', '#CD7F32'];
 
-interface Row {
-  result: ActualResult;
-  prediction: PredictionEntry | undefined;
-  predictedPos: number | null;
-  delta: number | null;
-}
-
 interface Props {
   rows: Row[];
+  season?: number;
+  round?: number;
 }
 
-export function ComparisonRows({ rows }: Props) {
+export function ComparisonRows({ rows, season, round }: Props) {
+  const { getDriver } = useDrivers();
   return (
     <div className="space-y-1.5">
       {rows.map(({ result, prediction, predictedPos, delta }, idx) => {
-        const driver = DRIVERS[result.driverId];
-        if (!driver) return null;
-        const teamColor = CONSTRUCTOR_COLORS[driver.constructor] ?? '#6b7280';
+        const driver = getDriver(result.driverCode, season, round);
+        const teamName = driver?.constructor ?? prediction?.constructor ?? 'Unknown';
+        const teamColor = driver?.constructorColor ?? CONSTRUCTOR_COLORS[teamName] ?? '#6b7280';
+        const constructorShort = CONSTRUCTOR_SHORT[teamName] ?? teamName.slice(0, 3).toUpperCase();
 
         return (
           <motion.div
-            key={result.driverId}
+            key={result.driverCode}
             initial={{ opacity: 0, x: -8 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3, delay: 0.15 + idx * 0.022 }}
@@ -65,13 +63,13 @@ export function ComparisonRows({ rows }: Props) {
                       letterSpacing: '0.02em',
                     }}
                   >
-                    {driver.name}
+                    {driver?.name ?? result.driverCode}
                   </span>
                   <span
                     className="text-[#4a4a62] text-[10px]"
                     style={{ fontFamily: "'JetBrains Mono', monospace" }}
                   >
-                    {CONSTRUCTOR_SHORT[driver.constructor]}
+                    {constructorShort}
                   </span>
                 </div>
               </div>
@@ -118,7 +116,7 @@ export function ComparisonRows({ rows }: Props) {
                       letterSpacing: '0.02em',
                     }}
                   >
-                    {driver.name}
+                    {driver?.name ?? result.driverCode}
                   </span>
                   <span
                     className="text-[#4a4a62] text-[10px]"

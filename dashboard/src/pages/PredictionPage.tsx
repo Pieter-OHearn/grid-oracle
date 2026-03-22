@@ -1,16 +1,74 @@
+import { useState, useEffect } from 'react';
 import { useParams } from 'react-router';
 import { AlertCircle } from 'lucide-react';
-import { RACES, RACE_PREDICTIONS } from '../data';
+import { api } from '../services/api';
+import { useRaceList } from '../context/RaceListContext';
+import { useModelVersion } from '../context/ModelVersionContext';
+import { useDrivers } from '../context/DriversContext';
 import { RaceHero } from '../components/prediction/RaceHero';
 import { PodiumPreview } from '../components/prediction/PodiumPreview';
 import { FullGridTable } from '../components/prediction/FullGridTable';
+import type { PredictionEntry } from '../types';
 
 export function PredictionPage() {
   const { raceId } = useParams();
-  const race = RACES.find((r) => r.id === raceId);
-  const predictions = raceId ? RACE_PREDICTIONS[raceId] : null;
+  const { races, currentSeason } = useRaceList();
+  const { ensureDrivers } = useDrivers();
+  const numericId = raceId != null ? Number(raceId) : undefined;
+  const race = numericId != null ? races.find((r) => r.id === numericId) : undefined;
+  const { setModelVersion } = useModelVersion();
+  const [predictions, setPredictions] = useState<PredictionEntry[] | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  if (!race) {
+  useEffect(() => {
+    if (race) {
+      ensureDrivers(currentSeason, race.round);
+    }
+  }, [race, ensureDrivers, currentSeason]);
+
+  useEffect(() => {
+    if (numericId == null) {
+      setLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function load() {
+      setLoading(true);
+      try {
+        const apiPreds = await api.getPredictions(numericId!);
+        if (!cancelled) {
+          setPredictions(
+            apiPreds.map((p) => ({
+              position: p.predicted_position,
+              driverCode: p.driver_code,
+              constructor: p.constructor,
+              confidence: Math.round((p.confidence_score ?? 0) * 100),
+            })),
+          );
+          if (apiPreds.length > 0) {
+            setModelVersion({
+              id: apiPreds[0].model_version_id,
+              name: apiPreds[0].model_version_name,
+            });
+          }
+        }
+      } catch {
+        if (!cancelled) setPredictions(null);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+      setModelVersion(null);
+    };
+  }, [numericId, setModelVersion]);
+
+  if (numericId == null || (!loading && !race)) {
     return (
       <div className="flex items-center justify-center h-full text-[#6b7280]">
         <div className="text-center">
@@ -21,19 +79,30 @@ export function PredictionPage() {
     );
   }
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-full text-[#6b7280]">
+        <p className="text-sm">Loading predictions…</p>
+      </div>
+    );
+  }
+
   if (!predictions) {
     return (
       <div className="flex items-center justify-center h-full text-[#6b7280]">
-        <p className="text-sm">No prediction data available for this race.</p>
+        <div className="text-center">
+          <AlertCircle size={40} className="mx-auto mb-3 opacity-40" />
+          <p className="text-sm">No predictions available for this race yet.</p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
-      <RaceHero race={race} predictions={predictions} />
-      <PodiumPreview predictions={predictions} />
-      <FullGridTable predictions={predictions} />
+      {race && <RaceHero race={race} predictions={predictions} />}
+      <PodiumPreview predictions={predictions} season={currentSeason} round={race?.round} />
+      <FullGridTable predictions={predictions} season={currentSeason} round={race?.round} />
     </div>
   );
 }

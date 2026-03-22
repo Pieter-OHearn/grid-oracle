@@ -14,11 +14,14 @@ from pipeline.scheduler import (
     WEATHER_REFRESH_AFTER_QUALI_MINUTES,
     _compute_job_times,
     _find_session_time,
+    _get_latest_model_version_id_for_race,
+    _get_remaining_race_ids,
     _list_jobs,
     _make_job_id,
     _run_job,
     _schedule_events,
     _should_catch_up,
+    post_race_pipeline,
 )
 
 # ---------------------------------------------------------------------------
@@ -102,6 +105,16 @@ def _mock_engine_with_fetchone(row):
     conn = MagicMock()
     engine.begin.return_value.__enter__ = MagicMock(return_value=conn)
     engine.begin.return_value.__exit__ = MagicMock(return_value=False)
+    conn.execute.return_value.fetchone.return_value = row
+    return engine, conn
+
+
+def _mock_engine_connect_fetchone(row):
+    """Return a mock engine whose conn.execute().fetchone() returns *row* (uses connect())."""
+    engine = MagicMock()
+    conn = MagicMock()
+    engine.connect.return_value.__enter__ = MagicMock(return_value=conn)
+    engine.connect.return_value.__exit__ = MagicMock(return_value=False)
     conn.execute.return_value.fetchone.return_value = row
     return engine, conn
 
@@ -232,11 +245,23 @@ def test_run_job_qualifying(mock_quali):
     mock_quali.assert_called_once_with(2026, 3, engine)
 
 
-@patch("pipeline.scheduler.ingest_results_event")
-def test_run_job_race(mock_race):
+@patch("pipeline.scheduler.post_race_pipeline")
+@patch("pipeline.scheduler.ingest_results_event", return_value=True)
+def test_run_job_race(mock_race, mock_pipeline):
     engine = MagicMock()
     _run_job(JOB_RACE, 2026, 3, 30, engine)
     mock_race.assert_called_once_with(2026, 3, engine)
+    mock_pipeline.assert_called_once_with(30, 2026, engine)
+
+
+@patch("pipeline.scheduler.post_race_pipeline")
+@patch("pipeline.scheduler.ingest_results_event", return_value=False)
+def test_run_job_race_skips_pipeline_when_no_ingest(mock_race, mock_pipeline):
+    """post_race_pipeline is not called when ingest_results_event returns False."""
+    engine = MagicMock()
+    _run_job(JOB_RACE, 2026, 3, 30, engine)
+    mock_race.assert_called_once_with(2026, 3, engine)
+    mock_pipeline.assert_not_called()
 
 
 @patch("pipeline.scheduler.ingest_results_event", side_effect=Exception("boom"))
@@ -437,3 +462,147 @@ def test_weather_refresh_timing_30_min_after_quali():
     expected = quali_dt + timedelta(minutes=30)
     assert jobs[JOB_WEATHER_REFRESH] == expected
     assert expected == datetime(2026, 3, 14, 16, 30, tzinfo=timezone.utc)
+
+
+# ---------------------------------------------------------------------------
+# _get_latest_model_version_id_for_race
+# ---------------------------------------------------------------------------
+
+
+def test_get_latest_model_version_id_returns_value():
+    engine, _ = _mock_engine_connect_fetchone((7,))
+    assert _get_latest_model_version_id_for_race(10, engine) == 7
+
+
+def test_get_latest_model_version_id_returns_none_when_no_predictions():
+    engine, _ = _mock_engine_connect_fetchone(None)
+    assert _get_latest_model_version_id_for_race(10, engine) is None
+
+
+# ---------------------------------------------------------------------------
+# _get_remaining_race_ids
+# ---------------------------------------------------------------------------
+
+
+def test_get_remaining_race_ids_returns_ids():
+    engine = MagicMock()
+    conn = MagicMock()
+    engine.connect.return_value.__enter__ = MagicMock(return_value=conn)
+    engine.connect.return_value.__exit__ = MagicMock(return_value=False)
+    conn.execute.return_value.fetchall.return_value = [(11,), (12,), (13,)]
+    result = _get_remaining_race_ids(2026, engine)
+    assert result == [11, 12, 13]
+    call_params = conn.execute.call_args[0][1]
+    assert "today" in call_params
+    assert "season" in call_params
+
+
+def test_get_remaining_race_ids_empty():
+    engine = MagicMock()
+    conn = MagicMock()
+    engine.connect.return_value.__enter__ = MagicMock(return_value=conn)
+    engine.connect.return_value.__exit__ = MagicMock(return_value=False)
+    conn.execute.return_value.fetchall.return_value = []
+    assert _get_remaining_race_ids(2026, engine) == []
+    call_params = conn.execute.call_args[0][1]
+    assert "today" in call_params
+    assert "season" in call_params
+
+
+# ---------------------------------------------------------------------------
+# post_race_pipeline
+# ---------------------------------------------------------------------------
+
+
+@patch("pipeline.ml.workflow.ml_predict.run")
+@patch("pipeline.ml.workflow.ml_evaluate.run")
+@patch("pipeline.ml.workflow.ml_train.run", return_value=42)
+@patch("pipeline.ml.workflow._get_remaining_race_ids", return_value=[11, 12])
+@patch("pipeline.ml.workflow._get_latest_model_version_id_for_race", return_value=7)
+@patch("pipeline.ml.workflow.export_parquet")
+@patch("pipeline.ml.workflow.build_features_for_race")
+def test_post_race_pipeline_happy_path(
+    mock_build, mock_export, mock_old_id, mock_remaining, mock_train, mock_eval, mock_predict
+):
+    import pandas as pd
+
+    mock_build.return_value = pd.DataFrame({"driver_id": [1]})
+    engine = MagicMock()
+
+    post_race_pipeline(10, 2026, engine)
+
+    mock_build.assert_called_once_with(10, engine)
+    mock_export.assert_called_once()
+    mock_train.assert_called_once_with(engine=engine, triggered_by_race_id=10)
+    mock_eval.assert_called_once_with(race_id=10, model_version_id=7, engine=engine)
+    assert mock_predict.call_count == 2
+    mock_predict.assert_any_call(race_id=11, model_version_id=42, engine=engine)
+    mock_predict.assert_any_call(race_id=12, model_version_id=42, engine=engine)
+
+
+@patch("pipeline.ml.workflow.ml_predict.run")
+@patch("pipeline.ml.workflow.ml_evaluate.run")
+@patch("pipeline.ml.workflow.ml_train.run", side_effect=ValueError("not enough seasons"))
+@patch("pipeline.ml.workflow._get_remaining_race_ids", return_value=[11])
+@patch("pipeline.ml.workflow._get_latest_model_version_id_for_race", return_value=7)
+@patch("pipeline.ml.workflow.export_parquet")
+@patch("pipeline.ml.workflow.build_features_for_race")
+def test_post_race_pipeline_training_failure_does_not_raise(
+    mock_build, mock_export, mock_old_id, mock_remaining, mock_train, mock_eval, mock_predict, caplog
+):
+    """A ValueError from ml_train (insufficient seasons) logs a warning and exits early."""
+    import pandas as pd
+
+    mock_build.return_value = pd.DataFrame({"driver_id": [1]})
+    engine = MagicMock()
+
+    with caplog.at_level("WARNING"):
+        post_race_pipeline(10, 2026, engine)  # must not raise
+
+    mock_train.assert_called_once()
+    mock_eval.assert_not_called()
+    mock_predict.assert_not_called()
+    assert "skipping retrain" in caplog.text
+
+
+@patch("pipeline.ml.workflow.ml_predict.run")
+@patch("pipeline.ml.workflow.ml_evaluate.run")
+@patch("pipeline.ml.workflow.ml_train.run", return_value=42)
+@patch("pipeline.ml.workflow._get_remaining_race_ids", return_value=[11, 12])
+@patch("pipeline.ml.workflow._get_latest_model_version_id_for_race", return_value=None)
+@patch("pipeline.ml.workflow.export_parquet")
+@patch("pipeline.ml.workflow.build_features_for_race")
+def test_post_race_pipeline_skips_eval_when_no_prior_predictions(
+    mock_build, mock_export, mock_old_id, mock_remaining, mock_train, mock_eval, mock_predict
+):
+    """Evaluation is skipped when no prior model_version_id exists for the race."""
+    import pandas as pd
+
+    mock_build.return_value = pd.DataFrame({"driver_id": [1]})
+    engine = MagicMock()
+
+    post_race_pipeline(10, 2026, engine)  # must not raise
+
+    mock_eval.assert_not_called()
+    assert mock_predict.call_count == 2  # predictions still attempted for remaining races
+
+
+@patch("pipeline.ml.workflow.ml_predict.run", side_effect=[None, ValueError("no features")])
+@patch("pipeline.ml.workflow.ml_evaluate.run")
+@patch("pipeline.ml.workflow.ml_train.run", return_value=42)
+@patch("pipeline.ml.workflow._get_remaining_race_ids", return_value=[11, 12])
+@patch("pipeline.ml.workflow._get_latest_model_version_id_for_race", return_value=7)
+@patch("pipeline.ml.workflow.export_parquet")
+@patch("pipeline.ml.workflow.build_features_for_race")
+def test_post_race_pipeline_prediction_failure_continues(
+    mock_build, mock_export, mock_old_id, mock_remaining, mock_train, mock_eval, mock_predict
+):
+    """A prediction failure for one race does not stop predictions for others."""
+    import pandas as pd
+
+    mock_build.return_value = pd.DataFrame({"driver_id": [1]})
+    engine = MagicMock()
+
+    post_race_pipeline(10, 2026, engine)  # must not raise
+
+    assert mock_predict.call_count == 2

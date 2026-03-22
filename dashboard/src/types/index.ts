@@ -1,9 +1,10 @@
 export interface Driver {
-  id: string;
+  code: string;
   name: string;
   shortName: string;
-  number: number;
+  number: number | null;
   constructor: string;
+  constructorColor: string;
   nationality: string;
   flag: string;
 }
@@ -22,13 +23,14 @@ export interface Race {
 
 export interface PredictionEntry {
   position: number;
-  driverId: string;
+  driverCode: string;
+  constructor: string;
   confidence: number;
 }
 
 export interface ActualResult {
   position: number;
-  driverId: string;
+  driverCode: string;
   fastestLap: boolean;
   dnf: boolean;
   dnfReason?: string;
@@ -42,6 +44,18 @@ export interface AccuracyMetrics {
   exactHitRate: number;
   meanPositionError: number;
   podiumCorrect: number;
+}
+
+export interface Row {
+  result: ActualResult;
+  prediction: PredictionEntry | undefined;
+  predictedPos: number | null;
+  delta: number | null;
+}
+
+export interface LearningCurvePoint {
+  round: number;
+  mae: number;
 }
 
 export interface SeasonChartPoint {

@@ -1,4 +1,5 @@
 from sqlalchemy import (
+    JSON,
     Boolean,
     Column,
     Date,
@@ -8,6 +9,7 @@ from sqlalchemy import (
     Numeric,
     Text,
 )
+from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import relationship
 
 from api.database import Base
@@ -51,6 +53,7 @@ class Driver(Base):
     code = Column(Text, nullable=False, unique=True)
     full_name = Column(Text, nullable=False)
     nationality = Column(Text, nullable=False)
+    number = Column(Integer)
 
 
 class Constructor(Base):
@@ -88,7 +91,14 @@ class ModelVersion(Base):
     name = Column(Text, nullable=False)
     trained_at = Column(DateTime(timezone=True), nullable=False)
     training_races_count = Column(Integer, nullable=False)
+    mae = Column(Numeric(6, 4))
+    artifact_path = Column(Text)
     notes = Column(Text)
+    train_seasons = Column(ARRAY(Integer).with_variant(JSON, "sqlite"))
+    test_season = Column(Integer)
+    triggered_by_race_id = Column(Integer, ForeignKey("races.id"))
+
+    triggered_by_race = relationship("Race", foreign_keys=[triggered_by_race_id])
 
 
 class Prediction(Base):
@@ -106,6 +116,7 @@ class Prediction(Base):
     race = relationship("Race", back_populates="predictions")
     driver = relationship("Driver")
     constructor = relationship("Constructor")
+    model_version = relationship("ModelVersion")
 
 
 class EvaluationMetrics(Base):
@@ -115,7 +126,9 @@ class EvaluationMetrics(Base):
     race_id = Column(Integer, ForeignKey("races.id"), nullable=False)
     model_version_id = Column(Integer, ForeignKey("model_versions.id"), nullable=False)
     evaluated_at = Column(DateTime(timezone=True), nullable=False)
-    top3_accuracy = Column(Numeric(5, 4))
+    top3_accuracy = Column(Numeric(6, 4))
+    top5_accuracy = Column(Numeric(6, 4))
+    top10_accuracy = Column(Numeric(6, 4))
     exact_position_accuracy = Column(Numeric(5, 4))
     mean_position_error = Column(Numeric(6, 4))
 

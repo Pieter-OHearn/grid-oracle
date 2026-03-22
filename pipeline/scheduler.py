@@ -16,6 +16,18 @@ from pipeline.ingest.fetch_qualifying import ingest_event as ingest_qualifying_e
 from pipeline.ingest.fetch_results import ingest_event as ingest_results_event
 from pipeline.ingest.fetch_weather import fetch_and_store_weather
 from pipeline.ingest.upsert_helpers import get_engine
+from pipeline.ml import workflow as ml_workflow
+
+post_race_pipeline = ml_workflow.post_race_pipeline
+_get_latest_model_version_id_for_race = ml_workflow._get_latest_model_version_id_for_race
+_get_remaining_race_ids = ml_workflow._get_remaining_race_ids
+
+# Back-compat aliases for unit tests that patch scheduler-level names.
+build_features_for_race = ml_workflow.build_features_for_race
+export_parquet = ml_workflow.export_parquet
+ml_train = ml_workflow.ml_train
+ml_evaluate = ml_workflow.ml_evaluate
+ml_predict = ml_workflow.ml_predict
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 for _noisy in ("fastf1", "req", "core", "logger", "_api", "apscheduler"):
@@ -123,7 +135,14 @@ def _run_job(job_type: str, season: int, round_num: int, race_id: int, engine: E
         elif job_type == JOB_QUALIFYING:
             ingest_qualifying_event(season, round_num, engine)
         elif job_type == JOB_RACE:
-            ingest_results_event(season, round_num, engine)
+            ingested = ingest_results_event(season, round_num, engine)
+            if ingested:
+                post_race_pipeline(race_id, season, engine)
+            else:
+                logger.info(
+                    "_run_job: ingest returned no data for race_id=%d — skipping post_race_pipeline",
+                    race_id,
+                )
         else:
             logger.error("Unknown job type: %s", job_type)
             return
