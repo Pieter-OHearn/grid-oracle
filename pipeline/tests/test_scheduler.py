@@ -284,10 +284,29 @@ def test_run_job_logs_exception(mock_race):
 @patch("pipeline.scheduler._get_latest_model_version_id", return_value=5)
 def test_run_job_preweekend_predictions(mock_model_id, mock_build, mock_predict):
     """Pre-weekend job builds features and runs prediction with the latest model."""
+    import pandas as pd
+
+    mock_build.return_value = pd.DataFrame({"driver_id": [1, 2]})
     engine = MagicMock()
     _run_job(JOB_PREDICTIONS_PREWEEKEND, 2026, 3, 30, engine)
     mock_build.assert_called_once_with(30, engine)
     mock_predict.assert_called_once_with(race_id=30, model_version_id=5, engine=engine)
+
+
+@patch("pipeline.scheduler.ml_predict.run")
+@patch("pipeline.scheduler.build_features_for_race")
+@patch("pipeline.scheduler._get_latest_model_version_id", return_value=5)
+def test_run_job_preweekend_predictions_skips_when_no_features(mock_model_id, mock_build, mock_predict, caplog):
+    """Pre-weekend job skips prediction and logs a warning when feature build returns empty."""
+    import pandas as pd
+
+    mock_build.return_value = pd.DataFrame()
+    engine = MagicMock()
+    with caplog.at_level("WARNING"):
+        _run_job(JOB_PREDICTIONS_PREWEEKEND, 2026, 3, 30, engine)
+    mock_build.assert_called_once_with(30, engine)
+    mock_predict.assert_not_called()
+    assert "no features built" in caplog.text
 
 
 @patch("pipeline.scheduler.ml_predict.run")
@@ -407,6 +426,14 @@ def test_catch_up_preweekend_predictions_qualifying_already_ran():
         quali_dt=now - timedelta(hours=1),
         race_dt=now + timedelta(hours=23),
     )
+    assert _should_catch_up(JOB_PREDICTIONS_PREWEEKEND, event, engine) is False
+
+
+def test_catch_up_preweekend_predictions_no_race_time():
+    """Skip catch-up when the event has no Race session time recorded."""
+    engine, _conn = _mock_engine_with_scalar(0)
+    event = _make_conventional_event()
+    del event["session_times"]["Race"]
     assert _should_catch_up(JOB_PREDICTIONS_PREWEEKEND, event, engine) is False
 
 

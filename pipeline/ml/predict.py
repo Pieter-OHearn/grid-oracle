@@ -61,6 +61,7 @@ def load_features(engine: Engine, race_id: int) -> pd.DataFrame:
             conn,
             params={"race_id": race_id},
         )
+        constructor_source = "qualifying_results"
         if qualifying_raw.empty:
             # Pre-weekend: no qualifying ingested yet — resolve constructor from driver_contracts
             logger.info(
@@ -81,6 +82,7 @@ def load_features(engine: Engine, race_id: int) -> pd.DataFrame:
                 conn,
                 params={"race_id": race_id},
             )
+            constructor_source = "driver_contracts"
 
     if features_raw.empty:
         raise ValueError(f"No features found for race_id={race_id}")
@@ -97,9 +99,10 @@ def load_features(engine: Engine, race_id: int) -> pd.DataFrame:
     dropped = len(expanded) - len(result)
     if dropped > 0:
         logger.warning(
-            "%d driver(s) dropped for race_id=%d: present in features but missing from qualifying_results",
+            "%d driver(s) dropped for race_id=%d: present in features but missing from %s",
             dropped,
             race_id,
+            constructor_source,
         )
 
     logger.info("Loaded features for %d drivers (race_id=%d)", len(result), race_id)

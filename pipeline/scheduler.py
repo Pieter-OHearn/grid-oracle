@@ -196,7 +196,13 @@ def _run_job(job_type: str, season: int, round_num: int, race_id: int, engine: E
                     race_id,
                 )
                 return
-            build_features_for_race(race_id, engine)
+            df = build_features_for_race(race_id, engine)
+            if df.empty:
+                logger.warning(
+                    "_run_job: no features built for race_id=%d — skipping pre-weekend predictions",
+                    race_id,
+                )
+                return
             ml_predict.run(race_id=race_id, model_version_id=model_version_id, engine=engine)
         else:
             logger.error("Unknown job type: %s", job_type)
@@ -271,8 +277,10 @@ def _should_catch_up(job_type: str, event: dict, engine: Engine) -> bool:
 
         if job_type == JOB_PREDICTIONS_PREWEEKEND:
             race_time = _find_session_time(session_times, "Race")
+            if race_time is None:
+                return False
             # Skip if the race has already happened
-            if race_time and now >= race_time:
+            if now >= race_time:
                 return False
             # Skip if qualifying data already exists (quali-based predictions will run instead)
             quali_time = _find_session_time(session_times, "Qualifying")
