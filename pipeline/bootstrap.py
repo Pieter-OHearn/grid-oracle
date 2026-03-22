@@ -86,7 +86,6 @@ def main() -> None:
     for hist_season in HISTORICAL_SEASONS:
         logger.info("  Syncing %d calendar…", hist_season)
         hist_events = sync_season_calendar(hist_season, engine)
-        today = date.today()
         hist_completed = sorted((e for e in hist_events if e["event_date"] < today), key=lambda e: e["round"])
         logger.info("  %d: %d completed races to ingest", hist_season, len(hist_completed))
         for event in hist_completed:
