@@ -13,10 +13,9 @@ Usage (from inside the pipeline container or a local venv):
 import argparse
 import logging
 
-from sqlalchemy import text
-
 from pipeline.ingest.fetch_qualifying import ingest_season
 from pipeline.ingest.upsert_helpers import get_engine
+from sqlalchemy import text
 
 logger = logging.getLogger(__name__)
 
