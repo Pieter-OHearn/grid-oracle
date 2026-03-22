@@ -12,6 +12,7 @@ from pipeline.ml.train import (
     attach_targets,
     insert_model_version,
     load_feature_parquets,
+    resolve_season_split,
     save_model,
     train_model,
     update_artifact_path,
@@ -248,6 +249,61 @@ def test_insert_model_version_no_row():
             train_seasons=[2022],
             test_seasons=[2024],
         )
+
+
+# ---------------------------------------------------------------------------
+# resolve_season_split
+# ---------------------------------------------------------------------------
+
+
+def _make_engine_for_split(available_seasons: list[int], incomplete_in_latest: int) -> MagicMock:
+    """Build a mock engine for resolve_season_split tests.
+
+    available_seasons: returned by get_available_seasons (via SELECT DISTINCT season)
+    incomplete_in_latest: the COUNT(*) of incomplete races in the latest season
+    """
+    season_rows = [(s,) for s in available_seasons]
+    mock_conn = MagicMock()
+    # First call: fetchall() for get_available_seasons
+    # Second call: scalar() for COUNT(*) of incomplete races
+    mock_conn.execute.return_value.fetchall.return_value = season_rows
+    mock_conn.execute.return_value.scalar.return_value = incomplete_in_latest
+    mock_engine = MagicMock()
+    mock_engine.connect.return_value.__enter__ = MagicMock(return_value=mock_conn)
+    mock_engine.connect.return_value.__exit__ = MagicMock(return_value=False)
+    return mock_engine
+
+
+def test_resolve_season_split_current_season_in_progress():
+    """When latest season has incomplete races, test=last full, train=rest + current."""
+    engine = _make_engine_for_split([2022, 2023, 2024, 2025, 2026], incomplete_in_latest=17)
+    train, test = resolve_season_split(engine)
+    assert test == [2025]
+    assert train == [2022, 2023, 2024, 2026]
+    assert 2026 in train
+    assert 2026 not in test
+
+
+def test_resolve_season_split_all_seasons_complete():
+    """When latest season is fully complete, test=latest, train=everything else."""
+    engine = _make_engine_for_split([2022, 2023, 2024, 2025], incomplete_in_latest=0)
+    train, test = resolve_season_split(engine)
+    assert test == [2025]
+    assert train == [2022, 2023, 2024]
+
+
+def test_resolve_season_split_too_few_seasons():
+    """Raises ValueError when fewer than two seasons have completed races."""
+    engine = _make_engine_for_split([2026], incomplete_in_latest=0)
+    with pytest.raises(ValueError, match="Need at least 2"):
+        resolve_season_split(engine)
+
+
+def test_resolve_season_split_no_overlap():
+    """Train and test seasons must never overlap."""
+    engine = _make_engine_for_split([2022, 2023, 2024, 2025, 2026], incomplete_in_latest=5)
+    train, test = resolve_season_split(engine)
+    assert not (set(train) & set(test))
 
 
 # ---------------------------------------------------------------------------

@@ -201,6 +201,40 @@ def get_available_seasons(engine: Engine) -> list[int]:
     return [row[0] for row in rows]
 
 
+def resolve_season_split(engine: Engine) -> tuple[list[int], list[int]]:
+    """Determine train/test season split from the database.
+
+    The test holdout is always the most recently completed *full* season.
+    Training uses all other seasons, including any partially completed current
+    season, so the model learns from the latest competitive order.
+
+    Returns (train_seasons, test_seasons). Raises ValueError if fewer than two
+    seasons have at least one completed race.
+    """
+    available = get_available_seasons(engine)
+    if len(available) < 2:
+        raise ValueError(f"Need at least 2 completed seasons; found {available}")
+
+    latest = available[-1]
+    with engine.connect() as conn:
+        incomplete_count = conn.execute(
+            text("SELECT COUNT(*) FROM races WHERE season = :season AND is_completed = FALSE"),
+            {"season": latest},
+        ).scalar()
+
+    if incomplete_count:
+        # Latest season is still in progress: hold out the previous full season,
+        # train on everything else (including the partial current season).
+        test_seasons = [available[-2]]
+        train_seasons = available[:-2] + [latest]
+    else:
+        # All seasons are fully complete: hold out the last season, train on rest.
+        test_seasons = [available[-1]]
+        train_seasons = available[:-1]
+
+    return train_seasons, test_seasons
+
+
 def run(
     data_dir: Path = DATA_DIR,
     artifact_path: Path | None = None,
@@ -212,9 +246,10 @@ def run(
     """End-to-end training pipeline.
 
     When train_seasons or test_seasons is None, seasons are derived from the
-    database via get_available_seasons(): all but the last go to training,
-    the last goes to testing. Raises ValueError if seasons overlap or fewer
-    than two completed seasons exist.
+    database via resolve_season_split(): the test holdout is the last *full*
+    season, and training includes all other seasons plus any partially completed
+    current season. Raises ValueError if seasons overlap or fewer than two
+    completed seasons exist.
 
     When artifact_path is None, the path is auto-derived as
     ``ARTIFACTS_DIR/model_v{model_version_id}.json`` after the DB row is
@@ -224,13 +259,11 @@ def run(
         engine = get_engine()
 
     if train_seasons is None or test_seasons is None:
-        available = get_available_seasons(engine)
-        if len(available) < 2:
-            raise ValueError(f"Need at least 2 completed seasons; found {available}")
+        resolved_train, resolved_test = resolve_season_split(engine)
         if train_seasons is None:
-            train_seasons = available[:-1]
+            train_seasons = resolved_train
         if test_seasons is None:
-            test_seasons = [available[-1]]
+            test_seasons = resolved_test
 
     overlap = set(train_seasons) & set(test_seasons)
     if overlap:
