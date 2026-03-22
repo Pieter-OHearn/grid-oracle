@@ -22,6 +22,14 @@ post_race_pipeline = ml_workflow.post_race_pipeline
 _get_latest_model_version_id_for_race = ml_workflow._get_latest_model_version_id_for_race
 _get_remaining_race_ids = ml_workflow._get_remaining_race_ids
 
+
+def _get_latest_model_version_id(engine: Engine) -> int | None:
+    """Return the ID of the most recently created model version, or None."""
+    with engine.connect() as conn:
+        row = conn.execute(text("SELECT id FROM model_versions ORDER BY created_at DESC LIMIT 1")).fetchone()
+    return row[0] if row else None
+
+
 # Back-compat aliases for unit tests that patch scheduler-level names.
 build_features_for_race = ml_workflow.build_features_for_race
 export_parquet = ml_workflow.export_parquet
@@ -51,13 +59,23 @@ JOB_WEATHER_INITIAL = "weather_initial"
 JOB_WEATHER_REFRESH = "weather_refresh"
 JOB_QUALIFYING = "qualifying_results"
 JOB_RACE = "race_results"
+JOB_PREDICTIONS_PREWEEKEND = "preweekend_predictions"
 
-ALL_JOB_TYPES = [JOB_WEATHER_INITIAL, JOB_WEATHER_REFRESH, JOB_QUALIFYING, JOB_RACE]
+ALL_JOB_TYPES = [
+    JOB_WEATHER_INITIAL,
+    JOB_WEATHER_REFRESH,
+    JOB_QUALIFYING,
+    JOB_RACE,
+    JOB_PREDICTIONS_PREWEEKEND,
+]
 
 
 # ---------------------------------------------------------------------------
 # Job timing computation
 # ---------------------------------------------------------------------------
+
+
+PREWEEKEND_THURSDAY_HOUR_UTC = 9
 
 
 def _find_session_time(session_times: dict[str, datetime], target: str) -> datetime | None:
@@ -66,6 +84,27 @@ def _find_session_time(session_times: dict[str, datetime], target: str) -> datet
         if name.lower() == target.lower():
             return dt
     return None
+
+
+def _compute_preweekend_thursday(race_time: datetime) -> datetime:
+    """Return the Thursday 09:00 UTC before the race weekend.
+
+    F1 races fall on Sunday (weekday 6) for standard weekends and occasionally
+    Saturday (weekday 5) for sprint weekends.  In both cases, subtracting
+    ``(weekday - 3) % 7`` days rolls back to the Thursday of that same week.
+    """
+    race_date = race_time.date()
+    days_back = (race_date.weekday() - 3) % 7
+    thursday = race_date - timedelta(days=days_back)
+    return datetime(
+        thursday.year,
+        thursday.month,
+        thursday.day,
+        PREWEEKEND_THURSDAY_HOUR_UTC,
+        0,
+        0,
+        tzinfo=timezone.utc,
+    )
 
 
 def _compute_job_times(event: dict) -> list[tuple[str, datetime]]:
@@ -87,6 +126,12 @@ def _compute_job_times(event: dict) -> list[tuple[str, datetime]]:
             (
                 JOB_RACE,
                 race_time + timedelta(minutes=RACE_GRACE_MINUTES),
+            )
+        )
+        jobs.append(
+            (
+                JOB_PREDICTIONS_PREWEEKEND,
+                _compute_preweekend_thursday(race_time),
             )
         )
 
@@ -143,6 +188,22 @@ def _run_job(job_type: str, season: int, round_num: int, race_id: int, engine: E
                     "_run_job: ingest returned no data for race_id=%d — skipping post_race_pipeline",
                     race_id,
                 )
+        elif job_type == JOB_PREDICTIONS_PREWEEKEND:
+            model_version_id = _get_latest_model_version_id(engine)
+            if model_version_id is None:
+                logger.error(
+                    "_run_job: no model version available — cannot generate pre-weekend predictions for race_id=%d",
+                    race_id,
+                )
+                return
+            df = build_features_for_race(race_id, engine)
+            if df.empty:
+                logger.warning(
+                    "_run_job: no features built for race_id=%d — skipping pre-weekend predictions",
+                    race_id,
+                )
+                return
+            ml_predict.run(race_id=race_id, model_version_id=model_version_id, engine=engine)
         else:
             logger.error("Unknown job type: %s", job_type)
             return
@@ -213,6 +274,23 @@ def _should_catch_up(job_type: str, event: dict, engine: Engine) -> bool:
                     return False
                 return not is_completed
             return False
+
+        if job_type == JOB_PREDICTIONS_PREWEEKEND:
+            race_time = _find_session_time(session_times, "Race")
+            if race_time is None:
+                return False
+            # Skip if the race has already happened
+            if now >= race_time:
+                return False
+            # Skip if qualifying data already exists (quali-based predictions will run instead)
+            quali_time = _find_session_time(session_times, "Qualifying")
+            if quali_time and now >= quali_time:
+                return False
+            count = conn.execute(
+                text("SELECT COUNT(*) FROM predictions WHERE race_id = :rid"),
+                {"rid": race_id},
+            ).scalar()
+            return count == 0
 
     return False
 

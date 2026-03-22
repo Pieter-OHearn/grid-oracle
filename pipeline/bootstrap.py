@@ -137,7 +137,10 @@ def main() -> None:
     # Step 3 — Build features and export Parquet files
     # ------------------------------------------------------------------
     logger.info("=== Step 3: Building features ===")
-    races_for_features = completed_events + ([next_event] if next_event else [])
+    # Include all upcoming races so predict_remaining_races can generate pre-weekend
+    # predictions for events that do not yet have qualifying data.  The feature
+    # builder falls back to driver_contracts when no qualifying data is present.
+    races_for_features = completed_events + upcoming_events
     parquet_count = 0
     for event in races_for_features:
         race_id = event["race_id"]

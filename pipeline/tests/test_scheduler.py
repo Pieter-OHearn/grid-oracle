@@ -4,16 +4,20 @@ from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock, patch
 
 from pipeline.scheduler import (
+    JOB_PREDICTIONS_PREWEEKEND,
     JOB_QUALIFYING,
     JOB_RACE,
     JOB_WEATHER_INITIAL,
     JOB_WEATHER_REFRESH,
+    PREWEEKEND_THURSDAY_HOUR_UTC,
     QUALIFYING_GRACE_MINUTES,
     RACE_GRACE_MINUTES,
     WEATHER_INITIAL_DAYS_BEFORE,
     WEATHER_REFRESH_AFTER_QUALI_MINUTES,
     _compute_job_times,
+    _compute_preweekend_thursday,
     _find_session_time,
+    _get_latest_model_version_id,
     _get_latest_model_version_id_for_race,
     _get_remaining_race_ids,
     _list_jobs,
@@ -148,7 +152,7 @@ def test_compute_job_times_conventional_weekend():
     jobs = _compute_job_times(event)
 
     job_dict = dict(jobs)
-    assert len(job_dict) == 4, f"Expected 4 jobs, got {len(job_dict)}: {list(job_dict.keys())}"
+    assert len(job_dict) == 5, f"Expected 5 jobs, got {len(job_dict)}: {list(job_dict.keys())}"
 
     quali_time = event["session_times"]["Qualifying"]
     race_time = event["session_times"]["Race"]
@@ -157,6 +161,7 @@ def test_compute_job_times_conventional_weekend():
     assert job_dict[JOB_WEATHER_REFRESH] == quali_time + timedelta(minutes=WEATHER_REFRESH_AFTER_QUALI_MINUTES)
     assert job_dict[JOB_QUALIFYING] == quali_time + timedelta(minutes=QUALIFYING_GRACE_MINUTES)
     assert job_dict[JOB_RACE] == race_time + timedelta(minutes=RACE_GRACE_MINUTES)
+    assert job_dict[JOB_PREDICTIONS_PREWEEKEND] == _compute_preweekend_thursday(race_time)
 
 
 # ---------------------------------------------------------------------------
@@ -169,7 +174,7 @@ def test_compute_job_times_sprint_weekend():
     jobs = _compute_job_times(event)
 
     job_dict = dict(jobs)
-    assert len(job_dict) == 4
+    assert len(job_dict) == 5
 
     quali_time = event["session_times"]["Qualifying"]
     race_time = event["session_times"]["Race"]
@@ -178,6 +183,7 @@ def test_compute_job_times_sprint_weekend():
     assert job_dict[JOB_WEATHER_REFRESH] == quali_time + timedelta(minutes=WEATHER_REFRESH_AFTER_QUALI_MINUTES)
     assert job_dict[JOB_QUALIFYING] == quali_time + timedelta(minutes=QUALIFYING_GRACE_MINUTES)
     assert job_dict[JOB_RACE] == race_time + timedelta(minutes=RACE_GRACE_MINUTES)
+    assert job_dict[JOB_PREDICTIONS_PREWEEKEND] == _compute_preweekend_thursday(race_time)
 
 
 # ---------------------------------------------------------------------------
@@ -186,19 +192,20 @@ def test_compute_job_times_sprint_weekend():
 
 
 def test_compute_job_times_missing_qualifying():
-    """Only weather_initial and race_results if Qualifying is absent."""
+    """weather_initial, race_results, and preweekend_predictions present; quali jobs absent."""
     event = _make_conventional_event()
     del event["session_times"]["Qualifying"]
     jobs = _compute_job_times(event)
     job_types = [jt for jt, _ in jobs]
     assert JOB_WEATHER_INITIAL in job_types
     assert JOB_RACE in job_types
+    assert JOB_PREDICTIONS_PREWEEKEND in job_types
     assert JOB_QUALIFYING not in job_types
     assert JOB_WEATHER_REFRESH not in job_types
 
 
 def test_compute_job_times_missing_race():
-    """Only weather_refresh and qualifying_results if Race is absent."""
+    """Only weather_refresh and qualifying_results if Race is absent (no preweekend job either)."""
     event = _make_conventional_event()
     del event["session_times"]["Race"]
     jobs = _compute_job_times(event)
@@ -207,6 +214,7 @@ def test_compute_job_times_missing_race():
     assert JOB_QUALIFYING in job_types
     assert JOB_WEATHER_INITIAL not in job_types
     assert JOB_RACE not in job_types
+    assert JOB_PREDICTIONS_PREWEEKEND not in job_types
 
 
 # ---------------------------------------------------------------------------
@@ -269,6 +277,49 @@ def test_run_job_logs_exception(mock_race):
     """Job failures are caught and logged, not raised."""
     engine = MagicMock()
     _run_job(JOB_RACE, 2026, 1, 10, engine)  # Should not raise
+
+
+@patch("pipeline.scheduler.ml_predict.run")
+@patch("pipeline.scheduler.build_features_for_race")
+@patch("pipeline.scheduler._get_latest_model_version_id", return_value=5)
+def test_run_job_preweekend_predictions(mock_model_id, mock_build, mock_predict):
+    """Pre-weekend job builds features and runs prediction with the latest model."""
+    import pandas as pd
+
+    mock_build.return_value = pd.DataFrame({"driver_id": [1, 2]})
+    engine = MagicMock()
+    _run_job(JOB_PREDICTIONS_PREWEEKEND, 2026, 3, 30, engine)
+    mock_build.assert_called_once_with(30, engine)
+    mock_predict.assert_called_once_with(race_id=30, model_version_id=5, engine=engine)
+
+
+@patch("pipeline.scheduler.ml_predict.run")
+@patch("pipeline.scheduler.build_features_for_race")
+@patch("pipeline.scheduler._get_latest_model_version_id", return_value=5)
+def test_run_job_preweekend_predictions_skips_when_no_features(mock_model_id, mock_build, mock_predict, caplog):
+    """Pre-weekend job skips prediction and logs a warning when feature build returns empty."""
+    import pandas as pd
+
+    mock_build.return_value = pd.DataFrame()
+    engine = MagicMock()
+    with caplog.at_level("WARNING"):
+        _run_job(JOB_PREDICTIONS_PREWEEKEND, 2026, 3, 30, engine)
+    mock_build.assert_called_once_with(30, engine)
+    mock_predict.assert_not_called()
+    assert "no features built" in caplog.text
+
+
+@patch("pipeline.scheduler.ml_predict.run")
+@patch("pipeline.scheduler.build_features_for_race")
+@patch("pipeline.scheduler._get_latest_model_version_id", return_value=None)
+def test_run_job_preweekend_predictions_skips_when_no_model(mock_model_id, mock_build, mock_predict, caplog):
+    """Pre-weekend job logs an error and skips prediction when no model is available."""
+    engine = MagicMock()
+    with caplog.at_level("ERROR"):
+        _run_job(JOB_PREDICTIONS_PREWEEKEND, 2026, 3, 30, engine)
+    mock_build.assert_not_called()
+    mock_predict.assert_not_called()
+    assert "no model version available" in caplog.text
 
 
 # ---------------------------------------------------------------------------
@@ -334,6 +385,58 @@ def test_catch_up_weather_refresh_race_already_past():
     assert _should_catch_up(JOB_WEATHER_REFRESH, event, engine) is False
 
 
+def test_catch_up_preweekend_predictions_no_predictions_yet():
+    """Catch up when no predictions exist and race/quali are still in the future."""
+    engine, _conn = _mock_engine_with_scalar(0)  # COUNT(*) predictions = 0
+    now = datetime.now(timezone.utc)
+    event = _make_conventional_event(
+        quali_dt=now + timedelta(days=2),
+        race_dt=now + timedelta(days=3),
+    )
+    assert _should_catch_up(JOB_PREDICTIONS_PREWEEKEND, event, engine) is True
+
+
+def test_catch_up_preweekend_predictions_already_generated():
+    """Skip catch-up when predictions already exist."""
+    engine, _conn = _mock_engine_with_scalar(20)  # COUNT(*) predictions = 20
+    now = datetime.now(timezone.utc)
+    event = _make_conventional_event(
+        quali_dt=now + timedelta(days=2),
+        race_dt=now + timedelta(days=3),
+    )
+    assert _should_catch_up(JOB_PREDICTIONS_PREWEEKEND, event, engine) is False
+
+
+def test_catch_up_preweekend_predictions_race_already_past():
+    """Skip catch-up when the race has already happened."""
+    engine, _conn = _mock_engine_with_scalar(0)
+    now = datetime.now(timezone.utc)
+    event = _make_conventional_event(
+        quali_dt=now - timedelta(days=2),
+        race_dt=now - timedelta(days=1),
+    )
+    assert _should_catch_up(JOB_PREDICTIONS_PREWEEKEND, event, engine) is False
+
+
+def test_catch_up_preweekend_predictions_qualifying_already_ran():
+    """Skip catch-up when qualifying has already happened (quali-based predictions will follow)."""
+    engine, _conn = _mock_engine_with_scalar(0)
+    now = datetime.now(timezone.utc)
+    event = _make_conventional_event(
+        quali_dt=now - timedelta(hours=1),
+        race_dt=now + timedelta(hours=23),
+    )
+    assert _should_catch_up(JOB_PREDICTIONS_PREWEEKEND, event, engine) is False
+
+
+def test_catch_up_preweekend_predictions_no_race_time():
+    """Skip catch-up when the event has no Race session time recorded."""
+    engine, _conn = _mock_engine_with_scalar(0)
+    event = _make_conventional_event()
+    del event["session_times"]["Race"]
+    assert _should_catch_up(JOB_PREDICTIONS_PREWEEKEND, event, engine) is False
+
+
 # ---------------------------------------------------------------------------
 # _schedule_events
 # ---------------------------------------------------------------------------
@@ -355,8 +458,8 @@ def test_schedule_events_registers_future_jobs(mock_dt, mock_catchup):
     event = _make_conventional_event()
     _schedule_events(scheduler, [event], engine)
 
-    # 4 jobs should be registered
-    assert scheduler.add_job.call_count == 4
+    # 5 jobs should be registered (4 original + preweekend_predictions)
+    assert scheduler.add_job.call_count == 5
 
 
 @patch("pipeline.scheduler._run_job")
@@ -378,8 +481,8 @@ def test_schedule_events_catches_up_past_jobs(mock_dt, mock_catchup, mock_run):
 
     # No jobs added to scheduler (all in the past)
     scheduler.add_job.assert_not_called()
-    # catch-up runs were triggered
-    assert mock_run.call_count == 4
+    # catch-up runs were triggered (4 original + preweekend_predictions)
+    assert mock_run.call_count == 5
 
 
 # ---------------------------------------------------------------------------
@@ -465,6 +568,28 @@ def test_weather_refresh_timing_30_min_after_quali():
 
 
 # ---------------------------------------------------------------------------
+# _compute_preweekend_thursday
+# ---------------------------------------------------------------------------
+
+
+def test_compute_preweekend_thursday_sunday_race():
+    """Standard weekend: race on Sunday → Thursday 3 days earlier at 09:00 UTC."""
+    race_dt = datetime(2026, 3, 15, 15, 0, tzinfo=timezone.utc)  # Sunday
+    result = _compute_preweekend_thursday(race_dt)
+    assert result == datetime(2026, 3, 12, PREWEEKEND_THURSDAY_HOUR_UTC, 0, 0, tzinfo=timezone.utc)
+    assert result.weekday() == 3  # Thursday
+
+
+def test_compute_preweekend_thursday_saturday_race():
+    """Sprint weekend: race on Saturday → Thursday 2 days earlier at 09:00 UTC."""
+    race_dt = datetime(2026, 3, 21, 7, 0, tzinfo=timezone.utc)  # Saturday (2026-03-21 is a Saturday)
+    result = _compute_preweekend_thursday(race_dt)
+    assert result.weekday() == 3  # Thursday
+    assert result.hour == PREWEEKEND_THURSDAY_HOUR_UTC
+    assert result.minute == 0
+
+
+# ---------------------------------------------------------------------------
 # _get_latest_model_version_id_for_race
 # ---------------------------------------------------------------------------
 
@@ -477,6 +602,21 @@ def test_get_latest_model_version_id_returns_value():
 def test_get_latest_model_version_id_returns_none_when_no_predictions():
     engine, _ = _mock_engine_connect_fetchone(None)
     assert _get_latest_model_version_id_for_race(10, engine) is None
+
+
+# ---------------------------------------------------------------------------
+# _get_latest_model_version_id
+# ---------------------------------------------------------------------------
+
+
+def test_get_latest_model_version_id_returns_most_recent():
+    engine, _ = _mock_engine_connect_fetchone((3,))
+    assert _get_latest_model_version_id(engine) == 3
+
+
+def test_get_latest_model_version_id_returns_none_when_empty():
+    engine, _ = _mock_engine_connect_fetchone(None)
+    assert _get_latest_model_version_id(engine) is None
 
 
 # ---------------------------------------------------------------------------
