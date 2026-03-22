@@ -10,6 +10,7 @@ from pipeline.features.builder import (
     _championship_position,
     _driver_avg_position_at_circuit,
     _driver_avg_position_last_n,
+    _driver_avg_qualifying_position_at_circuit,
     _driver_podium_rate_at_circuit,
     _driver_season_avg_position,
     _driver_wet_race_avg_position,
@@ -46,6 +47,18 @@ def test_grid_position_returns_value():
 def test_grid_position_returns_none():
     conn = _mock_conn_scalar(None)
     assert _grid_position(conn, race_id=1, driver_id=2) is None
+
+
+def test_driver_avg_qualifying_position_at_circuit():
+    conn = _mock_conn_scalar(6.0)
+    result = _driver_avg_qualifying_position_at_circuit(conn, driver_id=1, circuit_id=3, race_date=date(2024, 5, 1))
+    assert result == 6.0
+
+
+def test_driver_avg_qualifying_position_at_circuit_none():
+    conn = _mock_conn_scalar(None)
+    result = _driver_avg_qualifying_position_at_circuit(conn, driver_id=1, circuit_id=3, race_date=date(2024, 5, 1))
+    assert result is None
 
 
 def test_driver_avg_position_last_n():

@@ -57,6 +57,15 @@ def test_upsert_qualifying_result_executes():
     assert params["grid_position"] == 5
     assert params["q1_time"] == f"{q1.total_seconds()} seconds"
     assert params["q3_time"] is None
+    assert params["grid_penalty"] is None
+
+
+def test_upsert_qualifying_result_with_penalty():
+    conn = MagicMock()
+    upsert_qualifying_result(conn, 1, 2, 3, None, None, None, grid_position=3, grid_penalty=5)
+    params = conn.execute.call_args[0][1]
+    assert params["grid_position"] == 3
+    assert params["grid_penalty"] == 5
 
 
 def test_upsert_qualifying_result_null_grid_position():
@@ -64,3 +73,4 @@ def test_upsert_qualifying_result_null_grid_position():
     upsert_qualifying_result(conn, 1, 2, 3, None, None, None, grid_position=None)
     params = conn.execute.call_args[0][1]
     assert params["grid_position"] is None
+    assert params["grid_penalty"] is None
