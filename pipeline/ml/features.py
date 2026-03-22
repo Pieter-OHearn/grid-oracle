@@ -53,7 +53,8 @@ def prepare_features(df: pd.DataFrame) -> pd.DataFrame:
         "driver_wet_race_avg_position",
         "constructor_wet_race_avg_position",
         "driver_season_avg_position",
-        "championship_position",
+        "driver_championship_position",
+        "constructor_championship_position",
         "constructor_dnf_rate_last_season",
     ]
     for col in _numeric_cols:

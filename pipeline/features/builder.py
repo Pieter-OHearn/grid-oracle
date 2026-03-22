@@ -357,11 +357,12 @@ def _driver_season_avg_position(conn: Connection, driver_id: int, season: int, r
     return float(val) if val is not None else None
 
 
-def _championship_position(conn: Connection, driver_id: int, season: int, race_date: object) -> int | None:
-    """Driver's championship standing at the time of the race.
+def _driver_standings(conn: Connection, season: int, race_date: object) -> dict[int, int]:
+    """Return {driver_id: championship_position} for all point-scorers before race_date.
 
-    Computed by summing points from all completed races in the season
-    that occurred before the given race date, then ranking all drivers.
+    Position is 1-based, ordered by total points descending.  Returns an empty
+    dict when no races have been completed yet (round 1 of a season) — callers
+    treat an empty dict as all drivers tied at position 1.
     """
     rows = conn.execute(
         text(
@@ -378,13 +379,31 @@ def _championship_position(conn: Connection, driver_id: int, season: int, race_d
         ),
         {"season": season, "race_date": race_date},
     ).fetchall()
-    if not rows:
-        return None
-    for position, row in enumerate(rows, start=1):
-        if row[0] == driver_id:
-            return position
-    # Driver hasn't scored in any prior race this season
-    return None
+    return {row[0]: pos for pos, row in enumerate(rows, start=1)}
+
+
+def _constructor_standings(conn: Connection, season: int, race_date: object) -> dict[int, int]:
+    """Return {constructor_id: championship_position} for all point-scorers before race_date.
+
+    Position is 1-based, ordered by total constructor points descending.  Returns
+    an empty dict when no races have been completed yet (round 1).
+    """
+    rows = conn.execute(
+        text(
+            """
+            SELECT rr.constructor_id, SUM(rr.points) AS total_points
+            FROM race_results rr
+            JOIN races r ON r.id = rr.race_id
+            WHERE r.season = :season
+              AND r.date < :race_date
+              AND r.is_completed = TRUE
+            GROUP BY rr.constructor_id
+            ORDER BY total_points DESC
+            """
+        ),
+        {"season": season, "race_date": race_date},
+    ).fetchall()
+    return {row[0]: pos for pos, row in enumerate(rows, start=1)}
 
 
 # ---------------------------------------------------------------------------
@@ -439,6 +458,13 @@ def build_features_for_race(race_id: int, engine: Engine) -> pd.DataFrame:
             > 0
         )
 
+        # Fetch championship standings once per race (not once per driver).
+        # An empty dict means round 1 — everyone defaults to position 1.
+        driver_champ = _driver_standings(conn, race["season"], race["date"])
+        constructor_champ = _constructor_standings(conn, race["season"], race["date"])
+        driver_champ_default = 1 if not driver_champ else len(driver_champ) + 1
+        constructor_champ_default = 1 if not constructor_champ else len(constructor_champ) + 1
+
         rows: list[dict] = []
         for entry in drivers:
             did = entry["driver_id"]
@@ -467,7 +493,8 @@ def build_features_for_race(race_id: int, engine: Engine) -> pd.DataFrame:
                 "driver_wet_race_avg_position": _driver_wet_race_avg_position(conn, did, race["date"]),
                 "constructor_wet_race_avg_position": _constructor_wet_race_avg_position(conn, cid, race["date"]),
                 "driver_season_avg_position": _driver_season_avg_position(conn, did, race["season"], race["date"]),
-                "championship_position": _championship_position(conn, did, race["season"], race["date"]),
+                "driver_championship_position": driver_champ.get(did, driver_champ_default),
+                "constructor_championship_position": constructor_champ.get(cid, constructor_champ_default),
                 "constructor_dnf_rate_last_season": _constructor_dnf_rate_last_season(conn, cid, race["season"]),
             }
 

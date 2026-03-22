@@ -30,7 +30,8 @@ FEATURE_COLS = [
     "driver_wet_race_avg_position",
     "constructor_wet_race_avg_position",
     "driver_season_avg_position",
-    "championship_position",
+    "driver_championship_position",
+    "constructor_championship_position",
     "constructor_dnf_rate_last_season",
 ]
 
@@ -44,7 +45,17 @@ def load_feature_parquets(data_dir: Path) -> pd.DataFrame:
         raise FileNotFoundError(f"No feature Parquet files found in {data_dir}")
     logger.info("Loading %d Parquet files from %s", len(parquet_files), data_dir)
     dfs = [pd.read_parquet(p) for p in parquet_files]
-    return pd.concat(dfs, ignore_index=True)
+    df = pd.concat(dfs, ignore_index=True)
+    # Backward compatibility: Parquet files written before TICKET 035 use the old
+    # column name "championship_position". Migrate rows from old files by filling
+    # the new column with the old values where it is absent or null.
+    if "championship_position" in df.columns:
+        if "driver_championship_position" not in df.columns:
+            df = df.rename(columns={"championship_position": "driver_championship_position"})
+        else:
+            df["driver_championship_position"] = df["driver_championship_position"].fillna(df["championship_position"])
+            df = df.drop(columns=["championship_position"])
+    return df
 
 
 def attach_targets(features_df: pd.DataFrame, engine: Engine) -> pd.DataFrame:
