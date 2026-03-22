@@ -144,6 +144,8 @@ def seed_data(db):
         model_version_id=model_version.id,
         evaluated_at=datetime.datetime(2024, 3, 3, 10, 0, tzinfo=datetime.UTC),
         top3_accuracy=1.0000,
+        top5_accuracy=1.0000,
+        top10_accuracy=1.0000,
         exact_position_accuracy=1.0000,
         mean_position_error=0.0000,
     )
@@ -331,6 +333,8 @@ def test_get_season_accuracy_contains_metrics(client, seed_data):
     item = data[0]
     assert item["race_name"] == "Bahrain Grand Prix"
     assert item["top3_accuracy"] == 1.0
+    assert item["top5_accuracy"] == 1.0
+    assert item["top10_accuracy"] == 1.0
     assert item["exact_position_accuracy"] == 1.0
     assert item["mean_position_error"] == 0.0
 

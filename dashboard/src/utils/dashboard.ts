@@ -17,7 +17,7 @@ export function buildChartData(items: ApiAccuracyItem[]): SeasonChartPoint[] {
     race: item.race_name.replace(' Grand Prix', '').slice(0, 3).toUpperCase(),
     round: idx + 1,
     top3: Math.round((item.top3_accuracy ?? 0) * 100),
-    top10: 0,
+    top10: Math.round((item.top10_accuracy ?? 0) * 100),
     exactHit: Math.round((item.exact_position_accuracy ?? 0) * 100),
     mpe: item.mean_position_error ?? 0,
     podiumCorrect: 0,
@@ -39,7 +39,8 @@ export function buildBreakdownRows(
       country,
       countryFlag: getCountryFlag(country),
       top3Accuracy: item.top3_accuracy != null ? Math.round(item.top3_accuracy * 100) : undefined,
-      top10Accuracy: undefined,
+      top10Accuracy:
+        item.top10_accuracy != null ? Math.round(item.top10_accuracy * 100) : undefined,
       exactHitRate:
         item.exact_position_accuracy != null
           ? Math.round(item.exact_position_accuracy * 100)

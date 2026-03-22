@@ -51,6 +51,8 @@ class AccuracyItem(BaseModel):
     race_name: str
     evaluated_at: datetime.datetime
     top3_accuracy: float | None = None
+    top5_accuracy: float | None = None
+    top10_accuracy: float | None = None
     exact_position_accuracy: float | None = None
     mean_position_error: float | None = None
     winner_name: str | None = None
