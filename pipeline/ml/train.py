@@ -225,6 +225,13 @@ def resolve_season_split(engine: Engine) -> tuple[list[int], list[int]]:
     if incomplete_count:
         # Latest season is still in progress: hold out the previous full season,
         # train on everything else (including the partial current season).
+        # Need at least 3 seasons: one for test holdout, one for training history,
+        # one in-progress — otherwise training would contain no completed data.
+        if len(available) < 3:
+            raise ValueError(
+                f"Need at least 3 seasons when current season is in progress "
+                f"(test holdout + training history + current); found {available}"
+            )
         test_seasons = [available[-2]]
         train_seasons = available[:-2] + [latest]
     else:
@@ -327,7 +334,7 @@ def main() -> None:
         nargs="+",
         default=None,
         metavar="YEAR",
-        help="Seasons to use for training (default: auto-derived from DB — all but the most recent completed season)",
+        help="Seasons for training (default: auto-derived — all except test holdout, plus partial current season)",
     )
     parser.add_argument(
         "--test-seasons",
@@ -335,7 +342,7 @@ def main() -> None:
         nargs="+",
         default=None,
         metavar="YEAR",
-        help="Seasons to use for evaluation (default: auto-derived from DB — the most recent completed season)",
+        help="Seasons to use for evaluation (default: auto-derived — the most recently completed full season)",
     )
     args = parser.parse_args()
 
