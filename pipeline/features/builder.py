@@ -49,7 +49,12 @@ def _get_race_info(conn: Connection, race_id: int) -> dict:
 
 
 def _get_entered_drivers(conn: Connection, race_id: int) -> list[dict]:
-    """Return drivers entered in the race (from qualifying or race results)."""
+    """Return drivers entered in the race.
+
+    Uses qualifying/race results when available (race weekend has started).
+    Falls back to driver_contracts for pre-weekend predictions where no session
+    data has been ingested yet.
+    """
     rows = conn.execute(
         text(
             """
@@ -70,6 +75,26 @@ def _get_entered_drivers(conn: Connection, race_id: int) -> list[dict]:
         ),
         {"rid": race_id},
     ).fetchall()
+
+    if rows:
+        return [{"driver_id": r[0], "constructor_id": r[1]} for r in rows]
+
+    # Pre-weekend fallback: no qualifying or race data yet — use driver_contracts
+    logger.info("No session data for race %d — using driver_contracts for driver lineup", race_id)
+    rows = conn.execute(
+        text(
+            """
+            SELECT dc.driver_id, dc.constructor_id
+            FROM driver_contracts dc
+            JOIN races r ON r.id = :rid
+            WHERE dc.season = r.season
+              AND dc.start_round <= r.round
+              AND (dc.end_round IS NULL OR dc.end_round >= r.round)
+            ORDER BY dc.driver_id
+            """
+        ),
+        {"rid": race_id},
+    ).fetchall()
     return [{"driver_id": r[0], "constructor_id": r[1]} for r in rows]
 
 
@@ -79,6 +104,28 @@ def _grid_position(conn: Connection, race_id: int, driver_id: int) -> int | None
         text("SELECT grid_position FROM qualifying_results WHERE race_id = :rid AND driver_id = :did"),
         {"rid": race_id, "did": driver_id},
     ).scalar()
+
+
+def _driver_avg_qualifying_position_at_circuit(
+    conn: Connection, driver_id: int, circuit_id: int, race_date: object
+) -> float | None:
+    """Historical average qualifying (grid) position at a circuit before race_date."""
+    val = conn.execute(
+        text(
+            """
+            SELECT AVG(qr.grid_position)
+            FROM qualifying_results qr
+            JOIN races r ON r.id = qr.race_id
+            WHERE qr.driver_id = :did
+              AND r.circuit_id = :cid
+              AND qr.grid_position IS NOT NULL
+              AND r.date < :race_date
+              AND r.is_completed = TRUE
+            """
+        ),
+        {"did": driver_id, "cid": circuit_id, "race_date": race_date},
+    ).scalar()
+    return float(val) if val is not None else None
 
 
 def _driver_avg_position_last_n(conn: Connection, driver_id: int, race_date: object, n: int = 3) -> float | None:
@@ -347,13 +394,26 @@ def build_features_for_race(race_id: int, engine: Engine) -> pd.DataFrame:
 
         is_wet = _is_wet_race_forecast(conn, race_id)
 
+        has_qualifying = (
+            conn.execute(
+                text("SELECT COUNT(*) FROM qualifying_results WHERE race_id = :rid"),
+                {"rid": race_id},
+            ).scalar()
+            > 0
+        )
+
         rows: list[dict] = []
         for entry in drivers:
             did = entry["driver_id"]
             cid = entry["constructor_id"]
 
+            if has_qualifying:
+                grid_pos = _grid_position(conn, race_id, did)
+            else:
+                grid_pos = _driver_avg_qualifying_position_at_circuit(conn, did, race["circuit_id"], race["date"])
+
             feature_data = {
-                "grid_position": _grid_position(conn, race_id, did),
+                "grid_position": grid_pos,
                 "driver_avg_position_last_3_races": _driver_avg_position_last_n(conn, did, race["date"], n=3),
                 "driver_avg_position_at_circuit": _driver_avg_position_at_circuit(
                     conn, did, race["circuit_id"], race["date"]
