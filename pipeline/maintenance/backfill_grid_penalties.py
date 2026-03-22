@@ -28,9 +28,7 @@ def backfill_grid_penalties(engine, seasons: list[int]) -> None:
     is stored. Existing rows are updated via ON CONFLICT DO UPDATE.
     """
     with engine.connect() as conn:
-        null_count = conn.execute(
-            text("SELECT COUNT(*) FROM qualifying_results WHERE grid_penalty IS NULL")
-        ).scalar()
+        null_count = conn.execute(text("SELECT COUNT(*) FROM qualifying_results WHERE grid_penalty IS NULL")).scalar()
 
     logger.info("Rows with NULL grid_penalty before backfill: %d", null_count)
 
