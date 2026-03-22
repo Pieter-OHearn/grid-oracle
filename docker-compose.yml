@@ -37,6 +37,7 @@ services:
       OPENWEATHER_API_KEY: ${OPENWEATHER_API_KEY}
     volumes:
       - fastf1_cache:/app/pipeline/data/fastf1_cache
+      - model_artifacts:/app/pipeline/ml/artifacts
     depends_on:
       db:
         condition: service_healthy
@@ -52,3 +53,4 @@ services:
 volumes:
   pgdata:
   fastf1_cache:
+  model_artifacts:

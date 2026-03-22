@@ -174,15 +174,20 @@ def _should_catch_up(job_type: str, event: dict, engine: Engine) -> bool:
             row = conn.execute(
                 text("""
                     SELECT is_completed,
-                           (SELECT COUNT(*) FROM race_results WHERE race_id = :rid)
+                           (SELECT COUNT(*) FROM race_results WHERE race_id = :rid),
+                           (SELECT COUNT(*) FROM predictions WHERE race_id = :rid)
                     FROM races WHERE id = :rid
                 """),
                 {"rid": race_id},
             ).fetchone()
             if row is None:
                 return False
-            is_completed, result_count = row
-            return not is_completed and result_count == 0
+            is_completed, result_count, prediction_count = row
+            # Skip if race already completed, results already present, or predictions
+            # already generated (post_race_pipeline already ran, e.g. via bootstrap).
+            if is_completed or result_count > 0 or prediction_count > 0:
+                return False
+            return True
 
         if job_type == JOB_WEATHER_INITIAL:
             race_time = _find_session_time(session_times, "Race")
@@ -255,8 +260,9 @@ def _list_jobs(scheduler: BlockingScheduler) -> None:
         return
     logger.info("Scheduled jobs (%d):", len(jobs))
     _min = datetime.min.replace(tzinfo=timezone.utc)
-    for job in sorted(jobs, key=lambda j: j.next_run_time or _min):
-        next_run = job.next_run_time.isoformat() if job.next_run_time else "N/A"
+    for job in sorted(jobs, key=lambda j: getattr(j, "next_run_time", None) or _min):
+        next_run_time = getattr(job, "next_run_time", None)
+        next_run = next_run_time.isoformat() if next_run_time else "N/A"
         logger.info("  %-45s  next run: %s", job.id, next_run)
 
 
