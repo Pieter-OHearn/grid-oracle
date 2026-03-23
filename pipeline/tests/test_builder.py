@@ -443,22 +443,22 @@ def test_sector_fp2_imputation_all_null_defaults_to_one():
 
 
 def test_circuit_tyre_degradation_index_high():
-    """Average hard ratio > 0.50 → index 2."""
-    conn = _mock_conn_scalar(0.60)
+    """avg_compounds_per_driver >= 2.3 → index 2 (e.g. Barcelona: ~2.33)."""
+    conn = _mock_conn_scalar(2.60)
     result = _circuit_tyre_degradation_index(conn, circuit_id=1, race_date=date(2024, 5, 1))
     assert result == 2
 
 
 def test_circuit_tyre_degradation_index_medium():
-    """Average hard ratio between 0.30 and 0.50 (inclusive) → index 1."""
-    conn = _mock_conn_scalar(0.40)
+    """avg_compounds_per_driver in [2.1, 2.3) → index 1."""
+    conn = _mock_conn_scalar(2.20)
     result = _circuit_tyre_degradation_index(conn, circuit_id=1, race_date=date(2024, 5, 1))
     assert result == 1
 
 
 def test_circuit_tyre_degradation_index_low():
-    """Average hard ratio < 0.30 → index 0."""
-    conn = _mock_conn_scalar(0.15)
+    """avg_compounds_per_driver < 2.1 → index 0 (e.g. Monza: ~2.0)."""
+    conn = _mock_conn_scalar(1.95)
     result = _circuit_tyre_degradation_index(conn, circuit_id=1, race_date=date(2024, 5, 1))
     assert result == 0
 
@@ -471,17 +471,17 @@ def test_circuit_tyre_degradation_index_no_data():
 
 
 def test_circuit_tyre_degradation_index_boundary_low_medium():
-    """Exactly 0.30 → index 1 (medium, not low)."""
-    conn = _mock_conn_scalar(0.30)
+    """Exactly 2.1 → index 1 (medium, not low)."""
+    conn = _mock_conn_scalar(2.10)
     result = _circuit_tyre_degradation_index(conn, circuit_id=1, race_date=date(2024, 5, 1))
     assert result == 1
 
 
 def test_circuit_tyre_degradation_index_boundary_medium_high():
-    """Exactly 0.50 → index 1 (medium, not high)."""
-    conn = _mock_conn_scalar(0.50)
+    """Exactly 2.3 → index 2 (high, not medium)."""
+    conn = _mock_conn_scalar(2.30)
     result = _circuit_tyre_degradation_index(conn, circuit_id=1, race_date=date(2024, 5, 1))
-    assert result == 1
+    assert result == 2
 
 
 # ---------------------------------------------------------------------------

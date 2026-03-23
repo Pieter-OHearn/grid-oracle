@@ -450,22 +450,24 @@ def _driver_avg_sector2_time_at_circuit(
 def _circuit_tyre_degradation_index(conn: Connection, circuit_id: int, race_date: object) -> int:
     """Ordinal encoding of historically high/medium/low tyre degradation at a circuit.
 
-    Computed as the average proportion of HARD compound laps across all completed
-    races at this circuit before race_date.  Thresholds:
-        < 0.30   -> 0 (low degradation, e.g. Monza)
-        0.30-0.50 -> 1 (medium)
-        > 0.50   -> 2 (high degradation, e.g. Barcelona)
+    Computed as the average number of distinct compounds used per driver across all
+    completed races at this circuit before race_date.  More compounds per driver
+    indicates more pit stops, which is a reliable proxy for tyre degradation.
+    Thresholds:
+        < 2.1  -> 0 (low degradation, e.g. Monza)
+        2.1-2.3 -> 1 (medium)
+        >= 2.3  -> 2 (high degradation, e.g. Barcelona)
 
     Returns 1 (neutral) when no prior tyre data exists for the circuit.
     """
     val = conn.execute(
         text(
             """
-            SELECT AVG(sub.hard_ratio)
+            SELECT AVG(sub.avg_compounds)
             FROM (
                 SELECT
-                    SUM(rtd.lap_count) FILTER (WHERE rtd.compound = 'HARD')::float
-                    / NULLIF(SUM(rtd.lap_count), 0) AS hard_ratio
+                    COUNT(DISTINCT (rtd.driver_id, rtd.compound))::float
+                    / NULLIF(COUNT(DISTINCT rtd.driver_id), 0) AS avg_compounds
                 FROM race_tyre_data rtd
                 JOIN races r ON r.id = rtd.race_id
                 WHERE r.circuit_id = :cid
@@ -479,10 +481,10 @@ def _circuit_tyre_degradation_index(conn: Connection, circuit_id: int, race_date
     ).scalar()
     if val is None:
         return 1
-    ratio = float(val)
-    if ratio < 0.30:
+    avg = float(val)
+    if avg < 2.1:
         return 0
-    if ratio <= 0.50:
+    if avg < 2.3:
         return 1
     return 2
 
@@ -490,9 +492,9 @@ def _circuit_tyre_degradation_index(conn: Connection, circuit_id: int, race_date
 def _constructor_hard_compound_avg_position(conn: Connection, constructor_id: int, race_date: object) -> float | None:
     """Historical average finish position for a constructor at high-degradation circuits.
 
-    A circuit is considered high-degradation when the average proportion of HARD
-    compound laps across its historical races exceeds 0.50 (i.e. the same threshold
-    used for circuit_tyre_degradation_index == 2).
+    A circuit is considered high-degradation when its average compounds-per-driver
+    across historical races is >= 2.3 (i.e. the same threshold used for
+    circuit_tyre_degradation_index == 2).
 
     Returns None when the constructor has no results at high-degradation circuits.
     """
@@ -511,10 +513,8 @@ def _constructor_hard_compound_avg_position(conn: Connection, constructor_id: in
                   FROM (
                       SELECT
                           r2.circuit_id,
-                          AVG(
-                              SUM(rtd.lap_count) FILTER (WHERE rtd.compound = 'HARD')::float
-                              / NULLIF(SUM(rtd.lap_count), 0)
-                          ) AS avg_hard_ratio
+                          COUNT(DISTINCT (rtd.driver_id, rtd.compound))::float
+                          / NULLIF(COUNT(DISTINCT rtd.driver_id), 0) AS avg_compounds
                       FROM race_tyre_data rtd
                       JOIN races r2 ON r2.id = rtd.race_id
                       WHERE r2.date < :race_date
@@ -522,7 +522,7 @@ def _constructor_hard_compound_avg_position(conn: Connection, constructor_id: in
                       GROUP BY r2.circuit_id, r2.id
                   ) per_circuit
                   GROUP BY circuit_id
-                  HAVING AVG(avg_hard_ratio) > 0.50
+                  HAVING AVG(avg_compounds) >= 2.3
               )
             """
         ),
