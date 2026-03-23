@@ -531,6 +531,54 @@ def _constructor_hard_compound_avg_position(conn: Connection, constructor_id: in
     return float(val) if val is not None else None
 
 
+def _driver_sprint_avg_position_at_circuit(
+    conn: Connection, driver_id: int, circuit_id: int, race_date: object
+) -> float | None:
+    """Historical average sprint race finish position for a driver at this circuit.
+
+    Returns None when no prior sprint data exists for the driver at this circuit.
+    """
+    val = conn.execute(
+        text(
+            """
+            SELECT AVG(sr.sprint_position)
+            FROM sprint_results sr
+            JOIN races r ON r.id = sr.race_id
+            WHERE sr.driver_id = :did
+              AND r.circuit_id = :cid
+              AND sr.sprint_position IS NOT NULL
+              AND r.date < :race_date
+              AND r.is_completed = TRUE
+            """
+        ),
+        {"did": driver_id, "cid": circuit_id, "race_date": race_date},
+    ).scalar()
+    return float(val) if val is not None else None
+
+
+def _driver_sprint_race_pace(conn: Connection, driver_id: int, race_date: object) -> float | None:
+    """Driver's average sprint race finish position across all historical sprints.
+
+    Lower values mean the driver consistently finishes well in sprint format.
+    Returns None when the driver has no prior sprint race results.
+    """
+    val = conn.execute(
+        text(
+            """
+            SELECT AVG(sr.sprint_position)
+            FROM sprint_results sr
+            JOIN races r ON r.id = sr.race_id
+            WHERE sr.driver_id = :did
+              AND sr.sprint_position IS NOT NULL
+              AND r.date < :race_date
+              AND r.is_completed = TRUE
+            """
+        ),
+        {"did": driver_id, "race_date": race_date},
+    ).scalar()
+    return float(val) if val is not None else None
+
+
 def _constructor_avg_fp2_pace_at_circuit(
     conn: Connection, constructor_id: int, circuit_id: int, race_date: object
 ) -> float | None:
@@ -684,6 +732,11 @@ def build_features_for_race(race_id: int, engine: Engine) -> pd.DataFrame:
                 "constructor_hard_compound_avg_position": _constructor_hard_compound_avg_position(
                     conn, cid, race["date"]
                 ),
+                # Sprint features — None for drivers/circuits with no sprint history.
+                "driver_sprint_avg_position_at_circuit": _driver_sprint_avg_position_at_circuit(
+                    conn, did, race["circuit_id"], race["date"]
+                ),
+                "driver_sprint_race_pace": _driver_sprint_race_pace(conn, did, race["date"]),
             }
 
             rows.append({"race_id": race_id, "driver_id": did, **feature_data})

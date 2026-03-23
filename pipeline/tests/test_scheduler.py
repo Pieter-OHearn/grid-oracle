@@ -7,11 +7,13 @@ from pipeline.scheduler import (
     JOB_PREDICTIONS_PREWEEKEND,
     JOB_QUALIFYING,
     JOB_RACE,
+    JOB_SPRINT,
     JOB_WEATHER_INITIAL,
     JOB_WEATHER_REFRESH,
     PREWEEKEND_THURSDAY_HOUR_UTC,
     QUALIFYING_GRACE_MINUTES,
     RACE_GRACE_MINUTES,
+    SPRINT_GRACE_MINUTES,
     WEATHER_INITIAL_DAYS_BEFORE,
     WEATHER_REFRESH_AFTER_QUALI_MINUTES,
     _compute_job_times,
@@ -20,6 +22,7 @@ from pipeline.scheduler import (
     _get_latest_model_version_id,
     _get_latest_model_version_id_for_race,
     _get_remaining_race_ids,
+    _is_sprint_weekend,
     _list_jobs,
     _make_job_id,
     _run_job,
@@ -174,16 +177,18 @@ def test_compute_job_times_sprint_weekend():
     jobs = _compute_job_times(event)
 
     job_dict = dict(jobs)
-    assert len(job_dict) == 5
+    assert len(job_dict) == 6, f"Expected 6 jobs for sprint weekend, got {len(job_dict)}: {list(job_dict.keys())}"
 
     quali_time = event["session_times"]["Qualifying"]
     race_time = event["session_times"]["Race"]
+    sprint_time = event["session_times"]["Sprint"]
 
     assert job_dict[JOB_WEATHER_INITIAL] == race_time - timedelta(days=WEATHER_INITIAL_DAYS_BEFORE)
     assert job_dict[JOB_WEATHER_REFRESH] == quali_time + timedelta(minutes=WEATHER_REFRESH_AFTER_QUALI_MINUTES)
     assert job_dict[JOB_QUALIFYING] == quali_time + timedelta(minutes=QUALIFYING_GRACE_MINUTES)
     assert job_dict[JOB_RACE] == race_time + timedelta(minutes=RACE_GRACE_MINUTES)
     assert job_dict[JOB_PREDICTIONS_PREWEEKEND] == _compute_preweekend_thursday(race_time)
+    assert job_dict[JOB_SPRINT] == sprint_time + timedelta(minutes=SPRINT_GRACE_MINUTES)
 
 
 # ---------------------------------------------------------------------------
@@ -218,6 +223,39 @@ def test_compute_job_times_missing_race():
 
 
 # ---------------------------------------------------------------------------
+# _is_sprint_weekend
+# ---------------------------------------------------------------------------
+
+
+def test_is_sprint_weekend_sprint_qualifying_format():
+    event = _make_sprint_event()
+    assert _is_sprint_weekend(event) is True
+
+
+def test_is_sprint_weekend_conventional_format():
+    event = _make_conventional_event()
+    assert _is_sprint_weekend(event) is False
+
+
+def test_is_sprint_weekend_missing_format():
+    event = _make_conventional_event()
+    del event["event_format"]
+    assert _is_sprint_weekend(event) is False
+
+
+# ---------------------------------------------------------------------------
+# _compute_job_times — conventional weekend has no sprint job
+# ---------------------------------------------------------------------------
+
+
+def test_compute_job_times_conventional_has_no_sprint_job():
+    event = _make_conventional_event()
+    jobs = _compute_job_times(event)
+    job_types = [jt for jt, _ in jobs]
+    assert JOB_SPRINT not in job_types
+
+
+# ---------------------------------------------------------------------------
 # _make_job_id
 # ---------------------------------------------------------------------------
 
@@ -225,6 +263,7 @@ def test_compute_job_times_missing_race():
 def test_make_job_id_format():
     assert _make_job_id(JOB_QUALIFYING, 2026, 5) == "qualifying_results_2026_R05"
     assert _make_job_id(JOB_RACE, 2026, 12) == "race_results_2026_R12"
+    assert _make_job_id(JOB_SPRINT, 2026, 2) == "sprint_results_2026_R02"
 
 
 # ---------------------------------------------------------------------------
@@ -270,6 +309,13 @@ def test_run_job_race_skips_pipeline_when_no_ingest(mock_race, mock_pipeline):
     _run_job(JOB_RACE, 2026, 3, 30, engine)
     mock_race.assert_called_once_with(2026, 3, engine)
     mock_pipeline.assert_not_called()
+
+
+@patch("pipeline.scheduler.ingest_sprint_event")
+def test_run_job_sprint(mock_sprint):
+    engine = MagicMock()
+    _run_job(JOB_SPRINT, 2026, 2, 20, engine)
+    mock_sprint.assert_called_once_with(2026, 2, engine)
 
 
 @patch("pipeline.scheduler.ingest_results_event", side_effect=Exception("boom"))
@@ -435,6 +481,18 @@ def test_catch_up_preweekend_predictions_no_race_time():
     event = _make_conventional_event()
     del event["session_times"]["Race"]
     assert _should_catch_up(JOB_PREDICTIONS_PREWEEKEND, event, engine) is False
+
+
+def test_catch_up_sprint_data_absent():
+    engine, _conn = _mock_engine_with_scalar(0)  # COUNT(*) = 0
+    event = _make_sprint_event()
+    assert _should_catch_up(JOB_SPRINT, event, engine) is True
+
+
+def test_catch_up_sprint_data_present():
+    engine, _conn = _mock_engine_with_scalar(20)  # COUNT(*) = 20
+    event = _make_sprint_event()
+    assert _should_catch_up(JOB_SPRINT, event, engine) is False
 
 
 # ---------------------------------------------------------------------------

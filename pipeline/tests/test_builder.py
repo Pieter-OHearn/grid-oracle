@@ -18,6 +18,8 @@ from pipeline.features.builder import (
     _driver_avg_sector2_time_at_circuit,
     _driver_podium_rate_at_circuit,
     _driver_season_avg_position,
+    _driver_sprint_avg_position_at_circuit,
+    _driver_sprint_race_pace,
     _driver_standings,
     _driver_wet_race_avg_position,
     _grid_position,
@@ -504,3 +506,80 @@ def test_constructor_hard_compound_avg_position_no_hard_circuits():
     conn = _mock_conn_scalar(None)
     result = _constructor_hard_compound_avg_position(conn, constructor_id=1, race_date=date(2024, 5, 1))
     assert result is None
+
+
+# ---------------------------------------------------------------------------
+# Sprint features
+# ---------------------------------------------------------------------------
+
+
+def test_driver_sprint_avg_position_at_circuit_returns_value():
+    conn = _mock_conn_scalar(3.5)
+    result = _driver_sprint_avg_position_at_circuit(conn, driver_id=1, circuit_id=3, race_date=date(2026, 3, 1))
+    assert result == pytest.approx(3.5)
+
+
+def test_driver_sprint_avg_position_at_circuit_no_data():
+    conn = _mock_conn_scalar(None)
+    result = _driver_sprint_avg_position_at_circuit(conn, driver_id=1, circuit_id=3, race_date=date(2026, 3, 1))
+    assert result is None
+
+
+def test_driver_sprint_race_pace_returns_value():
+    conn = _mock_conn_scalar(5.0)
+    result = _driver_sprint_race_pace(conn, driver_id=1, race_date=date(2026, 3, 1))
+    assert result == pytest.approx(5.0)
+
+
+def test_driver_sprint_race_pace_no_data():
+    conn = _mock_conn_scalar(None)
+    result = _driver_sprint_race_pace(conn, driver_id=1, race_date=date(2026, 3, 1))
+    assert result is None
+
+
+def test_build_features_includes_sprint_features():
+    """build_features_for_race includes sprint feature columns in the output DataFrame."""
+    engine = MagicMock()
+    conn = MagicMock()
+    engine.begin.return_value.__enter__ = MagicMock(return_value=conn)
+    engine.begin.return_value.__exit__ = MagicMock(return_value=False)
+
+    def side_effect(stmt, params=None):
+        sql = str(stmt)
+        result = MagicMock()
+        if "JOIN circuits c" in sql:
+            result.fetchone.return_value = (1, 2026, 2, date(2026, 3, 22), 10, "street")
+        elif "DISTINCT d.id" in sql:
+            result.fetchall.return_value = []
+        elif "SELECT dc.driver_id" in sql:
+            result.fetchall.return_value = [(1, 2)]
+        elif "FROM weather_snapshots" in sql:
+            result.scalar.return_value = None
+        elif "FROM qualifying_results WHERE race_id" in sql:
+            result.scalar.return_value = 0
+        elif "GROUP BY rr.driver_id" in sql:
+            result.fetchall.return_value = []
+        elif "GROUP BY rr.constructor_id" in sql:
+            result.fetchall.return_value = []
+        elif "COUNT(DISTINCT rr.race_id) FILTER" in sql:
+            result.fetchone.return_value = (0, 10)
+        elif "COUNT(*) FILTER" in sql:
+            result.fetchone.return_value = (0, 5)
+        elif "sprint_results" in sql and "circuit_id" in sql:
+            result.scalar.return_value = 4.0  # sprint_avg_position_at_circuit
+        elif "sprint_results" in sql:
+            result.scalar.return_value = 4.5  # sprint_race_pace
+        elif "race_tyre_data" in sql:
+            result.scalar.return_value = None
+        else:
+            result.scalar.return_value = 5.0
+        return result
+
+    conn.execute.side_effect = side_effect
+
+    df = build_features_for_race(race_id=1, engine=engine)
+    assert len(df) == 1
+    assert "driver_sprint_avg_position_at_circuit" in df.columns
+    assert "driver_sprint_race_pace" in df.columns
+    assert df.iloc[0]["driver_sprint_avg_position_at_circuit"] == pytest.approx(4.0)
+    assert df.iloc[0]["driver_sprint_race_pace"] == pytest.approx(4.5)
