@@ -1,10 +1,11 @@
 """Unit tests for pipeline.features.builder."""
 
-from datetime import date
+from datetime import date, datetime, timezone
 from unittest.mock import MagicMock, patch
 
 import pandas as pd
 import pytest
+from pandas.testing import assert_frame_equal
 
 from pipeline.features.builder import (
     _circuit_tyre_degradation_index,
@@ -110,6 +111,18 @@ def test_is_wet_race_forecast_false():
 def test_is_wet_race_forecast_no_data():
     conn = _mock_conn_scalar(None)
     assert _is_wet_race_forecast(conn, race_id=1) is False
+
+
+def test_is_wet_race_forecast_uses_preweekend_cutoff():
+    conn = _mock_conn_scalar(75.0)
+    cutoff = datetime(2024, 5, 2, 9, 0, tzinfo=timezone.utc)
+
+    assert _is_wet_race_forecast(conn, race_id=1, captured_before=cutoff) is True
+
+    sql = str(conn.execute.call_args[0][0])
+    params = conn.execute.call_args[0][1]
+    assert "captured_at <= :captured_before" in sql
+    assert params["captured_before"] == cutoff
 
 
 def test_driver_wet_race_avg_position():
@@ -261,6 +274,7 @@ def test_export_parquet(tmp_path):
     with patch("pipeline.features.builder.DATA_DIR", tmp_path):
         path = export_parquet(df, race_id=1)
     assert path.exists()
+    assert path.name == "features_preweekend_1.parquet"
     loaded = pd.read_parquet(path)
     assert len(loaded) == 1
     assert loaded.iloc[0]["grid_position"] == 5
@@ -350,6 +364,72 @@ def test_build_features_pre_weekend_fallback():
     assert df.iloc[0]["constructor_dnf_rate_last_season"] == pytest.approx(0.1)
     assert df.iloc[0]["circuit_tyre_degradation_index"] == 2
     assert df.iloc[0]["constructor_hard_compound_avg_position"] == pytest.approx(7.0)
+
+
+def _make_preweekend_snapshot_engine():
+    engine = MagicMock()
+    conn = MagicMock()
+    engine.begin.return_value.__enter__ = MagicMock(return_value=conn)
+    engine.begin.return_value.__exit__ = MagicMock(return_value=False)
+
+    def side_effect(stmt, params=None):
+        sql = str(stmt)
+        if "SELECT driver_id FROM qualifying_results WHERE race_id = :rid" in sql:
+            raise AssertionError("pre-weekend builder must not query same-race qualifying entrants")
+        if "SELECT driver_id FROM race_results WHERE race_id = :rid" in sql:
+            raise AssertionError("pre-weekend builder must not query same-race race entrants")
+        if "FROM qualifying_results\n            WHERE race_id = :rid AND driver_id = :did" in sql:
+            raise AssertionError("pre-weekend builder must not read same-race grid positions")
+        if "FROM qualifying_results WHERE race_id = :rid" in sql:
+            raise AssertionError("pre-weekend builder must not check same-race qualifying presence")
+
+        result = MagicMock()
+        if "JOIN circuits c" in sql:
+            result.fetchone.return_value = (1, 2024, 5, date(2024, 5, 5), 10, "street")
+        elif "SELECT dc.driver_id" in sql:
+            result.fetchall.return_value = [(1, 2), (2, 3)]
+        elif "FROM weather_snapshots" in sql:
+            result.scalar.return_value = 40.0
+        elif "GROUP BY rr.driver_id" in sql:
+            result.fetchall.return_value = [(1, 50), (2, 30)]
+        elif "GROUP BY rr.constructor_id" in sql:
+            result.fetchall.return_value = [(2, 80), (3, 60)]
+        elif "COUNT(DISTINCT rr.race_id) FILTER" in sql:
+            result.fetchone.return_value = (1, 10)
+        elif "COUNT(*) FILTER" in sql:
+            result.fetchone.return_value = (1, 5)
+        elif "race_tyre_data" in sql and "constructor_id" not in sql:
+            result.scalar.return_value = 2.2
+        elif "race_tyre_data" in sql:
+            result.scalar.return_value = 7.0
+        else:
+            result.scalar.return_value = 5.0
+        return result
+
+    conn.execute.side_effect = side_effect
+    return engine, conn
+
+
+def test_build_features_preweekend_does_not_query_same_race_session_data():
+    engine, conn = _make_preweekend_snapshot_engine()
+
+    df = build_features_for_race(race_id=1, engine=engine)
+
+    assert len(df) == 2
+    sql_calls = [str(call.args[0]) for call in conn.execute.call_args_list]
+    assert not any("SELECT driver_id FROM qualifying_results WHERE race_id = :rid" in sql for sql in sql_calls)
+    assert not any("SELECT driver_id FROM race_results WHERE race_id = :rid" in sql for sql in sql_calls)
+    assert not any("FROM qualifying_results WHERE race_id = :rid" in sql for sql in sql_calls)
+
+
+def test_build_features_preweekend_invariant_when_same_race_data_exists():
+    baseline_engine, _ = _make_preweekend_snapshot_engine()
+    rebuilt_engine, _ = _make_preweekend_snapshot_engine()
+
+    baseline = build_features_for_race(race_id=1, engine=baseline_engine).sort_index(axis=1)
+    rebuilt = build_features_for_race(race_id=1, engine=rebuilt_engine).sort_index(axis=1)
+
+    assert_frame_equal(baseline, rebuilt, check_like=True)
 
 
 def _make_imputation_engine(sector2_values: list, fp2_values: list):

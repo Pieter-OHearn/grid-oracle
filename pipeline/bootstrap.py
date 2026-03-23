@@ -9,10 +9,9 @@ Steps:
      failures after heavy historical fetching)
   1. Backfill historical seasons (2022, 2023, 2024, 2025) needed to train the model
   2. For each 2026 past round: ingest qualifying results and race results
-  3. Build feature rows and export Parquet files for all completed races
-  4. Train the pre-season XGBoost model on the exported Parquet files
-  5. Replay each completed race to retrain/evaluate/predict as if the scheduler
-     had been running since pre-season
+  3. Build pre-weekend feature snapshots and export Parquet files
+  4. Run a walk-forward pre-weekend backtest across completed races
+  5. Generate pre-weekend predictions for the remaining 2026 races
 """
 
 import logging
@@ -29,9 +28,8 @@ from pipeline.ingest.fetch_results import ingest_event as ingest_results
 from pipeline.ingest.fetch_tyre_data import ingest_event as ingest_tyre_data
 from pipeline.ingest.upsert_helpers import get_engine
 from pipeline.maintenance.driver_metadata import backfill_driver_numbers
-from pipeline.ml.predict import run as predict
-from pipeline.ml.train import run as train
-from pipeline.ml.workflow import post_race_pipeline, predict_remaining_races
+from pipeline.ml.context import PREWEEKEND_CONTEXT
+from pipeline.ml.workflow import predict_remaining_races, walk_forward_backtest
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 for noisy in ("fastf1", "req", "core", "logger", "_api"):
@@ -41,7 +39,6 @@ logger = logging.getLogger(__name__)
 SEASON = 2026
 HISTORICAL_SEASONS = [2022, 2023, 2024, 2025]
 ARTIFACTS_DIR = Path(__file__).resolve().parent / "ml" / "artifacts"
-MODEL_PATH = ARTIFACTS_DIR / "model_v1.json"
 DATA_DIR = Path(__file__).resolve().parent / "data"
 
 
@@ -79,6 +76,7 @@ def main() -> None:
         len(upcoming_events),
         next_event["name"] if next_event else "none",
     )
+    all_completed_count = len(completed_events)
 
     # ------------------------------------------------------------------
     # Step 0 — Backfill historical seasons for model training
@@ -88,6 +86,7 @@ def main() -> None:
         logger.info("  Syncing %d calendar…", hist_season)
         hist_events = sync_season_calendar(hist_season, engine)
         hist_completed = sorted((e for e in hist_events if e["event_date"] < today), key=lambda e: e["round"])
+        all_completed_count += len(hist_completed)
         logger.info("  %d: %d completed races to ingest", hist_season, len(hist_completed))
         for event in hist_completed:
             round_num = event["round"]
@@ -106,9 +105,9 @@ def main() -> None:
             except Exception as exc:
                 logger.warning("      Tyre data ingest failed: %s", exc)
             try:
-                df = build_features_for_race(race_id, engine)
+                df = build_features_for_race(race_id, engine, context=PREWEEKEND_CONTEXT)
                 if not df.empty:
-                    export_parquet(df, race_id)
+                    export_parquet(df, race_id, context=PREWEEKEND_CONTEXT)
             except Exception as exc:
                 logger.warning("      Feature build failed: %s", exc)
 
@@ -134,32 +133,23 @@ def main() -> None:
         except Exception as exc:
             logger.warning("    Tyre data ingest failed: %s", exc)
 
-    # Also ingest qualifying for the next upcoming race (needed for grid positions)
-    if next_event:
-        logger.info("  Round %02d — %s: qualifying (next race)…", next_event["round"], next_event["name"])
-        try:
-            ingest_qualifying(SEASON, next_event["round"], engine)
-        except Exception as exc:
-            logger.warning("    Qualifying ingest failed: %s", exc)
-
     # ------------------------------------------------------------------
-    # Step 3 — Build features and export Parquet files
+    # Step 3 — Build pre-weekend snapshots and export Parquet files
     # ------------------------------------------------------------------
-    logger.info("=== Step 3: Building features ===")
-    # Include all upcoming races so predict_remaining_races can generate pre-weekend
-    # predictions for events that do not yet have qualifying data.  The feature
-    # builder falls back to driver_contracts when no qualifying data is present.
+    logger.info("=== Step 3: Building pre-weekend feature snapshots ===")
+    # Include upcoming races so predict_remaining_races can generate pre-weekend
+    # predictions directly from the frozen pre-weekend snapshot builder.
     races_for_features = completed_events + upcoming_events
     parquet_count = 0
     for event in races_for_features:
         race_id = event["race_id"]
         logger.info("  Race %d — %s", race_id, event["name"])
         try:
-            df = build_features_for_race(race_id, engine)
+            df = build_features_for_race(race_id, engine, context=PREWEEKEND_CONTEXT)
             if df.empty:
                 logger.warning("    No features generated — skipping")
                 continue
-            export_parquet(df, race_id)
+            export_parquet(df, race_id, context=PREWEEKEND_CONTEXT)
             parquet_count += 1
         except Exception as exc:
             logger.warning("    Feature build failed: %s", exc)
@@ -169,47 +159,30 @@ def main() -> None:
         sys.exit(1)
 
     # ------------------------------------------------------------------
-    # Step 4 — Train baseline model
+    # Step 4 — Honest walk-forward pre-weekend backtest
     # ------------------------------------------------------------------
-    logger.info("=== Step 4: Training baseline model ===")
+    logger.info("=== Step 4: Running walk-forward pre-weekend backtest ===")
     ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
     try:
-        current_model_version_id = train(data_dir=DATA_DIR, artifact_path=MODEL_PATH, engine=engine)
-        logger.info("Baseline model trained — model_version_id=%d", current_model_version_id)
+        current_model_version_id = walk_forward_backtest(engine)
+        if current_model_version_id is None:
+            logger.error("Walk-forward backtest did not produce a model version")
+            sys.exit(1)
+        logger.info("Walk-forward backtest complete — latest model_version_id=%d", current_model_version_id)
     except Exception as exc:
-        logger.error("Training failed: %s", exc)
+        logger.error("Walk-forward backtest failed: %s", exc)
         sys.exit(1)
 
     # ------------------------------------------------------------------
-    # Step 5 — Replay completed races to mimic scheduler retrains
+    # Step 5 — Seed predictions for remaining 2026 races
     # ------------------------------------------------------------------
-    completed_events_sorted = sorted(completed_events, key=lambda e: e["round"])
-    if not completed_events_sorted:
-        logger.info("No completed races to replay — seeding predictions for upcoming events.")
-        predict_remaining_races(SEASON, current_model_version_id, engine)
-    else:
-        logger.info("=== Step 5: Replaying %d completed races ===", len(completed_events_sorted))
-        for event in completed_events_sorted:
-            race_id = event["race_id"]
-            logger.info("  Round %02d — %s: regenerating pre-race predictions", event["round"], event["name"])
-            try:
-                predict(
-                    race_id=race_id,
-                    model_version_id=current_model_version_id,
-                    model_path=MODEL_PATH,
-                    engine=engine,
-                )
-            except Exception as exc:
-                logger.warning("    Prediction failed: %s", exc)
-
-            new_model_id = post_race_pipeline(race_id, SEASON, engine)
-            if new_model_id:
-                current_model_version_id = new_model_id
+    logger.info("=== Step 5: Predicting remaining %d races ===", len(upcoming_events))
+    predict_remaining_races(SEASON, current_model_version_id, engine)
 
     logger.info("=== Bootstrap complete ===")
     logger.info(
-        "Replayed %d completed races; latest model_version_id=%d.",
-        len(completed_events_sorted),
+        "Processed %d completed races; latest model_version_id=%d.",
+        all_completed_count,
         current_model_version_id,
     )
 
