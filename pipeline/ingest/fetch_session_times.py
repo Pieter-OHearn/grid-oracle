@@ -47,7 +47,12 @@ def _timedelta_to_ms(td: pd.Timedelta | None) -> int | None:
             return None
     except (TypeError, ValueError):
         pass
-    return int(td.total_seconds() * 1000)
+    return int(float(td.total_seconds()) * 1000)
+
+
+def _to_py_int(v) -> int | None:
+    """Coerce a value to Python int, returning None for missing."""
+    return None if v is None or (hasattr(v, "__class__") and v != v) else int(v)
 
 
 def upsert_session_time(
@@ -80,10 +85,10 @@ def upsert_session_time(
             "race_id": race_id,
             "driver_id": driver_id,
             "session_type": session_type,
-            "best_lap_ms": best_lap_ms,
-            "sector1_ms": sector1_ms,
-            "sector2_ms": sector2_ms,
-            "sector3_ms": sector3_ms,
+            "best_lap_ms": _to_py_int(best_lap_ms),
+            "sector1_ms": _to_py_int(sector1_ms),
+            "sector2_ms": _to_py_int(sector2_ms),
+            "sector3_ms": _to_py_int(sector3_ms),
         },
     )
 
