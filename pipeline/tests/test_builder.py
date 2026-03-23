@@ -7,8 +7,10 @@ import pandas as pd
 import pytest
 
 from pipeline.features.builder import (
+    _circuit_tyre_degradation_index,
     _constructor_avg_fp2_pace_at_circuit,
     _constructor_dnf_rate_last_season,
+    _constructor_hard_compound_avg_position,
     _constructor_standings,
     _driver_avg_position_at_circuit,
     _driver_avg_position_last_n,
@@ -328,6 +330,12 @@ def test_build_features_pre_weekend_fallback():
         elif "COUNT(*) FILTER" in sql:
             # _driver_podium_rate_at_circuit
             result.fetchone.return_value = (0, 5)
+        elif "race_tyre_data" in sql and "AVG" in sql and "constructor_id" not in sql:
+            # _circuit_tyre_degradation_index — high degradation circuit
+            result.scalar.return_value = 2.60
+        elif "race_tyre_data" in sql:
+            # _constructor_hard_compound_avg_position
+            result.scalar.return_value = 7.0
         else:
             result.scalar.return_value = 5.0
         return result
@@ -340,6 +348,8 @@ def test_build_features_pre_weekend_fallback():
     assert df.iloc[0]["driver_championship_position"] == 1
     assert df.iloc[0]["constructor_championship_position"] == 1
     assert df.iloc[0]["constructor_dnf_rate_last_season"] == pytest.approx(0.1)
+    assert df.iloc[0]["circuit_tyre_degradation_index"] == 2
+    assert df.iloc[0]["constructor_hard_compound_avg_position"] == pytest.approx(7.0)
 
 
 def _make_imputation_engine(sector2_values: list, fp2_values: list):
@@ -381,6 +391,9 @@ def _make_imputation_engine(sector2_values: list, fp2_values: list):
             result.scalar.return_value = next(sector2_calls, None)
         elif "best_lap_ms" in sql and "session_times" in sql:
             result.scalar.return_value = next(fp2_calls, None)
+        elif "race_tyre_data" in sql:
+            # tyre features — return neutral values for imputation tests
+            result.scalar.return_value = None
         else:
             result.scalar.return_value = 5.0
         return result
@@ -409,7 +422,8 @@ def test_sector_fp2_imputation_mixed_null():
 
 
 def test_sector_fp2_imputation_all_null_defaults_to_one():
-    """When no driver has any historical data (new circuit), all values default to 1.0."""
+    """When no driver has any historical data (new circuit), pace-ratio values default
+    to 1.0 and constructor_hard_compound_avg_position defaults to 10.0."""
     engine = _make_imputation_engine(
         sector2_values=[None, None],
         fp2_values=[None, None],
@@ -418,7 +432,75 @@ def test_sector_fp2_imputation_all_null_defaults_to_one():
     assert len(df) == 2
     assert df["driver_avg_sector2_time_at_circuit"].notna().all()
     assert df["constructor_avg_fp2_pace_at_circuit"].notna().all()
+    assert df["constructor_hard_compound_avg_position"].notna().all()
     for v in df["driver_avg_sector2_time_at_circuit"]:
         assert v == pytest.approx(1.0)
     for v in df["constructor_avg_fp2_pace_at_circuit"]:
         assert v == pytest.approx(1.0)
+    for v in df["constructor_hard_compound_avg_position"]:
+        assert v == pytest.approx(10.0)
+
+
+# ---------------------------------------------------------------------------
+# Tyre degradation index
+# ---------------------------------------------------------------------------
+
+
+def test_circuit_tyre_degradation_index_high():
+    """avg_compounds_per_driver >= 2.3 → index 2 (e.g. Barcelona: ~2.33)."""
+    conn = _mock_conn_scalar(2.60)
+    result = _circuit_tyre_degradation_index(conn, circuit_id=1, race_date=date(2024, 5, 1))
+    assert result == 2
+
+
+def test_circuit_tyre_degradation_index_medium():
+    """avg_compounds_per_driver in [2.1, 2.3) → index 1."""
+    conn = _mock_conn_scalar(2.20)
+    result = _circuit_tyre_degradation_index(conn, circuit_id=1, race_date=date(2024, 5, 1))
+    assert result == 1
+
+
+def test_circuit_tyre_degradation_index_low():
+    """avg_compounds_per_driver < 2.1 → index 0 (e.g. Monza: ~2.0)."""
+    conn = _mock_conn_scalar(1.95)
+    result = _circuit_tyre_degradation_index(conn, circuit_id=1, race_date=date(2024, 5, 1))
+    assert result == 0
+
+
+def test_circuit_tyre_degradation_index_no_data():
+    """No prior tyre data for circuit → neutral fallback of 1."""
+    conn = _mock_conn_scalar(None)
+    result = _circuit_tyre_degradation_index(conn, circuit_id=1, race_date=date(2024, 5, 1))
+    assert result == 1
+
+
+def test_circuit_tyre_degradation_index_boundary_low_medium():
+    """Exactly 2.1 → index 1 (medium, not low)."""
+    conn = _mock_conn_scalar(2.10)
+    result = _circuit_tyre_degradation_index(conn, circuit_id=1, race_date=date(2024, 5, 1))
+    assert result == 1
+
+
+def test_circuit_tyre_degradation_index_boundary_medium_high():
+    """Exactly 2.3 → index 2 (high, not medium)."""
+    conn = _mock_conn_scalar(2.30)
+    result = _circuit_tyre_degradation_index(conn, circuit_id=1, race_date=date(2024, 5, 1))
+    assert result == 2
+
+
+# ---------------------------------------------------------------------------
+# Constructor hard compound avg position
+# ---------------------------------------------------------------------------
+
+
+def test_constructor_hard_compound_avg_position_returns_value():
+    conn = _mock_conn_scalar(6.5)
+    result = _constructor_hard_compound_avg_position(conn, constructor_id=1, race_date=date(2024, 5, 1))
+    assert result == pytest.approx(6.5)
+
+
+def test_constructor_hard_compound_avg_position_no_hard_circuits():
+    """No results at high-degradation circuits → None."""
+    conn = _mock_conn_scalar(None)
+    result = _constructor_hard_compound_avg_position(conn, constructor_id=1, race_date=date(2024, 5, 1))
+    assert result is None

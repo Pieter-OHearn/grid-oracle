@@ -35,6 +35,8 @@ FEATURE_COLS = [
     "constructor_dnf_rate_last_season",
     "driver_avg_sector2_time_at_circuit",
     "constructor_avg_fp2_pace_at_circuit",
+    "circuit_tyre_degradation_index",
+    "constructor_hard_compound_avg_position",
 ]
 
 TARGET_COL = "finish_position"

@@ -49,6 +49,8 @@ def _make_feature_df(n: int = 20, season: int = 2023) -> pd.DataFrame:
                 "constructor_dnf_rate_last_season": rng.uniform(0, 1),
                 "driver_avg_sector2_time_at_circuit": rng.uniform(1.0, 1.3),
                 "constructor_avg_fp2_pace_at_circuit": rng.uniform(1.0, 1.3),
+                "circuit_tyre_degradation_index": rng.randint(0, 3),
+                "constructor_hard_compound_avg_position": rng.uniform(1, 20),
                 "finish_position": rng.randint(1, 21),
                 "season": season,
             }
