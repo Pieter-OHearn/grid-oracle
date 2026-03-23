@@ -332,7 +332,7 @@ def test_build_features_pre_weekend_fallback():
             result.fetchone.return_value = (0, 5)
         elif "race_tyre_data" in sql and "AVG" in sql and "constructor_id" not in sql:
             # _circuit_tyre_degradation_index — high degradation circuit
-            result.scalar.return_value = 0.55
+            result.scalar.return_value = 2.60
         elif "race_tyre_data" in sql:
             # _constructor_hard_compound_avg_position
             result.scalar.return_value = 7.0
