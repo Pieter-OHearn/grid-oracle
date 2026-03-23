@@ -14,6 +14,7 @@ from sqlalchemy.engine import Engine
 from pipeline.ingest.calendar_sync import sync_season_calendar
 from pipeline.ingest.fetch_qualifying import ingest_event as ingest_qualifying_event
 from pipeline.ingest.fetch_results import ingest_event as ingest_results_event
+from pipeline.ingest.fetch_sprint import ingest_event as ingest_sprint_event
 from pipeline.ingest.fetch_weather import fetch_and_store_weather
 from pipeline.ingest.upsert_helpers import get_engine
 from pipeline.ml import workflow as ml_workflow
@@ -26,7 +27,7 @@ _get_remaining_race_ids = ml_workflow._get_remaining_race_ids
 def _get_latest_model_version_id(engine: Engine) -> int | None:
     """Return the ID of the most recently created model version, or None."""
     with engine.connect() as conn:
-        row = conn.execute(text("SELECT id FROM model_versions ORDER BY created_at DESC LIMIT 1")).fetchone()
+        row = conn.execute(text("SELECT id FROM model_versions ORDER BY trained_at DESC LIMIT 1")).fetchone()
     return row[0] if row else None
 
 
@@ -48,6 +49,7 @@ logger = logging.getLogger(__name__)
 
 QUALIFYING_GRACE_MINUTES = 45
 RACE_GRACE_MINUTES = 60
+SPRINT_GRACE_MINUTES = 60
 WEATHER_INITIAL_DAYS_BEFORE = 5
 WEATHER_REFRESH_AFTER_QUALI_MINUTES = 30
 
@@ -59,6 +61,7 @@ JOB_WEATHER_INITIAL = "weather_initial"
 JOB_WEATHER_REFRESH = "weather_refresh"
 JOB_QUALIFYING = "qualifying_results"
 JOB_RACE = "race_results"
+JOB_SPRINT = "sprint_results"
 JOB_PREDICTIONS_PREWEEKEND = "preweekend_predictions"
 
 ALL_JOB_TYPES = [
@@ -66,6 +69,7 @@ ALL_JOB_TYPES = [
     JOB_WEATHER_REFRESH,
     JOB_QUALIFYING,
     JOB_RACE,
+    JOB_SPRINT,
     JOB_PREDICTIONS_PREWEEKEND,
 ]
 
@@ -107,11 +111,17 @@ def _compute_preweekend_thursday(race_time: datetime) -> datetime:
     )
 
 
+def _is_sprint_weekend(event: dict) -> bool:
+    """Return True when the event uses the sprint_qualifying format."""
+    return str(event.get("event_format", "")).lower() == "sprint_qualifying"
+
+
 def _compute_job_times(event: dict) -> list[tuple[str, datetime]]:
     """Compute (job_type, run_at_utc) pairs for an event."""
     session_times = event["session_times"]
     quali_time = _find_session_time(session_times, "Qualifying")
     race_time = _find_session_time(session_times, "Race")
+    sprint_time = _find_session_time(session_times, "Sprint")
 
     jobs: list[tuple[str, datetime]] = []
 
@@ -149,6 +159,14 @@ def _compute_job_times(event: dict) -> list[tuple[str, datetime]]:
             )
         )
 
+    if sprint_time:
+        jobs.append(
+            (
+                JOB_SPRINT,
+                sprint_time + timedelta(minutes=SPRINT_GRACE_MINUTES),
+            )
+        )
+
     return jobs
 
 
@@ -179,6 +197,8 @@ def _run_job(job_type: str, season: int, round_num: int, race_id: int, engine: E
             fetch_and_store_weather(race_id, engine)
         elif job_type == JOB_QUALIFYING:
             ingest_qualifying_event(season, round_num, engine)
+        elif job_type == JOB_SPRINT:
+            ingest_sprint_event(season, round_num, engine)
         elif job_type == JOB_RACE:
             ingested = ingest_results_event(season, round_num, engine)
             if ingested:
@@ -227,6 +247,13 @@ def _should_catch_up(job_type: str, event: dict, engine: Engine) -> bool:
         if job_type == JOB_QUALIFYING:
             count = conn.execute(
                 text("SELECT COUNT(*) FROM qualifying_results WHERE race_id = :rid"),
+                {"rid": race_id},
+            ).scalar()
+            return count == 0
+
+        if job_type == JOB_SPRINT:
+            count = conn.execute(
+                text("SELECT COUNT(*) FROM sprint_results WHERE race_id = :rid"),
                 {"rid": race_id},
             ).scalar()
             return count == 0
