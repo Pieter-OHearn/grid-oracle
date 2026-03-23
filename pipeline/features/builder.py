@@ -3,6 +3,7 @@
 import argparse
 import json
 import logging
+import statistics
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -406,6 +407,91 @@ def _constructor_standings(conn: Connection, season: int, race_date: object) -> 
     return {row[0]: pos for pos, row in enumerate(rows, start=1)}
 
 
+def _driver_avg_sector2_time_at_circuit(
+    conn: Connection, driver_id: int, circuit_id: int, race_date: object
+) -> float | None:
+    """Historical average of driver's sector-2 time relative to session fastest at circuit.
+
+    For each prior qualifying session at this circuit, compute the ratio of
+    the driver's best sector-2 time to the fastest sector-2 time in that session,
+    then return the average ratio across sessions.  A value of 1.0 means the
+    driver was the fastest; higher values mean they were slower.
+    Returns None when no qualifying sector data is available.
+    """
+    val = conn.execute(
+        text(
+            """
+            SELECT AVG(sub.ratio)
+            FROM (
+                SELECT st.sector2_ms::float / fastest.min_s2::float AS ratio
+                FROM session_times st
+                JOIN races r ON r.id = st.race_id
+                JOIN (
+                    SELECT race_id, MIN(sector2_ms) AS min_s2
+                    FROM session_times
+                    WHERE session_type = 'Q' AND sector2_ms IS NOT NULL AND sector2_ms > 0
+                    GROUP BY race_id
+                ) fastest ON fastest.race_id = st.race_id
+                WHERE st.driver_id = :did
+                  AND r.circuit_id = :cid
+                  AND st.session_type = 'Q'
+                  AND st.sector2_ms IS NOT NULL
+                  AND st.sector2_ms > 0
+                  AND r.date < :race_date
+                  AND r.is_completed = TRUE
+            ) sub
+            """
+        ),
+        {"did": driver_id, "cid": circuit_id, "race_date": race_date},
+    ).scalar()
+    return float(val) if val is not None else None
+
+
+def _constructor_avg_fp2_pace_at_circuit(
+    conn: Connection, constructor_id: int, circuit_id: int, race_date: object
+) -> float | None:
+    """Historical average of constructor's FP2 pace relative to session fastest at circuit.
+
+    For each prior FP2 session at this circuit, compute the ratio of the
+    constructor's best lap time (minimum across its two drivers) to the
+    fastest FP2 lap in that session, then return the average ratio.
+    Returns None when no FP2 data is available.
+    """
+    val = conn.execute(
+        text(
+            """
+            SELECT AVG(sub.ratio)
+            FROM (
+                SELECT MIN(st.best_lap_ms)::float / fastest.min_lap::float AS ratio
+                FROM session_times st
+                JOIN races r ON r.id = st.race_id
+                JOIN driver_contracts dc
+                  ON dc.driver_id    = st.driver_id
+                 AND dc.constructor_id = :cid
+                 AND dc.season         = r.season
+                 AND dc.start_round   <= r.round
+                 AND (dc.end_round IS NULL OR dc.end_round >= r.round)
+                JOIN (
+                    SELECT race_id, MIN(best_lap_ms) AS min_lap
+                    FROM session_times
+                    WHERE session_type = 'FP2' AND best_lap_ms IS NOT NULL AND best_lap_ms > 0
+                    GROUP BY race_id
+                ) fastest ON fastest.race_id = st.race_id
+                WHERE r.circuit_id = :circuit
+                  AND st.session_type = 'FP2'
+                  AND st.best_lap_ms IS NOT NULL
+                  AND st.best_lap_ms > 0
+                  AND r.date < :race_date
+                  AND r.is_completed = TRUE
+                GROUP BY r.id, fastest.min_lap
+            ) sub
+            """
+        ),
+        {"cid": constructor_id, "circuit": circuit_id, "race_date": race_date},
+    ).scalar()
+    return float(val) if val is not None else None
+
+
 # ---------------------------------------------------------------------------
 # Upsert feature row into the database
 # ---------------------------------------------------------------------------
@@ -496,11 +582,32 @@ def build_features_for_race(race_id: int, engine: Engine) -> pd.DataFrame:
                 "driver_championship_position": driver_champ.get(did, driver_champ_default),
                 "constructor_championship_position": constructor_champ.get(cid, constructor_champ_default),
                 "constructor_dnf_rate_last_season": _constructor_dnf_rate_last_season(conn, cid, race["season"]),
+                # Sector / practice pace features — normalised ratios relative to session fastest.
+                # None here; imputed with circuit median below after all drivers are processed.
+                "driver_avg_sector2_time_at_circuit": _driver_avg_sector2_time_at_circuit(
+                    conn, did, race["circuit_id"], race["date"]
+                ),
+                "constructor_avg_fp2_pace_at_circuit": _constructor_avg_fp2_pace_at_circuit(
+                    conn, cid, race["circuit_id"], race["date"]
+                ),
             }
 
-            _upsert_feature(conn, race_id, did, feature_data)
-
             rows.append({"race_id": race_id, "driver_id": did, **feature_data})
+
+        # Impute missing sector/FP2 features with the circuit median for this race.
+        # If no driver has historical data (e.g. a new circuit), default to 1.0.
+        # Note: 1.0 is the fastest possible ratio, so all drivers receive the same
+        # value and gain no relative advantage over each other from this feature.
+        for col in ("driver_avg_sector2_time_at_circuit", "constructor_avg_fp2_pace_at_circuit"):
+            non_null = [r[col] for r in rows if r[col] is not None]
+            fill = statistics.median(non_null) if non_null else 1.0
+            for r in rows:
+                if r[col] is None:
+                    r[col] = fill
+
+        skip = {"race_id", "driver_id"}
+        for r in rows:
+            _upsert_feature(conn, race_id, r["driver_id"], {k: v for k, v in r.items() if k not in skip})
 
         logger.info("Built features for %d drivers in race %d", len(rows), race_id)
 

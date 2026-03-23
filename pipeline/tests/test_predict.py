@@ -42,6 +42,8 @@ def _make_feature_data() -> dict:
         "driver_championship_position": int(rng.randint(1, 21)),
         "constructor_championship_position": int(rng.randint(1, 11)),
         "constructor_dnf_rate_last_season": float(rng.uniform(0, 1)),
+        "driver_avg_sector2_time_at_circuit": float(rng.uniform(1.0, 1.3)),
+        "constructor_avg_fp2_pace_at_circuit": float(rng.uniform(1.0, 1.3)),
     }
 
 

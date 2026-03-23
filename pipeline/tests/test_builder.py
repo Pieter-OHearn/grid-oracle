@@ -7,11 +7,13 @@ import pandas as pd
 import pytest
 
 from pipeline.features.builder import (
+    _constructor_avg_fp2_pace_at_circuit,
     _constructor_dnf_rate_last_season,
     _constructor_standings,
     _driver_avg_position_at_circuit,
     _driver_avg_position_last_n,
     _driver_avg_qualifying_position_at_circuit,
+    _driver_avg_sector2_time_at_circuit,
     _driver_podium_rate_at_circuit,
     _driver_season_avg_position,
     _driver_standings,
@@ -197,6 +199,42 @@ def test_constructor_dnf_rate_last_season_none_row():
 
 
 # ---------------------------------------------------------------------------
+# Sector time and FP2 pace features
+# ---------------------------------------------------------------------------
+
+
+def test_driver_avg_sector2_time_at_circuit_returns_value():
+    conn = _mock_conn_scalar(1.05)
+    result = _driver_avg_sector2_time_at_circuit(conn, driver_id=1, circuit_id=3, race_date=date(2024, 5, 1))
+    assert result == pytest.approx(1.05)
+
+
+def test_driver_avg_sector2_time_at_circuit_returns_none():
+    conn = _mock_conn_scalar(None)
+    result = _driver_avg_sector2_time_at_circuit(conn, driver_id=1, circuit_id=3, race_date=date(2024, 5, 1))
+    assert result is None
+
+
+def test_driver_avg_sector2_time_at_circuit_fastest_driver_is_one():
+    """A driver who is always fastest should have a ratio of 1.0."""
+    conn = _mock_conn_scalar(1.0)
+    result = _driver_avg_sector2_time_at_circuit(conn, driver_id=1, circuit_id=3, race_date=date(2024, 5, 1))
+    assert result == pytest.approx(1.0)
+
+
+def test_constructor_avg_fp2_pace_at_circuit_returns_value():
+    conn = _mock_conn_scalar(1.02)
+    result = _constructor_avg_fp2_pace_at_circuit(conn, constructor_id=2, circuit_id=3, race_date=date(2024, 5, 1))
+    assert result == pytest.approx(1.02)
+
+
+def test_constructor_avg_fp2_pace_at_circuit_returns_none():
+    conn = _mock_conn_scalar(None)
+    result = _constructor_avg_fp2_pace_at_circuit(conn, constructor_id=2, circuit_id=3, race_date=date(2024, 5, 1))
+    assert result is None
+
+
+# ---------------------------------------------------------------------------
 # Upsert
 # ---------------------------------------------------------------------------
 
@@ -302,3 +340,85 @@ def test_build_features_pre_weekend_fallback():
     assert df.iloc[0]["driver_championship_position"] == 1
     assert df.iloc[0]["constructor_championship_position"] == 1
     assert df.iloc[0]["constructor_dnf_rate_last_season"] == pytest.approx(0.1)
+
+
+def _make_imputation_engine(sector2_values: list, fp2_values: list):
+    """Build a mock engine where two drivers are returned and sector/FP2 features
+    cycle through the provided values (one per driver).  All other scalars return 5.0.
+    """
+    engine = MagicMock()
+    conn = MagicMock()
+    engine.begin.return_value.__enter__ = MagicMock(return_value=conn)
+    engine.begin.return_value.__exit__ = MagicMock(return_value=False)
+
+    # Counters to cycle through per-driver values for the two new features.
+    sector2_calls = iter(sector2_values)
+    fp2_calls = iter(fp2_values)
+
+    def side_effect(stmt, params=None):
+        sql = str(stmt)
+        result = MagicMock()
+        if "JOIN circuits c" in sql:
+            result.fetchone.return_value = (1, 2024, 5, date(2024, 5, 1), 10, "street")
+        elif "DISTINCT d.id" in sql:
+            result.fetchall.return_value = []
+        elif "SELECT dc.driver_id" in sql:
+            # two drivers
+            result.fetchall.return_value = [(1, 2), (2, 3)]
+        elif "FROM weather_snapshots" in sql:
+            result.scalar.return_value = None
+        elif "FROM qualifying_results WHERE race_id" in sql:
+            result.scalar.return_value = 0
+        elif "GROUP BY rr.driver_id" in sql:
+            result.fetchall.return_value = []
+        elif "GROUP BY rr.constructor_id" in sql:
+            result.fetchall.return_value = []
+        elif "COUNT(DISTINCT rr.race_id) FILTER" in sql:
+            result.fetchone.return_value = (0, 10)
+        elif "COUNT(*) FILTER" in sql:
+            result.fetchone.return_value = (0, 5)
+        elif "sector2_ms" in sql:
+            result.scalar.return_value = next(sector2_calls, None)
+        elif "best_lap_ms" in sql and "session_times" in sql:
+            result.scalar.return_value = next(fp2_calls, None)
+        else:
+            result.scalar.return_value = 5.0
+        return result
+
+    conn.execute.side_effect = side_effect
+    return engine
+
+
+def test_sector_fp2_imputation_mixed_null():
+    """When one driver has data and the other doesn't, the missing value is imputed
+    with the median (= the single non-null value)."""
+    # driver 1 gets 1.05, driver 2 gets None → imputed to 1.05
+    engine = _make_imputation_engine(
+        sector2_values=[1.05, None],
+        fp2_values=[1.08, None],
+    )
+    df = build_features_for_race(race_id=1, engine=engine)
+    assert len(df) == 2
+    assert df["driver_avg_sector2_time_at_circuit"].notna().all()
+    assert df["constructor_avg_fp2_pace_at_circuit"].notna().all()
+    # Both values should equal the single non-null value (median of one element)
+    for v in df["driver_avg_sector2_time_at_circuit"]:
+        assert v == pytest.approx(1.05)
+    for v in df["constructor_avg_fp2_pace_at_circuit"]:
+        assert v == pytest.approx(1.08)
+
+
+def test_sector_fp2_imputation_all_null_defaults_to_one():
+    """When no driver has any historical data (new circuit), all values default to 1.0."""
+    engine = _make_imputation_engine(
+        sector2_values=[None, None],
+        fp2_values=[None, None],
+    )
+    df = build_features_for_race(race_id=1, engine=engine)
+    assert len(df) == 2
+    assert df["driver_avg_sector2_time_at_circuit"].notna().all()
+    assert df["constructor_avg_fp2_pace_at_circuit"].notna().all()
+    for v in df["driver_avg_sector2_time_at_circuit"]:
+        assert v == pytest.approx(1.0)
+    for v in df["constructor_avg_fp2_pace_at_circuit"]:
+        assert v == pytest.approx(1.0)

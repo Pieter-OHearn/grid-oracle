@@ -56,6 +56,8 @@ def prepare_features(df: pd.DataFrame) -> pd.DataFrame:
         "driver_championship_position",
         "constructor_championship_position",
         "constructor_dnf_rate_last_season",
+        "driver_avg_sector2_time_at_circuit",
+        "constructor_avg_fp2_pace_at_circuit",
     ]
     for col in _numeric_cols:
         if col in df.columns:
