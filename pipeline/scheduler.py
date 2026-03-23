@@ -27,7 +27,7 @@ _get_remaining_race_ids = ml_workflow._get_remaining_race_ids
 def _get_latest_model_version_id(engine: Engine) -> int | None:
     """Return the ID of the most recently created model version, or None."""
     with engine.connect() as conn:
-        row = conn.execute(text("SELECT id FROM model_versions ORDER BY created_at DESC LIMIT 1")).fetchone()
+        row = conn.execute(text("SELECT id FROM model_versions ORDER BY trained_at DESC LIMIT 1")).fetchone()
     return row[0] if row else None
 
 
