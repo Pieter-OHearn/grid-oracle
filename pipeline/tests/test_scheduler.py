@@ -387,25 +387,33 @@ def test_catch_up_weather_refresh_race_already_past():
 
 
 def test_catch_up_preweekend_predictions_no_predictions_yet():
-    """Catch up when no predictions exist and race/quali are still in the future."""
+    """Catch up only before the Thursday pre-weekend cutoff when predictions are absent."""
     engine, _conn = _mock_engine_with_scalar(0)  # COUNT(*) predictions = 0
-    now = datetime.now(timezone.utc)
+    mocked_now = datetime(2026, 3, 11, 8, 0, tzinfo=timezone.utc)
     event = _make_conventional_event(
-        quali_dt=now + timedelta(days=2),
-        race_dt=now + timedelta(days=3),
+        quali_dt=datetime(2026, 3, 13, 16, 0, tzinfo=timezone.utc),
+        race_dt=datetime(2026, 3, 15, 15, 0, tzinfo=timezone.utc),
     )
-    assert _should_catch_up(JOB_PREDICTIONS_PREWEEKEND, event, engine) is True
+
+    with patch("pipeline.scheduler.datetime") as mock_dt:
+        mock_dt.now.return_value = mocked_now
+        mock_dt.side_effect = lambda *a, **kw: datetime(*a, **kw)
+        assert _should_catch_up(JOB_PREDICTIONS_PREWEEKEND, event, engine) is True
 
 
 def test_catch_up_preweekend_predictions_already_generated():
     """Skip catch-up when predictions already exist."""
     engine, _conn = _mock_engine_with_scalar(20)  # COUNT(*) predictions = 20
-    now = datetime.now(timezone.utc)
+    mocked_now = datetime(2026, 3, 11, 8, 0, tzinfo=timezone.utc)
     event = _make_conventional_event(
-        quali_dt=now + timedelta(days=2),
-        race_dt=now + timedelta(days=3),
+        quali_dt=datetime(2026, 3, 13, 16, 0, tzinfo=timezone.utc),
+        race_dt=datetime(2026, 3, 15, 15, 0, tzinfo=timezone.utc),
     )
-    assert _should_catch_up(JOB_PREDICTIONS_PREWEEKEND, event, engine) is False
+
+    with patch("pipeline.scheduler.datetime") as mock_dt:
+        mock_dt.now.return_value = mocked_now
+        mock_dt.side_effect = lambda *a, **kw: datetime(*a, **kw)
+        assert _should_catch_up(JOB_PREDICTIONS_PREWEEKEND, event, engine) is False
 
 
 def test_catch_up_preweekend_predictions_race_already_past():
@@ -420,7 +428,7 @@ def test_catch_up_preweekend_predictions_race_already_past():
 
 
 def test_catch_up_preweekend_predictions_qualifying_already_ran():
-    """Skip catch-up when qualifying has already happened (quali-based predictions will follow)."""
+    """Skip catch-up once the pre-weekend prediction window has fully passed."""
     engine, _conn = _mock_engine_with_scalar(0)
     now = datetime.now(timezone.utc)
     event = _make_conventional_event(
@@ -428,6 +436,23 @@ def test_catch_up_preweekend_predictions_qualifying_already_ran():
         race_dt=now + timedelta(hours=23),
     )
     assert _should_catch_up(JOB_PREDICTIONS_PREWEEKEND, event, engine) is False
+
+
+def test_catch_up_preweekend_predictions_after_thursday_cutoff_before_qualifying():
+    """Skip catch-up after Thursday 09:00 UTC even if qualifying has not started yet."""
+    engine, conn = _mock_engine_with_scalar(0)
+    mocked_now = datetime(2026, 3, 13, 10, 0, tzinfo=timezone.utc)
+    event = _make_conventional_event(
+        quali_dt=datetime(2026, 3, 13, 16, 0, tzinfo=timezone.utc),
+        race_dt=datetime(2026, 3, 15, 15, 0, tzinfo=timezone.utc),
+    )
+
+    with patch("pipeline.scheduler.datetime") as mock_dt:
+        mock_dt.now.return_value = mocked_now
+        mock_dt.side_effect = lambda *a, **kw: datetime(*a, **kw)
+        assert _should_catch_up(JOB_PREDICTIONS_PREWEEKEND, event, engine) is False
+
+    conn.execute.assert_not_called()
 
 
 def test_catch_up_preweekend_predictions_no_race_time():

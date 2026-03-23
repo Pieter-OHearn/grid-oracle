@@ -283,9 +283,9 @@ def _should_catch_up(job_type: str, event: dict, engine: Engine) -> bool:
             # Skip if the race has already happened
             if now >= race_time:
                 return False
-            # Skip if the pre-weekend prediction window has already passed.
-            quali_time = _find_session_time(session_times, "Qualifying")
-            if quali_time and now >= quali_time:
+            # Pre-weekend predictions are only valid up to the Thursday 09:00 UTC
+            # snapshot cutoff, even if qualifying has not started yet.
+            if now > _compute_preweekend_thursday(race_time):
                 return False
             count = conn.execute(
                 text("SELECT COUNT(*) FROM predictions WHERE race_id = :rid"),

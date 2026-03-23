@@ -56,7 +56,7 @@ def _get_remaining_race_ids(season: int, engine: Engine) -> list[int]:
 
 
 def _get_cumulative_backtest_mae(through_race_id: int, engine: Engine) -> float | None:
-    """Return average per-race MPE from the latest evaluated prediction of each race."""
+    """Return MAE across all classified backtest prediction/result pairs to the cutoff race."""
     with engine.connect() as conn:
         cutoff_row = conn.execute(
             text("SELECT date FROM races WHERE id = :race_id"),
@@ -68,10 +68,10 @@ def _get_cumulative_backtest_mae(through_race_id: int, engine: Engine) -> float 
         rows = conn.execute(
             text(
                 """
-                SELECT mean_position_error
-                FROM (
+                WITH ranked_evaluations AS (
                     SELECT
-                        em.mean_position_error,
+                        em.race_id,
+                        em.model_version_id,
                         ROW_NUMBER() OVER (
                             PARTITION BY em.race_id
                             ORDER BY em.evaluated_at DESC, em.model_version_id DESC
@@ -80,8 +80,17 @@ def _get_cumulative_backtest_mae(through_race_id: int, engine: Engine) -> float 
                     JOIN races r ON r.id = em.race_id
                     WHERE r.date <= :cutoff_date
                       AND em.mean_position_error IS NOT NULL
-                ) ranked
-                WHERE row_num = 1
+                )
+                SELECT ABS(p.predicted_position - rr.finish_position) AS absolute_error
+                FROM ranked_evaluations re
+                JOIN predictions p
+                  ON p.race_id = re.race_id
+                 AND p.model_version_id = re.model_version_id
+                JOIN race_results rr
+                  ON rr.race_id = p.race_id
+                 AND rr.driver_id = p.driver_id
+                WHERE re.row_num = 1
+                  AND rr.finish_position IS NOT NULL
                 """
             ),
             {"cutoff_date": cutoff_row[0]},

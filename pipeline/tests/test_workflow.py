@@ -1,11 +1,13 @@
 """Unit tests for pipeline.ml.workflow."""
 
+from datetime import date
 from unittest.mock import MagicMock, patch
 
 import pandas as pd
+import pytest
 
 from pipeline.ml.context import PREWEEKEND_CONTEXT
-from pipeline.ml.workflow import post_race_pipeline, walk_forward_backtest
+from pipeline.ml.workflow import _get_cumulative_backtest_mae, post_race_pipeline, walk_forward_backtest
 
 
 @patch(
@@ -68,3 +70,21 @@ def test_post_race_pipeline_retrains_from_preweekend_snapshots(
         evaluation_mae=1.75,
     )
     mock_predict_remaining.assert_called_once_with(2026, 42, engine)
+
+
+def test_get_cumulative_backtest_mae_weights_unequal_race_row_counts():
+    """Cumulative MAE should be computed over classified driver rows, not race averages."""
+    mock_conn = MagicMock()
+    mock_engine = MagicMock()
+    mock_engine.connect.return_value.__enter__ = MagicMock(return_value=mock_conn)
+    mock_engine.connect.return_value.__exit__ = MagicMock(return_value=False)
+    mock_conn.execute.side_effect = [
+        MagicMock(fetchone=MagicMock(return_value=(date(2026, 3, 29),))),
+        MagicMock(fetchall=MagicMock(return_value=[(0,), (0,), (2,), (2,), (2,), (2,)])),
+    ]
+
+    result = _get_cumulative_backtest_mae(through_race_id=7, engine=mock_engine)
+
+    # Race A contributes 2 classified rows at error 0, race B contributes
+    # 4 classified rows at error 2.0 => cumulative MAE = 8 / 6 = 1.3333.
+    assert result == pytest.approx(1.3333, abs=1e-4)
