@@ -447,6 +447,92 @@ def _driver_avg_sector2_time_at_circuit(
     return float(val) if val is not None else None
 
 
+def _circuit_tyre_degradation_index(conn: Connection, circuit_id: int, race_date: object) -> int:
+    """Ordinal encoding of historically high/medium/low tyre degradation at a circuit.
+
+    Computed as the average proportion of HARD compound laps across all completed
+    races at this circuit before race_date.  Thresholds:
+        < 0.30  → 0 (low degradation, e.g. Monza)
+        0.30–0.50 → 1 (medium)
+        > 0.50  → 2 (high degradation, e.g. Barcelona)
+
+    Returns 1 (neutral) when no prior tyre data exists for the circuit.
+    """
+    val = conn.execute(
+        text(
+            """
+            SELECT AVG(sub.hard_ratio)
+            FROM (
+                SELECT
+                    SUM(rtd.lap_count) FILTER (WHERE rtd.compound = 'HARD')::float
+                    / NULLIF(SUM(rtd.lap_count), 0) AS hard_ratio
+                FROM race_tyre_data rtd
+                JOIN races r ON r.id = rtd.race_id
+                WHERE r.circuit_id = :cid
+                  AND r.date < :race_date
+                  AND r.is_completed = TRUE
+                GROUP BY r.id
+            ) sub
+            """
+        ),
+        {"cid": circuit_id, "race_date": race_date},
+    ).scalar()
+    if val is None:
+        return 1
+    ratio = float(val)
+    if ratio < 0.30:
+        return 0
+    if ratio <= 0.50:
+        return 1
+    return 2
+
+
+def _constructor_hard_compound_avg_position(
+    conn: Connection, constructor_id: int, race_date: object
+) -> float | None:
+    """Historical average finish position for a constructor at high-degradation circuits.
+
+    A circuit is considered high-degradation when the average proportion of HARD
+    compound laps across its historical races exceeds 0.50 (i.e. the same threshold
+    used for circuit_tyre_degradation_index == 2).
+
+    Returns None when the constructor has no results at high-degradation circuits.
+    """
+    val = conn.execute(
+        text(
+            """
+            SELECT AVG(rr.finish_position)
+            FROM race_results rr
+            JOIN races r ON r.id = rr.race_id
+            WHERE rr.constructor_id = :cid
+              AND rr.finish_position IS NOT NULL
+              AND r.date < :race_date
+              AND r.is_completed = TRUE
+              AND r.circuit_id IN (
+                  SELECT circuit_id
+                  FROM (
+                      SELECT
+                          r2.circuit_id,
+                          AVG(
+                              SUM(rtd.lap_count) FILTER (WHERE rtd.compound = 'HARD')::float
+                              / NULLIF(SUM(rtd.lap_count), 0)
+                          ) AS avg_hard_ratio
+                      FROM race_tyre_data rtd
+                      JOIN races r2 ON r2.id = rtd.race_id
+                      WHERE r2.date < :race_date
+                        AND r2.is_completed = TRUE
+                      GROUP BY r2.circuit_id, r2.id
+                  ) per_circuit
+                  GROUP BY circuit_id
+                  HAVING AVG(avg_hard_ratio) > 0.50
+              )
+            """
+        ),
+        {"cid": constructor_id, "race_date": race_date},
+    ).scalar()
+    return float(val) if val is not None else None
+
+
 def _constructor_avg_fp2_pace_at_circuit(
     conn: Connection, constructor_id: int, circuit_id: int, race_date: object
 ) -> float | None:
@@ -551,6 +637,9 @@ def build_features_for_race(race_id: int, engine: Engine) -> pd.DataFrame:
         driver_champ_default = 1 if not driver_champ else len(driver_champ) + 1
         constructor_champ_default = 1 if not constructor_champ else len(constructor_champ) + 1
 
+        # Circuit-level tyre degradation index — same value for every driver this race.
+        degradation_idx = _circuit_tyre_degradation_index(conn, race["circuit_id"], race["date"])
+
         rows: list[dict] = []
         for entry in drivers:
             did = entry["driver_id"]
@@ -590,6 +679,13 @@ def build_features_for_race(race_id: int, engine: Engine) -> pd.DataFrame:
                 "constructor_avg_fp2_pace_at_circuit": _constructor_avg_fp2_pace_at_circuit(
                     conn, cid, race["circuit_id"], race["date"]
                 ),
+                # Tyre features.
+                # circuit_tyre_degradation_index is a race-level constant (same for all drivers).
+                # constructor_hard_compound_avg_position may be None; imputed with median below.
+                "circuit_tyre_degradation_index": degradation_idx,
+                "constructor_hard_compound_avg_position": _constructor_hard_compound_avg_position(
+                    conn, cid, race["date"]
+                ),
             }
 
             rows.append({"race_id": race_id, "driver_id": did, **feature_data})
@@ -598,7 +694,11 @@ def build_features_for_race(race_id: int, engine: Engine) -> pd.DataFrame:
         # If no driver has historical data (e.g. a new circuit), default to 1.0.
         # Note: 1.0 is the fastest possible ratio, so all drivers receive the same
         # value and gain no relative advantage over each other from this feature.
-        for col in ("driver_avg_sector2_time_at_circuit", "constructor_avg_fp2_pace_at_circuit"):
+        for col in (
+            "driver_avg_sector2_time_at_circuit",
+            "constructor_avg_fp2_pace_at_circuit",
+            "constructor_hard_compound_avg_position",
+        ):
             non_null = [r[col] for r in rows if r[col] is not None]
             fill = statistics.median(non_null) if non_null else 1.0
             for r in rows:
