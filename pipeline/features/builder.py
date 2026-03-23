@@ -452,9 +452,9 @@ def _circuit_tyre_degradation_index(conn: Connection, circuit_id: int, race_date
 
     Computed as the average proportion of HARD compound laps across all completed
     races at this circuit before race_date.  Thresholds:
-        < 0.30  → 0 (low degradation, e.g. Monza)
-        0.30–0.50 → 1 (medium)
-        > 0.50  → 2 (high degradation, e.g. Barcelona)
+        < 0.30   -> 0 (low degradation, e.g. Monza)
+        0.30-0.50 -> 1 (medium)
+        > 0.50   -> 2 (high degradation, e.g. Barcelona)
 
     Returns 1 (neutral) when no prior tyre data exists for the circuit.
     """
