@@ -487,9 +487,7 @@ def _circuit_tyre_degradation_index(conn: Connection, circuit_id: int, race_date
     return 2
 
 
-def _constructor_hard_compound_avg_position(
-    conn: Connection, constructor_id: int, race_date: object
-) -> float | None:
+def _constructor_hard_compound_avg_position(conn: Connection, constructor_id: int, race_date: object) -> float | None:
     """Historical average finish position for a constructor at high-degradation circuits.
 
     A circuit is considered high-degradation when the average proportion of HARD
