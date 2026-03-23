@@ -1,10 +1,14 @@
 """Unit tests for pipeline.ingest.fetch_qualifying."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pandas as pd
 
-from pipeline.ingest.fetch_qualifying import _interval_or_none, upsert_qualifying_result
+from pipeline.ingest.fetch_qualifying import (
+    _interval_or_none,
+    _load_race_grid,
+    upsert_qualifying_result,
+)
 
 # ---------------------------------------------------------------------------
 # _interval_or_none
@@ -74,3 +78,59 @@ def test_upsert_qualifying_result_null_grid_position():
     params = conn.execute.call_args[0][1]
     assert params["grid_position"] is None
     assert params["grid_penalty"] is None
+
+
+# ---------------------------------------------------------------------------
+# _load_race_grid
+# ---------------------------------------------------------------------------
+
+
+def _make_race_results(rows: list[dict]) -> pd.DataFrame:
+    return pd.DataFrame(rows)
+
+
+def test_load_race_grid_returns_grid_positions():
+    results = _make_race_results(
+        [
+            {"Abbreviation": "VER", "GridPosition": 6.0},
+            {"Abbreviation": "LEC", "GridPosition": 1.0},
+            {"Abbreviation": "HAM", "GridPosition": 4.0},
+        ]
+    )
+    mock_session = MagicMock()
+    mock_session.results = results
+    with patch("pipeline.ingest.fetch_qualifying.fastf1.get_session", return_value=mock_session):
+        grid = _load_race_grid(2023, 12)
+    assert grid == {"VER": 6, "LEC": 1, "HAM": 4}
+
+
+def test_load_race_grid_skips_nan_grid_position():
+    results = _make_race_results(
+        [
+            {"Abbreviation": "VER", "GridPosition": 1.0},
+            {"Abbreviation": "PIT", "GridPosition": float("nan")},
+        ]
+    )
+    mock_session = MagicMock()
+    mock_session.results = results
+    with patch("pipeline.ingest.fetch_qualifying.fastf1.get_session", return_value=mock_session):
+        grid = _load_race_grid(2023, 12)
+    assert grid == {"VER": 1}
+    assert "PIT" not in grid
+
+
+def test_load_race_grid_returns_empty_when_session_unavailable():
+    with patch(
+        "pipeline.ingest.fetch_qualifying.fastf1.get_session",
+        side_effect=Exception("no data"),
+    ):
+        grid = _load_race_grid(2026, 5)
+    assert grid == {}
+
+
+def test_load_race_grid_returns_empty_when_results_empty():
+    mock_session = MagicMock()
+    mock_session.results = pd.DataFrame()
+    with patch("pipeline.ingest.fetch_qualifying.fastf1.get_session", return_value=mock_session):
+        grid = _load_race_grid(2023, 1)
+    assert grid == {}

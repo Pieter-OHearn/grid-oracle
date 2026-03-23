@@ -82,6 +82,33 @@ def upsert_qualifying_result(
 # ---------------------------------------------------------------------------
 
 
+def _load_race_grid(season: int, round_num: int) -> dict[str, int]:
+    """Return {abbreviation: actual_grid_position} from the race session.
+
+    Grid penalties are finalised by the FIA only shortly before the race, so
+    the qualifying session's GridPosition field is always NaN.  The race session
+    results carry the definitive post-penalty starting positions.
+
+    Returns an empty dict when the race has not yet taken place or the session
+    data cannot be loaded.
+    """
+    try:
+        race_session = fastf1.get_session(season, round_num, "R")
+        race_session.load(laps=False, telemetry=False, weather=False, messages=False)
+        results = race_session.results
+        if results is None or results.empty:
+            return {}
+        grid: dict[str, int] = {}
+        for _, row in results.iterrows():
+            abbr = str(row.get("Abbreviation", ""))[:3]
+            gp = row.get("GridPosition")
+            if abbr and pd.notna(gp):
+                grid[abbr] = int(gp)
+        return grid
+    except Exception:
+        return {}
+
+
 def ingest_event(season: int, round_num: int, engine: Engine) -> bool:
     """Ingest qualifying results for a single event.
 
@@ -105,6 +132,10 @@ def ingest_event(season: int, round_num: int, engine: Engine) -> bool:
     event_date = session.event["EventDate"]
     race_date = event_date.date() if hasattr(event_date, "date") else event_date
 
+    # Grid penalties are only available from the race session (finalised ~30 min
+    # before lights out).  Empty dict means the race hasn't happened yet.
+    race_grid = _load_race_grid(season, round_num)
+
     with engine.begin() as conn:
         circuit_id = upsert_circuit(conn, session)
         # mark_completed=False: qualifying must not downgrade an existing TRUE value
@@ -127,10 +158,9 @@ def ingest_event(season: int, round_num: int, engine: Engine) -> bool:
             upsert_driver_contract(conn, driver_id, constructor_id, season, round_num)
 
             qual_pos = row.get("Position")
-            actual_grid = row.get("GridPosition")
             grid_penalty: int | None = None
-            if pd.notna(qual_pos) and pd.notna(actual_grid):
-                penalty = int(actual_grid) - int(qual_pos)
+            if pd.notna(qual_pos) and driver_code in race_grid:
+                penalty = race_grid[driver_code] - int(qual_pos)
                 if penalty != 0:
                     grid_penalty = penalty
 
