@@ -422,7 +422,8 @@ def test_sector_fp2_imputation_mixed_null():
 
 
 def test_sector_fp2_imputation_all_null_defaults_to_one():
-    """When no driver has any historical data (new circuit), all values default to 1.0."""
+    """When no driver has any historical data (new circuit), pace-ratio values default
+    to 1.0 and constructor_hard_compound_avg_position defaults to 10.0."""
     engine = _make_imputation_engine(
         sector2_values=[None, None],
         fp2_values=[None, None],
@@ -431,10 +432,13 @@ def test_sector_fp2_imputation_all_null_defaults_to_one():
     assert len(df) == 2
     assert df["driver_avg_sector2_time_at_circuit"].notna().all()
     assert df["constructor_avg_fp2_pace_at_circuit"].notna().all()
+    assert df["constructor_hard_compound_avg_position"].notna().all()
     for v in df["driver_avg_sector2_time_at_circuit"]:
         assert v == pytest.approx(1.0)
     for v in df["constructor_avg_fp2_pace_at_circuit"]:
         assert v == pytest.approx(1.0)
+    for v in df["constructor_hard_compound_avg_position"]:
+        assert v == pytest.approx(10.0)
 
 
 # ---------------------------------------------------------------------------

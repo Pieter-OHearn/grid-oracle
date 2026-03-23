@@ -1,7 +1,7 @@
 """Ingest per-driver tyre compound lap counts from race sessions using FastF1.
 
-Stores the number of laps each driver ran on each compound (SOFT, MEDIUM, HARD,
-INTERMEDIATE, WET) in the ``race_tyre_data`` table.  Used by the feature builder
+Stores the number of laps each driver ran on each dry compound (SOFT, MEDIUM,
+HARD) in the ``race_tyre_data`` table.  Used by the feature builder
 to compute ``circuit_tyre_degradation_index`` and
 ``constructor_hard_compound_avg_position``.
 
@@ -36,8 +36,10 @@ for _noisy in ("fastf1", "req", "core", "logger", "_api"):
     logging.getLogger(_noisy).setLevel(logging.CRITICAL)
 logger = logging.getLogger(__name__)
 
-# Compounds recognised as valid dry-tyre data.
-VALID_COMPOUNDS = {"SOFT", "MEDIUM", "HARD", "INTERMEDIATE", "WET"}
+# Dry-weather compounds only — INTERMEDIATE and WET are excluded because they
+# are driven by rain conditions, not tyre degradation characteristics, and
+# would inflate avg_compounds_per_driver at wet circuits.
+VALID_COMPOUNDS = {"SOFT", "MEDIUM", "HARD"}
 
 
 def upsert_tyre_data(
@@ -77,7 +79,7 @@ def _compound_counts_from_laps(laps: pd.DataFrame) -> dict[str, dict[str, int]]:
     return counts
 
 
-def _ingest_event(season: int, round_num: int, engine: Engine) -> bool:
+def ingest_event(season: int, round_num: int, engine: Engine) -> bool:
     """Load one race session and upsert compound lap counts into race_tyre_data.
 
     Returns True if any data was ingested.
@@ -149,7 +151,7 @@ def ingest_season(season: int, engine: Engine) -> None:
     schedule = fastf1.get_event_schedule(season, include_testing=False)
     logger.info("Season %d — %d race events found", season, len(schedule))
     for _, event in schedule.iterrows():
-        _ingest_event(season, int(event["RoundNumber"]), engine)
+        ingest_event(season, int(event["RoundNumber"]), engine)
     logger.info("Season %d tyre data ingestion complete.", season)
 
 
@@ -161,7 +163,7 @@ def main() -> None:
 
     engine = get_engine()
     if args.round is not None:
-        _ingest_event(args.season, args.round, engine)
+        ingest_event(args.season, args.round, engine)
     else:
         ingest_season(args.season, engine)
 

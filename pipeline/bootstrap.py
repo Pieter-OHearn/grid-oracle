@@ -26,6 +26,7 @@ from pipeline.features.builder import build_features_for_race, export_parquet
 from pipeline.ingest.calendar_sync import sync_season_calendar
 from pipeline.ingest.fetch_qualifying import ingest_event as ingest_qualifying
 from pipeline.ingest.fetch_results import ingest_event as ingest_results
+from pipeline.ingest.fetch_tyre_data import ingest_event as ingest_tyre_data
 from pipeline.ingest.upsert_helpers import get_engine
 from pipeline.maintenance.driver_metadata import backfill_driver_numbers
 from pipeline.ml.predict import run as predict
@@ -101,6 +102,10 @@ def main() -> None:
             except Exception as exc:
                 logger.warning("      Results ingest failed: %s", exc)
             try:
+                ingest_tyre_data(hist_season, round_num, engine)
+            except Exception as exc:
+                logger.warning("      Tyre data ingest failed: %s", exc)
+            try:
                 df = build_features_for_race(race_id, engine)
                 if not df.empty:
                     export_parquet(df, race_id)
@@ -124,6 +129,10 @@ def main() -> None:
             ingest_results(SEASON, round_num, engine)
         except Exception as exc:
             logger.warning("    Results ingest failed: %s", exc)
+        try:
+            ingest_tyre_data(SEASON, round_num, engine)
+        except Exception as exc:
+            logger.warning("    Tyre data ingest failed: %s", exc)
 
     # Also ingest qualifying for the next upcoming race (needed for grid positions)
     if next_event:

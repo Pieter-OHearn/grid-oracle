@@ -688,20 +688,30 @@ def build_features_for_race(race_id: int, engine: Engine) -> pd.DataFrame:
 
             rows.append({"race_id": race_id, "driver_id": did, **feature_data})
 
-        # Impute missing sector/FP2 features with the circuit median for this race.
-        # If no driver has historical data (e.g. a new circuit), default to 1.0.
-        # Note: 1.0 is the fastest possible ratio, so all drivers receive the same
-        # value and gain no relative advantage over each other from this feature.
+        # Impute missing sector/FP2 pace features with the circuit median for this
+        # race.  If no driver has historical data (e.g. a new circuit), default to
+        # 1.0 — the neutral "exactly at session pace" ratio, so all drivers receive
+        # the same value and gain no relative advantage from this feature.
         for col in (
             "driver_avg_sector2_time_at_circuit",
             "constructor_avg_fp2_pace_at_circuit",
-            "constructor_hard_compound_avg_position",
         ):
             non_null = [r[col] for r in rows if r[col] is not None]
             fill = statistics.median(non_null) if non_null else 1.0
             for r in rows:
                 if r[col] is None:
                     r[col] = fill
+
+        # Impute missing constructor hard-compound position with the race median.
+        # If no constructor has hard-compound circuit history, default to 10.0 —
+        # the neutral mid-field position — so no constructor gains a spurious
+        # advantage over another from missing data.
+        hc_col = "constructor_hard_compound_avg_position"
+        hc_non_null = [r[hc_col] for r in rows if r[hc_col] is not None]
+        hc_fill = statistics.median(hc_non_null) if hc_non_null else 10.0
+        for r in rows:
+            if r[hc_col] is None:
+                r[hc_col] = hc_fill
 
         skip = {"race_id", "driver_id"}
         for r in rows:
