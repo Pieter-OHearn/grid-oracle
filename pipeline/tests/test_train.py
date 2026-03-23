@@ -66,12 +66,25 @@ def _make_feature_df(n: int = 20, season: int = 2023) -> pd.DataFrame:
 def test_load_feature_parquets(tmp_path):
     df1 = pd.DataFrame({"race_id": [1], "driver_id": [1], "grid_position": [3]})
     df2 = pd.DataFrame({"race_id": [2], "driver_id": [2], "grid_position": [5]})
-    df1.to_parquet(tmp_path / "features_1.parquet", index=False)
-    df2.to_parquet(tmp_path / "features_2.parquet", index=False)
+    df1.to_parquet(tmp_path / "features_preweekend_1.parquet", index=False)
+    df2.to_parquet(tmp_path / "features_preweekend_2.parquet", index=False)
 
     result = load_feature_parquets(tmp_path)
     assert len(result) == 2
     assert set(result["race_id"]) == {1, 2}
+
+
+def test_load_feature_parquets_ignores_legacy_context_files(tmp_path):
+    df = pd.DataFrame({"race_id": [1], "driver_id": [1], "grid_position": [3]})
+    df.to_parquet(tmp_path / "features_preweekend_1.parquet", index=False)
+    pd.DataFrame({"race_id": [99], "driver_id": [9], "grid_position": [9]}).to_parquet(
+        tmp_path / "features_99.parquet",
+        index=False,
+    )
+
+    result = load_feature_parquets(tmp_path)
+
+    assert set(result["race_id"]) == {1}
 
 
 def test_load_feature_parquets_no_files(tmp_path):
@@ -393,6 +406,40 @@ def test_run_explicit_artifact_path(tmp_path):
     assert explicit_path.exists()
     # insert_model_version + update_artifact_path = 2 DB calls
     assert mock_conn.execute.call_count == 2
+
+
+def test_run_through_race_id_uses_backtest_mae(tmp_path):
+    from pipeline.ml.train import run
+
+    filtered_df = _make_feature_df(n=20, season=2023)
+    filtered_df["race_date"] = pd.to_datetime(["2023-03-05"] * len(filtered_df))
+
+    mock_conn = MagicMock()
+    mock_conn.execute.return_value.fetchone.return_value = (11,)
+    mock_conn.execute.return_value.rowcount = 1
+    mock_engine = MagicMock()
+    mock_engine.begin.return_value.__enter__ = MagicMock(return_value=mock_conn)
+    mock_engine.begin.return_value.__exit__ = MagicMock(return_value=False)
+
+    with (
+        patch("pipeline.ml.train.load_feature_parquets", return_value=filtered_df),
+        patch("pipeline.ml.train.attach_targets", return_value=filtered_df),
+        patch("pipeline.ml.train._filter_rows_through_race", return_value=filtered_df),
+    ):
+        model_version_id = run(
+            data_dir=tmp_path,
+            artifact_path=tmp_path / "model.json",
+            engine=mock_engine,
+            triggered_by_race_id=7,
+            through_race_id=7,
+            evaluation_mae=1.2345,
+        )
+
+    assert model_version_id == 11
+    call_params = mock_conn.execute.call_args_list[0][0][1]
+    assert call_params["mae"] == pytest.approx(1.2345)
+    assert call_params["triggered_by_race_id"] == 7
+    assert call_params["test_season"] is None
 
 
 def test_run_rolls_back_db_row_if_save_model_fails(tmp_path):

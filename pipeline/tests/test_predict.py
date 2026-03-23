@@ -145,7 +145,7 @@ def test_load_features_success():
             "feature_data": [fd1, fd2],
         }
     )
-    qualifying_db_df = pd.DataFrame(
+    lineup_db_df = pd.DataFrame(
         {
             "driver_id": [1, 2],
             "constructor_id": [10, 20],
@@ -154,7 +154,7 @@ def test_load_features_success():
     engine = MagicMock()
     with patch(
         "pipeline.ml.predict.pd.read_sql",
-        side_effect=[features_db_df, qualifying_db_df],
+        side_effect=[features_db_df, lineup_db_df],
     ):
         result = load_features(engine, race_id=1)
 
@@ -165,8 +165,25 @@ def test_load_features_success():
         assert col in result.columns, f"Missing feature column: {col}"
 
 
-def test_load_features_warns_on_missing_qualifying(caplog):
-    """load_features logs a warning when a driver has features but no qualifying result."""
+def test_load_features_uses_driver_contracts_for_constructor_lookup():
+    fd1 = _make_feature_data()
+    features_db_df = pd.DataFrame({"driver_id": [1], "feature_data": [fd1]})
+    lineup_db_df = pd.DataFrame({"driver_id": [1], "constructor_id": [10]})
+    engine = MagicMock()
+
+    with patch(
+        "pipeline.ml.predict.pd.read_sql",
+        side_effect=[features_db_df, lineup_db_df],
+    ) as mock_read_sql:
+        load_features(engine, race_id=1)
+
+    constructor_query = str(mock_read_sql.call_args_list[1].args[0])
+    assert "FROM driver_contracts" in constructor_query
+    assert "FROM qualifying_results" not in constructor_query
+
+
+def test_load_features_warns_on_missing_driver_contract(caplog):
+    """load_features logs a warning when a driver has features but no active contract."""
     import logging
 
     fd1 = _make_feature_data()
@@ -177,8 +194,8 @@ def test_load_features_warns_on_missing_qualifying(caplog):
             "feature_data": [fd1, fd2],
         }
     )
-    # Only driver 1 has a qualifying result; driver 2 will be dropped.
-    qualifying_db_df = pd.DataFrame(
+    # Only driver 1 has an active contract; driver 2 will be dropped.
+    lineup_db_df = pd.DataFrame(
         {
             "driver_id": [1],
             "constructor_id": [10],
@@ -187,7 +204,7 @@ def test_load_features_warns_on_missing_qualifying(caplog):
     engine = MagicMock()
     with patch(
         "pipeline.ml.predict.pd.read_sql",
-        side_effect=[features_db_df, qualifying_db_df],
+        side_effect=[features_db_df, lineup_db_df],
     ):
         with caplog.at_level(logging.WARNING, logger="pipeline.ml.predict"):
             result = load_features(engine, race_id=1)

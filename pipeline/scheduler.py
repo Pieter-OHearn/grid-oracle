@@ -17,6 +17,7 @@ from pipeline.ingest.fetch_results import ingest_event as ingest_results_event
 from pipeline.ingest.fetch_weather import fetch_and_store_weather
 from pipeline.ingest.upsert_helpers import get_engine
 from pipeline.ml import workflow as ml_workflow
+from pipeline.ml.context import PREWEEKEND_CONTEXT
 
 post_race_pipeline = ml_workflow.post_race_pipeline
 _get_latest_model_version_id_for_race = ml_workflow._get_latest_model_version_id_for_race
@@ -26,7 +27,7 @@ _get_remaining_race_ids = ml_workflow._get_remaining_race_ids
 def _get_latest_model_version_id(engine: Engine) -> int | None:
     """Return the ID of the most recently created model version, or None."""
     with engine.connect() as conn:
-        row = conn.execute(text("SELECT id FROM model_versions ORDER BY created_at DESC LIMIT 1")).fetchone()
+        row = conn.execute(text("SELECT id FROM model_versions ORDER BY trained_at DESC, id DESC LIMIT 1")).fetchone()
     return row[0] if row else None
 
 
@@ -196,7 +197,7 @@ def _run_job(job_type: str, season: int, round_num: int, race_id: int, engine: E
                     race_id,
                 )
                 return
-            df = build_features_for_race(race_id, engine)
+            df = build_features_for_race(race_id, engine, context=PREWEEKEND_CONTEXT)
             if df.empty:
                 logger.warning(
                     "_run_job: no features built for race_id=%d — skipping pre-weekend predictions",
@@ -282,7 +283,7 @@ def _should_catch_up(job_type: str, event: dict, engine: Engine) -> bool:
             # Skip if the race has already happened
             if now >= race_time:
                 return False
-            # Skip if qualifying data already exists (quali-based predictions will run instead)
+            # Skip if the pre-weekend prediction window has already passed.
             quali_time = _find_session_time(session_times, "Qualifying")
             if quali_time and now >= quali_time:
                 return False

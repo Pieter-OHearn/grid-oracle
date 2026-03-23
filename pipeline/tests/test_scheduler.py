@@ -3,6 +3,7 @@
 from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock, patch
 
+from pipeline.ml.context import PREWEEKEND_CONTEXT
 from pipeline.scheduler import (
     JOB_PREDICTIONS_PREWEEKEND,
     JOB_QUALIFYING,
@@ -289,7 +290,7 @@ def test_run_job_preweekend_predictions(mock_model_id, mock_build, mock_predict)
     mock_build.return_value = pd.DataFrame({"driver_id": [1, 2]})
     engine = MagicMock()
     _run_job(JOB_PREDICTIONS_PREWEEKEND, 2026, 3, 30, engine)
-    mock_build.assert_called_once_with(30, engine)
+    mock_build.assert_called_once_with(30, engine, context=PREWEEKEND_CONTEXT)
     mock_predict.assert_called_once_with(race_id=30, model_version_id=5, engine=engine)
 
 
@@ -304,7 +305,7 @@ def test_run_job_preweekend_predictions_skips_when_no_features(mock_model_id, mo
     engine = MagicMock()
     with caplog.at_level("WARNING"):
         _run_job(JOB_PREDICTIONS_PREWEEKEND, 2026, 3, 30, engine)
-    mock_build.assert_called_once_with(30, engine)
+    mock_build.assert_called_once_with(30, engine, context=PREWEEKEND_CONTEXT)
     mock_predict.assert_not_called()
     assert "no features built" in caplog.text
 
@@ -657,12 +658,13 @@ def test_get_remaining_race_ids_empty():
 @patch("pipeline.ml.workflow.ml_predict.run")
 @patch("pipeline.ml.workflow.ml_evaluate.run")
 @patch("pipeline.ml.workflow.ml_train.run", return_value=42)
+@patch("pipeline.ml.workflow._get_cumulative_backtest_mae", return_value=1.75)
 @patch("pipeline.ml.workflow._get_remaining_race_ids", return_value=[11, 12])
 @patch("pipeline.ml.workflow._get_latest_model_version_id_for_race", return_value=7)
 @patch("pipeline.ml.workflow.export_parquet")
 @patch("pipeline.ml.workflow.build_features_for_race")
 def test_post_race_pipeline_happy_path(
-    mock_build, mock_export, mock_old_id, mock_remaining, mock_train, mock_eval, mock_predict
+    mock_build, mock_export, mock_old_id, mock_remaining, mock_backtest_mae, mock_train, mock_eval, mock_predict
 ):
     import pandas as pd
 
@@ -671,9 +673,15 @@ def test_post_race_pipeline_happy_path(
 
     post_race_pipeline(10, 2026, engine)
 
-    mock_build.assert_called_once_with(10, engine)
+    mock_build.assert_called_once_with(10, engine, context=PREWEEKEND_CONTEXT)
     mock_export.assert_called_once()
-    mock_train.assert_called_once_with(engine=engine, triggered_by_race_id=10)
+    mock_backtest_mae.assert_called_once_with(10, engine)
+    mock_train.assert_called_once_with(
+        engine=engine,
+        triggered_by_race_id=10,
+        through_race_id=10,
+        evaluation_mae=1.75,
+    )
     mock_eval.assert_called_once_with(race_id=10, model_version_id=7, engine=engine)
     assert mock_predict.call_count == 2
     mock_predict.assert_any_call(race_id=11, model_version_id=42, engine=engine)
@@ -683,12 +691,21 @@ def test_post_race_pipeline_happy_path(
 @patch("pipeline.ml.workflow.ml_predict.run")
 @patch("pipeline.ml.workflow.ml_evaluate.run")
 @patch("pipeline.ml.workflow.ml_train.run", side_effect=ValueError("not enough seasons"))
+@patch("pipeline.ml.workflow._get_cumulative_backtest_mae", return_value=1.75)
 @patch("pipeline.ml.workflow._get_remaining_race_ids", return_value=[11])
 @patch("pipeline.ml.workflow._get_latest_model_version_id_for_race", return_value=7)
 @patch("pipeline.ml.workflow.export_parquet")
 @patch("pipeline.ml.workflow.build_features_for_race")
 def test_post_race_pipeline_training_failure_does_not_raise(
-    mock_build, mock_export, mock_old_id, mock_remaining, mock_train, mock_eval, mock_predict, caplog
+    mock_build,
+    mock_export,
+    mock_old_id,
+    mock_remaining,
+    mock_backtest_mae,
+    mock_train,
+    mock_eval,
+    mock_predict,
+    caplog,
 ):
     """A ValueError from ml_train (insufficient seasons) logs a warning and exits early."""
     import pandas as pd
@@ -700,7 +717,8 @@ def test_post_race_pipeline_training_failure_does_not_raise(
         post_race_pipeline(10, 2026, engine)  # must not raise
 
     mock_train.assert_called_once()
-    mock_eval.assert_not_called()
+    mock_eval.assert_called_once_with(race_id=10, model_version_id=7, engine=engine)
+    mock_backtest_mae.assert_called_once_with(10, engine)
     mock_predict.assert_not_called()
     assert "skipping retrain" in caplog.text
 
@@ -708,12 +726,13 @@ def test_post_race_pipeline_training_failure_does_not_raise(
 @patch("pipeline.ml.workflow.ml_predict.run")
 @patch("pipeline.ml.workflow.ml_evaluate.run")
 @patch("pipeline.ml.workflow.ml_train.run", return_value=42)
+@patch("pipeline.ml.workflow._get_cumulative_backtest_mae", return_value=None)
 @patch("pipeline.ml.workflow._get_remaining_race_ids", return_value=[11, 12])
 @patch("pipeline.ml.workflow._get_latest_model_version_id_for_race", return_value=None)
 @patch("pipeline.ml.workflow.export_parquet")
 @patch("pipeline.ml.workflow.build_features_for_race")
 def test_post_race_pipeline_skips_eval_when_no_prior_predictions(
-    mock_build, mock_export, mock_old_id, mock_remaining, mock_train, mock_eval, mock_predict
+    mock_build, mock_export, mock_old_id, mock_remaining, mock_backtest_mae, mock_train, mock_eval, mock_predict
 ):
     """Evaluation is skipped when no prior model_version_id exists for the race."""
     import pandas as pd
@@ -724,18 +743,20 @@ def test_post_race_pipeline_skips_eval_when_no_prior_predictions(
     post_race_pipeline(10, 2026, engine)  # must not raise
 
     mock_eval.assert_not_called()
+    mock_backtest_mae.assert_called_once_with(10, engine)
     assert mock_predict.call_count == 2  # predictions still attempted for remaining races
 
 
 @patch("pipeline.ml.workflow.ml_predict.run", side_effect=[None, ValueError("no features")])
 @patch("pipeline.ml.workflow.ml_evaluate.run")
 @patch("pipeline.ml.workflow.ml_train.run", return_value=42)
+@patch("pipeline.ml.workflow._get_cumulative_backtest_mae", return_value=1.75)
 @patch("pipeline.ml.workflow._get_remaining_race_ids", return_value=[11, 12])
 @patch("pipeline.ml.workflow._get_latest_model_version_id_for_race", return_value=7)
 @patch("pipeline.ml.workflow.export_parquet")
 @patch("pipeline.ml.workflow.build_features_for_race")
 def test_post_race_pipeline_prediction_failure_continues(
-    mock_build, mock_export, mock_old_id, mock_remaining, mock_train, mock_eval, mock_predict
+    mock_build, mock_export, mock_old_id, mock_remaining, mock_backtest_mae, mock_train, mock_eval, mock_predict
 ):
     """A prediction failure for one race does not stop predictions for others."""
     import pandas as pd

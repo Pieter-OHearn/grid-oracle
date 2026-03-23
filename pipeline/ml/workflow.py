@@ -12,6 +12,7 @@ from pipeline.features.builder import build_features_for_race, export_parquet
 from pipeline.ml import evaluate as ml_evaluate
 from pipeline.ml import predict as ml_predict
 from pipeline.ml import train as ml_train
+from pipeline.ml.context import PREWEEKEND_CONTEXT
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +27,22 @@ def _get_latest_model_version_id_for_race(race_id: int, engine: Engine) -> int |
     return row[0] if row else None
 
 
+def _get_completed_races(engine: Engine) -> list[dict]:
+    """Return completed races in strict chronological order."""
+    with engine.connect() as conn:
+        rows = conn.execute(
+            text(
+                """
+                SELECT id, season, round, date
+                FROM races
+                WHERE is_completed = TRUE
+                ORDER BY date, season, round
+                """
+            )
+        ).fetchall()
+    return [{"race_id": row[0], "season": row[1], "round": row[2], "date": row[3]} for row in rows]
+
+
 def _get_remaining_race_ids(season: int, engine: Engine) -> list[int]:
     """Return IDs of races that have not completed yet (date > today, is_completed = FALSE)."""
     with engine.connect() as conn:
@@ -36,6 +53,45 @@ def _get_remaining_race_ids(season: int, engine: Engine) -> list[int]:
             {"season": season, "today": datetime.now(timezone.utc).date()},
         ).fetchall()
     return [row[0] for row in rows]
+
+
+def _get_cumulative_backtest_mae(through_race_id: int, engine: Engine) -> float | None:
+    """Return average per-race MPE from the latest evaluated prediction of each race."""
+    with engine.connect() as conn:
+        cutoff_row = conn.execute(
+            text("SELECT date FROM races WHERE id = :race_id"),
+            {"race_id": through_race_id},
+        ).fetchone()
+        if cutoff_row is None:
+            raise ValueError(f"Race {through_race_id} not found")
+
+        rows = conn.execute(
+            text(
+                """
+                SELECT mean_position_error
+                FROM (
+                    SELECT
+                        em.mean_position_error,
+                        ROW_NUMBER() OVER (
+                            PARTITION BY em.race_id
+                            ORDER BY em.evaluated_at DESC, em.model_version_id DESC
+                        ) AS row_num
+                    FROM evaluation_metrics em
+                    JOIN races r ON r.id = em.race_id
+                    WHERE r.date <= :cutoff_date
+                      AND em.mean_position_error IS NOT NULL
+                ) ranked
+                WHERE row_num = 1
+                """
+            ),
+            {"cutoff_date": cutoff_row[0]},
+        ).fetchall()
+
+    if not rows:
+        return None
+
+    values = [float(row[0]) for row in rows]
+    return round(sum(values) / len(values), 4)
 
 
 def predict_remaining_races(season: int, model_version_id: int, engine: Engine) -> None:
@@ -54,11 +110,16 @@ def predict_remaining_races(season: int, model_version_id: int, engine: Engine) 
 
 
 def retrain_model(race_id: int, engine: Engine) -> int:
-    """Build features for race_id, export Parquet, and retrain model tagged to that race."""
-    df = build_features_for_race(race_id, engine)
+    """Export the pre-weekend snapshot for race_id and retrain through that race."""
+    df = build_features_for_race(race_id, engine, context=PREWEEKEND_CONTEXT)
     if not df.empty:
-        export_parquet(df, race_id)
-    new_model_version_id = ml_train.run(engine=engine, triggered_by_race_id=race_id)
+        export_parquet(df, race_id, context=PREWEEKEND_CONTEXT)
+    new_model_version_id = ml_train.run(
+        engine=engine,
+        triggered_by_race_id=race_id,
+        through_race_id=race_id,
+        evaluation_mae=_get_cumulative_backtest_mae(race_id, engine),
+    )
     logger.info("workflow: retrain complete — model_version_id=%d (race_id=%d)", new_model_version_id, race_id)
     return new_model_version_id
 
@@ -79,7 +140,57 @@ def evaluate_race(race_id: int, engine: Engine) -> None:
         )
 
 
-def post_race_pipeline(race_id: int, season: int, engine: Engine) -> int | None:
+def walk_forward_backtest(engine: Engine) -> int | None:
+    """Replay completed races using only pre-weekend snapshots in chronological order."""
+    completed_races = _get_completed_races(engine)
+    if not completed_races:
+        logger.info("walk_forward_backtest: no completed races available")
+        return None
+
+    try:
+        current_model_version_id = retrain_model(completed_races[0]["race_id"], engine)
+    except ValueError as exc:
+        logger.warning("walk_forward_backtest: skipping initial training — %s", exc)
+        return None
+
+    logger.info(
+        "walk_forward_backtest: seeded model_version_id=%d from race_id=%d",
+        current_model_version_id,
+        completed_races[0]["race_id"],
+    )
+
+    for race in completed_races[1:]:
+        try:
+            ml_predict.run(
+                race_id=race["race_id"],
+                model_version_id=current_model_version_id,
+                engine=engine,
+            )
+        except Exception:
+            logger.exception(
+                "walk_forward_backtest: prediction failed for race_id=%d model_version_id=%d",
+                race["race_id"],
+                current_model_version_id,
+            )
+
+        new_model_version_id = post_race_pipeline(
+            race["race_id"],
+            race["season"],
+            engine,
+            refresh_future_predictions=False,
+        )
+        if new_model_version_id is not None:
+            current_model_version_id = new_model_version_id
+
+    return current_model_version_id
+
+
+def post_race_pipeline(
+    race_id: int,
+    season: int,
+    engine: Engine,
+    refresh_future_predictions: bool = True,
+) -> int | None:
     """Retrain, evaluate, and refresh predictions after a race has completed.
 
     Returns the new model_version_id when retraining succeeds, otherwise None.
@@ -87,13 +198,14 @@ def post_race_pipeline(race_id: int, season: int, engine: Engine) -> int | None:
     logger.info("post_race_pipeline: starting (race_id=%d, season=%d)", race_id, season)
     try:
         try:
+            evaluate_race(race_id, engine)
             new_model_version_id = retrain_model(race_id, engine)
         except ValueError as exc:
             logger.warning("post_race_pipeline: skipping retrain for race_id=%d — %s", race_id, exc)
             return None
 
-        evaluate_race(race_id, engine)
-        predict_remaining_races(season, new_model_version_id, engine)
+        if refresh_future_predictions:
+            predict_remaining_races(season, new_model_version_id, engine)
         logger.info(
             "post_race_pipeline: complete — model_version_id=%d, season=%d",
             new_model_version_id,

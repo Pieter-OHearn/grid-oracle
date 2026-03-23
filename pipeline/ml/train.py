@@ -11,6 +11,7 @@ from sqlalchemy.dialects.postgresql import ARRAY as PgArray
 from sqlalchemy.engine import Engine
 
 from pipeline.ingest.upsert_helpers import get_engine
+from pipeline.ml.context import PREWEEKEND_CONTEXT, feature_parquet_glob
 from pipeline.ml.features import ARTIFACTS_DIR, prepare_features
 from pipeline.ml.xgb_compat import XGBRegressor
 
@@ -42,9 +43,9 @@ FEATURE_COLS = [
 TARGET_COL = "finish_position"
 
 
-def load_feature_parquets(data_dir: Path) -> pd.DataFrame:
-    """Load and concatenate all feature Parquet files."""
-    parquet_files = sorted(data_dir.glob("features_*.parquet"))
+def load_feature_parquets(data_dir: Path, context: str = PREWEEKEND_CONTEXT) -> pd.DataFrame:
+    """Load and concatenate all context-specific feature Parquet files."""
+    parquet_files = sorted(data_dir.glob(feature_parquet_glob(context)))
     if not parquet_files:
         raise FileNotFoundError(f"No feature Parquet files found in {data_dir}")
     logger.info("Loading %d Parquet files from %s", len(parquet_files), data_dir)
@@ -72,7 +73,7 @@ def attach_targets(features_df: pd.DataFrame, engine: Engine) -> pd.DataFrame:
         results = pd.read_sql(
             text(
                 """
-                SELECT rr.race_id, rr.driver_id, rr.finish_position, r.season
+                SELECT rr.race_id, rr.driver_id, rr.finish_position, r.season, r.date AS race_date
                 FROM race_results rr
                 JOIN races r ON r.id = rr.race_id
                 WHERE r.is_completed = TRUE
@@ -90,6 +91,25 @@ def attach_targets(features_df: pd.DataFrame, engine: Engine) -> pd.DataFrame:
         len(features_df) - len(merged),
     )
     return merged
+
+
+def fit_model(df: pd.DataFrame) -> tuple[XGBRegressor, int]:
+    """Train an XGBoost model on every supplied row."""
+    df = prepare_features(df)
+    if df.empty:
+        raise ValueError("No training data supplied")
+
+    model = XGBRegressor(
+        n_estimators=200,
+        max_depth=6,
+        learning_rate=0.1,
+        random_state=42,
+    )
+    model.fit(df[FEATURE_COLS], df[TARGET_COL])
+
+    training_race_count = int(df["race_id"].nunique())
+    logger.info("Training rows: %d across %d races", len(df), training_race_count)
+    return model, training_race_count
 
 
 def train_model(
@@ -139,6 +159,26 @@ def train_model(
     return model, mae, training_race_count
 
 
+def _filter_rows_through_race(
+    df: pd.DataFrame,
+    engine: Engine,
+    through_race_id: int,
+) -> pd.DataFrame:
+    """Keep completed snapshot rows up to and including the cutoff race date."""
+    with engine.connect() as conn:
+        row = conn.execute(
+            text("SELECT date FROM races WHERE id = :race_id"),
+            {"race_id": through_race_id},
+        ).fetchone()
+    if row is None:
+        raise ValueError(f"Race {through_race_id} not found")
+
+    filtered = df[df["race_date"] <= row[0]].copy()
+    if filtered.empty:
+        raise ValueError(f"No training rows available through race_id={through_race_id}")
+    return filtered
+
+
 def save_model(model: XGBRegressor, path: Path) -> None:
     """Save the trained model to a JSON file."""
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -150,12 +190,15 @@ def insert_model_version(
     engine: Engine,
     name: str,
     training_races_count: int,
-    mae: float,
+    mae: float | None,
     train_seasons: list[int],
     test_seasons: list[int],
     triggered_by_race_id: int | None = None,
 ) -> int:
     """Insert a row into model_versions and return the new id."""
+    notes = [f"context={PREWEEKEND_CONTEXT}", f"train={train_seasons}", f"test={test_seasons}"]
+    if mae is not None:
+        notes.insert(1, f"MAE={mae:.4f}")
     with engine.begin() as conn:
         row = conn.execute(
             text(
@@ -172,8 +215,8 @@ def insert_model_version(
                 "name": name,
                 "trained_at": datetime.now(timezone.utc),
                 "count": training_races_count,
-                "mae": float(mae),
-                "notes": f"MAE={mae:.4f}; train={train_seasons}, test={test_seasons}",
+                "mae": float(mae) if mae is not None else None,
+                "notes": "; ".join(notes),
                 "train_seasons": train_seasons,
                 "test_season": test_seasons[0] if test_seasons else None,
                 "triggered_by_race_id": triggered_by_race_id,
@@ -265,6 +308,8 @@ def run(
     train_seasons: list[int] | None = None,
     test_seasons: list[int] | None = None,
     triggered_by_race_id: int | None = None,
+    through_race_id: int | None = None,
+    evaluation_mae: float | None = None,
 ) -> int:
     """End-to-end training pipeline.
 
@@ -281,29 +326,38 @@ def run(
     if engine is None:
         engine = get_engine()
 
-    if train_seasons is None or test_seasons is None:
-        resolved_train, resolved_test = resolve_season_split(engine)
-        if train_seasons is None:
-            train_seasons = resolved_train
-        if test_seasons is None:
-            test_seasons = resolved_test
-
-    overlap = set(train_seasons) & set(test_seasons)
-    if overlap:
-        raise ValueError(f"Seasons appear in both train and test splits: {sorted(overlap)}")
-
-    features_df = load_feature_parquets(data_dir)
+    features_df = load_feature_parquets(data_dir, context=PREWEEKEND_CONTEXT)
     df = attach_targets(features_df, engine)
 
-    model, mae, training_races_count = train_model(
-        df,
-        train_seasons=train_seasons,
-        test_seasons=test_seasons,
-    )
+    if through_race_id is not None:
+        if train_seasons is not None or test_seasons is not None:
+            raise ValueError("through_race_id cannot be combined with explicit season splits")
+        df = _filter_rows_through_race(df, engine, through_race_id)
+        model, training_races_count = fit_model(df)
+        mae = evaluation_mae
+        train_seasons = sorted(int(season) for season in df["season"].dropna().unique().tolist())
+        test_seasons = []
+    else:
+        if train_seasons is None or test_seasons is None:
+            resolved_train, resolved_test = resolve_season_split(engine)
+            if train_seasons is None:
+                train_seasons = resolved_train
+            if test_seasons is None:
+                test_seasons = resolved_test
+
+        overlap = set(train_seasons) & set(test_seasons)
+        if overlap:
+            raise ValueError(f"Seasons appear in both train and test splits: {sorted(overlap)}")
+
+        model, mae, training_races_count = train_model(
+            df,
+            train_seasons=train_seasons,
+            test_seasons=test_seasons,
+        )
 
     model_version_id = insert_model_version(
         engine,
-        name="xgb_v1",
+        name="xgb_preweekend_v1",
         training_races_count=training_races_count,
         mae=mae,
         train_seasons=train_seasons,

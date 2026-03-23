@@ -12,6 +12,12 @@ from sqlalchemy import Connection, text
 from sqlalchemy.engine import Engine
 
 from pipeline.ingest.upsert_helpers import get_engine
+from pipeline.ml.context import (
+    PREWEEKEND_CONTEXT,
+    compute_preweekend_cutoff,
+    feature_parquet_path,
+    validate_prediction_context,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -49,39 +55,12 @@ def _get_race_info(conn: Connection, race_id: int) -> dict:
     }
 
 
-def _get_entered_drivers(conn: Connection, race_id: int) -> list[dict]:
+def _get_entered_drivers(conn: Connection, race_id: int, context: str = PREWEEKEND_CONTEXT) -> list[dict]:
     """Return drivers entered in the race.
 
-    Uses qualifying/race results when available (race weekend has started).
-    Falls back to driver_contracts for pre-weekend predictions where no session
-    data has been ingested yet.
+    Pre-weekend predictions use driver_contracts as the canonical lineup source.
     """
-    rows = conn.execute(
-        text(
-            """
-            SELECT DISTINCT d.id AS driver_id, dc.constructor_id
-            FROM (
-                SELECT driver_id FROM qualifying_results WHERE race_id = :rid
-                UNION
-                SELECT driver_id FROM race_results WHERE race_id = :rid
-            ) sub
-            JOIN drivers d ON d.id = sub.driver_id
-            JOIN races r ON r.id = :rid
-            JOIN driver_contracts dc
-              ON dc.driver_id = d.id
-             AND dc.season = r.season
-             AND dc.start_round <= r.round
-             AND (dc.end_round IS NULL OR dc.end_round >= r.round)
-            """
-        ),
-        {"rid": race_id},
-    ).fetchall()
-
-    if rows:
-        return [{"driver_id": r[0], "constructor_id": r[1]} for r in rows]
-
-    # Pre-weekend fallback: no qualifying or race data yet — use driver_contracts
-    logger.info("No session data for race %d — using driver_contracts for driver lineup", race_id)
+    validate_prediction_context(context)
     rows = conn.execute(
         text(
             """
@@ -251,20 +230,23 @@ def _constructor_avg_position_at_circuit(
     return float(val) if val is not None else None
 
 
-def _is_wet_race_forecast(conn: Connection, race_id: int) -> bool:
-    """Check the latest weather snapshot for rain probability >= 50%."""
-    val = conn.execute(
-        text(
-            """
-            SELECT rain_probability
-            FROM weather_snapshots
-            WHERE race_id = :rid
-            ORDER BY captured_at DESC
-            LIMIT 1
-            """
-        ),
-        {"rid": race_id},
-    ).scalar()
+def _is_wet_race_forecast(
+    conn: Connection,
+    race_id: int,
+    captured_before: datetime | None = None,
+) -> bool:
+    """Check the latest pre-weekend weather snapshot for rain probability >= 50%."""
+    params: dict[str, object] = {"rid": race_id}
+    sql = """
+        SELECT rain_probability
+        FROM weather_snapshots
+        WHERE race_id = :rid
+    """
+    if captured_before is not None:
+        sql += "\n  AND captured_at <= :captured_before"
+        params["captured_before"] = captured_before
+    sql += "\nORDER BY captured_at DESC\nLIMIT 1"
+    val = conn.execute(text(sql), params).scalar()
     if val is None:
         return False
     return float(val) >= 50.0
@@ -606,27 +588,25 @@ def _upsert_feature(conn: Connection, race_id: int, driver_id: int, feature_data
 # ---------------------------------------------------------------------------
 
 
-def build_features_for_race(race_id: int, engine: Engine) -> pd.DataFrame:
+def build_features_for_race(
+    race_id: int,
+    engine: Engine,
+    context: str = PREWEEKEND_CONTEXT,
+) -> pd.DataFrame:
     """Generate feature rows for every driver entered in the given race.
 
     Returns a DataFrame and also persists to the features table.
     """
+    validate_prediction_context(context)
     with engine.begin() as conn:
         race = _get_race_info(conn, race_id)
-        drivers = _get_entered_drivers(conn, race_id)
+        cutoff_at = compute_preweekend_cutoff(race["date"])
+        drivers = _get_entered_drivers(conn, race_id, context=context)
         if not drivers:
             logger.warning("No drivers found for race %d", race_id)
             return pd.DataFrame()
 
-        is_wet = _is_wet_race_forecast(conn, race_id)
-
-        has_qualifying = (
-            conn.execute(
-                text("SELECT COUNT(*) FROM qualifying_results WHERE race_id = :rid"),
-                {"rid": race_id},
-            ).scalar()
-            > 0
-        )
+        is_wet = _is_wet_race_forecast(conn, race_id, captured_before=cutoff_at)
 
         # Fetch championship standings once per race (not once per driver).
         # An empty dict means round 1 — everyone defaults to position 1.
@@ -642,11 +622,7 @@ def build_features_for_race(race_id: int, engine: Engine) -> pd.DataFrame:
         for entry in drivers:
             did = entry["driver_id"]
             cid = entry["constructor_id"]
-
-            if has_qualifying:
-                grid_pos = _grid_position(conn, race_id, did)
-            else:
-                grid_pos = _driver_avg_qualifying_position_at_circuit(conn, did, race["circuit_id"], race["date"])
+            grid_pos = _driver_avg_qualifying_position_at_circuit(conn, did, race["circuit_id"], race["date"])
 
             feature_data = {
                 "grid_position": grid_pos,
@@ -722,10 +698,15 @@ def build_features_for_race(race_id: int, engine: Engine) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def export_parquet(df: pd.DataFrame, race_id: int) -> Path:
+def export_parquet(
+    df: pd.DataFrame,
+    race_id: int,
+    context: str = PREWEEKEND_CONTEXT,
+) -> Path:
     """Write feature DataFrame to a Parquet file and return the path."""
+    validate_prediction_context(context)
     DATA_DIR.mkdir(parents=True, exist_ok=True)
-    path = DATA_DIR / f"features_{race_id}.parquet"
+    path = feature_parquet_path(DATA_DIR, race_id, context)
     df.to_parquet(path, index=False)
     logger.info("Exported features to %s", path)
     return path
@@ -744,15 +725,21 @@ def main() -> None:
 
     parser = argparse.ArgumentParser(description="Build feature rows for a given race.")
     parser.add_argument("--race_id", type=int, required=True, help="ID of the race")
+    parser.add_argument(
+        "--context",
+        type=str,
+        default=PREWEEKEND_CONTEXT,
+        help="Prediction context to build (default: preweekend)",
+    )
     args = parser.parse_args()
 
     engine = get_engine()
-    df = build_features_for_race(args.race_id, engine)
+    df = build_features_for_race(args.race_id, engine, context=args.context)
     if df.empty:
         logger.warning("No features generated — exiting")
         return
 
-    export_parquet(df, args.race_id)
+    export_parquet(df, args.race_id, context=args.context)
     logger.info("Done — %d rows", len(df))
 
 
