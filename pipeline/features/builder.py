@@ -429,13 +429,14 @@ def _driver_avg_sector2_time_at_circuit(
                 JOIN (
                     SELECT race_id, MIN(sector2_ms) AS min_s2
                     FROM session_times
-                    WHERE session_type = 'Q' AND sector2_ms IS NOT NULL
+                    WHERE session_type = 'Q' AND sector2_ms IS NOT NULL AND sector2_ms > 0
                     GROUP BY race_id
                 ) fastest ON fastest.race_id = st.race_id
                 WHERE st.driver_id = :did
                   AND r.circuit_id = :cid
                   AND st.session_type = 'Q'
                   AND st.sector2_ms IS NOT NULL
+                  AND st.sector2_ms > 0
                   AND r.date < :race_date
                   AND r.is_completed = TRUE
             ) sub
@@ -473,12 +474,13 @@ def _constructor_avg_fp2_pace_at_circuit(
                 JOIN (
                     SELECT race_id, MIN(best_lap_ms) AS min_lap
                     FROM session_times
-                    WHERE session_type = 'FP2' AND best_lap_ms IS NOT NULL
+                    WHERE session_type = 'FP2' AND best_lap_ms IS NOT NULL AND best_lap_ms > 0
                     GROUP BY race_id
                 ) fastest ON fastest.race_id = st.race_id
                 WHERE r.circuit_id = :circuit
                   AND st.session_type = 'FP2'
                   AND st.best_lap_ms IS NOT NULL
+                  AND st.best_lap_ms > 0
                   AND r.date < :race_date
                   AND r.is_completed = TRUE
                 GROUP BY r.id, fastest.min_lap
@@ -593,7 +595,9 @@ def build_features_for_race(race_id: int, engine: Engine) -> pd.DataFrame:
             rows.append({"race_id": race_id, "driver_id": did, **feature_data})
 
         # Impute missing sector/FP2 features with the circuit median for this race.
-        # If no driver has data (new circuit), default to 1.0 (no relative advantage).
+        # If no driver has historical data (e.g. a new circuit), default to 1.0.
+        # Note: 1.0 is the fastest possible ratio, so all drivers receive the same
+        # value and gain no relative advantage over each other from this feature.
         for col in ("driver_avg_sector2_time_at_circuit", "constructor_avg_fp2_pace_at_circuit"):
             non_null = [r[col] for r in rows if r[col] is not None]
             fill = statistics.median(non_null) if non_null else 1.0

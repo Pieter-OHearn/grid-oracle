@@ -4,6 +4,15 @@ Qualifying sector times and practice pace from previous seasons at a circuit
 are strong pre-weekend signals of driver/constructor performance.  This script
 loads laps from Qualifying ('Q') and Free Practice 2 ('FP2') sessions and
 stores the per-driver best times in the ``session_times`` table.
+
+Backfill ordering note
+----------------------
+``upsert_race`` is called with ``mark_completed=False``, which means race rows
+created by this script alone will have ``is_completed = FALSE``.  All feature
+builder SQL queries filter ``r.is_completed = TRUE``, so those races will be
+invisible to training until ``fetch_results`` (which sets ``is_completed = TRUE``)
+has also been run for that season.  Always run ``fetch_results`` before or after
+``fetch_session_times`` when backfilling a season on a fresh database.
 """
 
 import argparse
@@ -12,7 +21,7 @@ import logging
 import fastf1
 import pandas as pd
 from sqlalchemy import text
-from sqlalchemy.engine import Engine
+from sqlalchemy.engine import Connection, Engine
 
 from pipeline.ingest.upsert_helpers import (
     get_engine,
@@ -29,7 +38,7 @@ for _noisy in ("fastf1", "req", "core", "logger", "_api"):
 logger = logging.getLogger(__name__)
 
 
-def _timedelta_to_ms(td) -> int | None:
+def _timedelta_to_ms(td: pd.Timedelta | None) -> int | None:
     """Convert a pandas Timedelta to milliseconds, or None for missing data."""
     if td is None:
         return None
@@ -42,7 +51,7 @@ def _timedelta_to_ms(td) -> int | None:
 
 
 def upsert_session_time(
-    conn,
+    conn: Connection,
     race_id: int,
     driver_id: int,
     session_type: str,
@@ -82,8 +91,9 @@ def upsert_session_time(
 def _best_per_driver_from_laps(laps: pd.DataFrame, session_type: str) -> pd.DataFrame:
     """Return a DataFrame with best lap/sector times per driver.
 
-    For qualifying: min sector times (each from the best individual lap).
-    For FP2: min full lap time only (sector columns set to None).
+    For qualifying: independent per-sector minimums across all laps (theoretical
+    best — each sector may come from a different lap).
+    For FP2: min full lap time only (sector columns left as None).
 
     Returns columns: Driver, best_lap_ms, sector1_ms, sector2_ms, sector3_ms
     """
