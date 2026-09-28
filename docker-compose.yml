@@ -5,12 +5,16 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
+      GRIDORACLE_SAMPLE_DATA: "1"
     ports:
       - "5433:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      # A distinct default volume prevents the safe sample startup from
+      # attaching to a pre-existing legacy database volume.
+      - gridoracle_sample_pgdata:/var/lib/postgresql/data
       - ./db/migrations:/migrations:ro
       - ./db/init:/docker-entrypoint-initdb.d:ro
+      - ./db/sample:/sample:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
       interval: 5s
@@ -19,7 +23,8 @@ services:
 
   api:
     build:
-      context: ./api
+      context: .
+      dockerfile: api/Dockerfile
     ports:
       - "8000:8000"
     environment:
@@ -28,10 +33,22 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health').read()",
+        ]
+      interval: 2s
+      timeout: 2s
+      retries: 10
 
   pipeline:
     build:
-      context: ./pipeline
+      context: .
+      dockerfile: pipeline/Dockerfile
     environment:
       DATABASE_URL: ${DATABASE_URL}
       OPENWEATHER_API_KEY: ${OPENWEATHER_API_KEY}
@@ -41,6 +58,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    # Provider calls and legacy scheduler side effects are explicit opt-in.
+    profiles: ["scheduler"]
 
   dashboard:
     build:
@@ -51,6 +70,6 @@ services:
       VITE_API_URL: ${API_URL}
 
 volumes:
-  pgdata:
+  gridoracle_sample_pgdata:
   fastf1_cache:
   model_artifacts:

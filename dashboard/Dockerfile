@@ -1,10 +1,10 @@
-FROM node:20-slim
+FROM oven/bun:1.2.5-slim
 
 WORKDIR /app
 
-COPY package.json ./
-RUN npm install
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile
 
 COPY . .
 
-CMD ["npm", "run", "dev"]
+CMD ["bun", "run", "dev"]

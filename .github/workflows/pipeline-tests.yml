@@ -4,10 +4,16 @@ on:
   push:
     paths:
       - "pipeline/**"
+      - "scripts/**"
+      - "pyproject.toml"
+      - "uv.lock"
       - ".github/workflows/pipeline-tests.yml"
   pull_request:
     paths:
       - "pipeline/**"
+      - "scripts/**"
+      - "pyproject.toml"
+      - "uv.lock"
       - ".github/workflows/pipeline-tests.yml"
 
 permissions:
@@ -25,15 +31,15 @@ jobs:
         with:
           python-version: "3.12"
           cache: "pip"
-          cache-dependency-path: pipeline/requirements.txt
+          cache-dependency-path: pipeline/requirements-dev.txt
 
       - name: Install dependencies
-        run: pip install -r pipeline/requirements.txt
+        run: pip install -r pipeline/requirements-dev.txt
 
       - name: Lint
         run: |
-          ruff check pipeline/
-          ruff format --check pipeline/
+          ruff check pipeline/ scripts/
+          ruff format --check pipeline/ scripts/
 
       - name: Test
         run: python -m pytest pipeline/tests/ -v

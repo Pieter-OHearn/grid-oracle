@@ -1,3 +1,42 @@
+[project]
+name = "gridoracle"
+version = "0.1.0"
+description = "GridOracle development environment"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = []
+
+[project.optional-dependencies]
+api = [
+    "fastapi==0.115.6",
+    "psycopg2-binary==2.9.10",
+    "pydantic==2.10.3",
+    "sqlalchemy==2.0.36",
+    "uvicorn==0.34.0",
+]
+pipeline = [
+    "apscheduler==3.10.4",
+    "fastf1==3.8.1",
+    "numpy==2.2.0",
+    "pandas==2.2.3",
+    "pyarrow==23.0.1",
+    "psycopg2-binary==2.9.10",
+    "requests==2.32.4",
+    "scikit-learn==1.8.0",
+    "sqlalchemy==2.0.36",
+    "xgboost==3.2.0",
+]
+
+[dependency-groups]
+dev = [
+    "httpx==0.28.1",
+    "pytest==8.3.5",
+    "ruff==0.9.6",
+]
+
+[tool.uv]
+package = false
+
 [tool.ruff]
 line-length = 88
 target-version = "py312"
