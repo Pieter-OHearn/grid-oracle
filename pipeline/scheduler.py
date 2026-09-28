@@ -11,6 +11,7 @@ from apscheduler.triggers.date import DateTrigger
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
+from pipeline.config import load_pipeline_settings
 from pipeline.ingest.calendar_sync import sync_season_calendar
 from pipeline.ingest.fetch_qualifying import ingest_event as ingest_qualifying_event
 from pipeline.ingest.fetch_results import ingest_event as ingest_results_event
@@ -378,6 +379,9 @@ def main() -> None:
     parser.add_argument("--season", type=int, default=active_season)
     parser.add_argument("--round", type=int, default=None, help="Round number (required for --trigger)")
     args = parser.parse_args()
+    # Scheduler mode is explicitly opt-in and validates configuration before it
+    # creates jobs or performs any provider work.
+    load_pipeline_settings(require_weather_key=True)
 
     engine = get_engine()
 

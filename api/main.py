@@ -1,15 +1,12 @@
-import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.database import Base, engine
+from api.database import Base, engine, settings
 from api.routes.drivers import router as drivers_router
 from api.routes.models import router as models_router
 from api.routes.races import router as races_router
-
-CORS_ORIGIN = os.environ.get("CORS_ORIGIN", "http://localhost:3000")
 
 
 @asynccontextmanager
@@ -22,7 +19,7 @@ app = FastAPI(title="GridOracle API", version="0.1.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[CORS_ORIGIN],
+    allow_origins=[settings.cors_origin],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

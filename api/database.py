@@ -1,11 +1,10 @@
-import os
-
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-DATABASE_URL = os.environ.get(
-    "DATABASE_URL", "postgresql://gridoracle:gridoracle@db:5432/gridoracle"
-)
+from api.config import load_api_settings
+
+settings = load_api_settings()
+DATABASE_URL = settings.database_url
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

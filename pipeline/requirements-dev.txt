@@ -1,0 +1,6 @@
+-r requirements.txt
+
+# Local and CI test/lint dependencies. Runtime images intentionally install only
+# requirements.txt.
+pytest==8.3.5
+ruff==0.9.6
