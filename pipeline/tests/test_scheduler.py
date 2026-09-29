@@ -161,7 +161,7 @@ def test_compute_job_times_conventional_weekend():
     assert job_dict[JOB_WEATHER_REFRESH] == quali_time + timedelta(minutes=WEATHER_REFRESH_AFTER_QUALI_MINUTES)
     assert job_dict[JOB_QUALIFYING] == quali_time + timedelta(minutes=QUALIFYING_GRACE_MINUTES)
     assert job_dict[JOB_RACE] == race_time + timedelta(minutes=RACE_GRACE_MINUTES)
-    assert job_dict[JOB_PREDICTIONS_PREWEEKEND] == _compute_preweekend_thursday(race_time)
+    assert job_dict[JOB_PREDICTIONS_PREWEEKEND] == quali_time - timedelta(minutes=1)
 
 
 # ---------------------------------------------------------------------------
@@ -183,7 +183,7 @@ def test_compute_job_times_sprint_weekend():
     assert job_dict[JOB_WEATHER_REFRESH] == quali_time + timedelta(minutes=WEATHER_REFRESH_AFTER_QUALI_MINUTES)
     assert job_dict[JOB_QUALIFYING] == quali_time + timedelta(minutes=QUALIFYING_GRACE_MINUTES)
     assert job_dict[JOB_RACE] == race_time + timedelta(minutes=RACE_GRACE_MINUTES)
-    assert job_dict[JOB_PREDICTIONS_PREWEEKEND] == _compute_preweekend_thursday(race_time)
+    assert job_dict[JOB_PREDICTIONS_PREWEEKEND] == event["session_times"]["Sprint Qualifying"] - timedelta(minutes=1)
 
 
 # ---------------------------------------------------------------------------
@@ -340,13 +340,13 @@ def test_catch_up_qualifying_data_present():
 
 
 def test_catch_up_race_data_absent_not_completed():
-    engine, _conn = _mock_engine_with_fetchone((False, 0, 0))
+    engine, _conn = _mock_engine_with_fetchone((False, 0))
     event = _make_conventional_event()
     assert _should_catch_up(JOB_RACE, event, engine) is True
 
 
 def test_catch_up_race_already_completed():
-    engine, _conn = _mock_engine_with_fetchone((True, 20, 5))
+    engine, _conn = _mock_engine_with_fetchone((True, 20))
     event = _make_conventional_event()
     assert _should_catch_up(JOB_RACE, event, engine) is False
 

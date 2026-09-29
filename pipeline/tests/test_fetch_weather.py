@@ -1,5 +1,6 @@
 """Unit tests for pipeline.ingest.fetch_weather."""
 
+from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -173,6 +174,31 @@ def test_parse_forecast_missing_optional_fields():
     assert result["temp_celsius"] is None
     assert result["wind_speed"] is None
     assert result["conditions"] == "unknown"
+
+
+def test_parse_forecast_uses_race_valid_interval_and_keeps_dry_distinct():
+    race_start = datetime.fromtimestamp(1700000000, UTC)
+    data = {
+        "list": [
+            {"dt": 1699990000, "pop": 0.9},
+            {"dt": 1700000000, "pop": 0.0, "main": {}, "wind": {}},
+        ]
+    }
+    result = parse_forecast(data, race_start, race_start + timedelta(hours=2))
+    assert result["availability"] == "available"
+    assert result["rain_probability"] == 0.0
+    assert result["release_at"] is None
+    assert result["valid_at"] == race_start
+
+
+def test_parse_forecast_marks_interval_without_provider_data_unavailable():
+    result = parse_forecast(
+        SAMPLE_FORECAST,
+        datetime(2030, 1, 1, tzinfo=UTC),
+        datetime(2030, 1, 1, 2, tzinfo=UTC),
+    )
+    assert result["availability"] == "unavailable"
+    assert result["rain_probability"] is None
 
 
 # ---------------------------------------------------------------------------
