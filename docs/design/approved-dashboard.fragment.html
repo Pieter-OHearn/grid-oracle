@@ -1,0 +1,165 @@
+<div id="go-paddock" aria-label="GridOracle dashboard design">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500&family=Inter:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+  <style>
+    #go-paddock { --gp-surface:light-dark(#ffffff,#121416); --gp-sidebar:light-dark(#f7f7f8,#17191c); --gp-subtle:light-dark(#f5f5f6,#1c1f23); --gp-ink:light-dark(#202226,#eeeff2); --gp-muted:light-dark(#62666e,#a2a8b1); --gp-border:light-dark(#e6e7e9,#2b2f35); --gp-accent:light-dark(#bd2e22,#ff7568); --gp-racing:#e44634; --gp-highlight:light-dark(#fdf2f0,#2c1b19); --gp-good:light-dark(#207b52,#78cda1); color:var(--gp-ink); font:400 13px/1.5 'Inter',Arial,sans-serif; }
+    #go-paddock * { box-sizing:border-box; }
+    #go-paddock button { font:inherit; cursor:pointer; }
+    #go-paddock .gp-app { display:grid; grid-template-columns:178px minmax(0,1fr); background:var(--gp-surface); border:1px solid var(--gp-border); border-radius:9px; overflow:hidden; }
+    #go-paddock .gp-sidebar { display:flex; flex-direction:column; background:var(--gp-sidebar); border-right:1px solid var(--gp-border); padding:21px 12px 18px; }
+    #go-paddock .gp-brand { display:flex; align-items:center; gap:10px; margin:1px 9px 29px; font-family:'Barlow Condensed',sans-serif; font-size:21px; font-weight:500; letter-spacing:.035em; }
+    #go-paddock .gp-mark { width:18px; height:17px; border-left:6px solid var(--gp-racing); border-right:6px solid var(--gp-racing); transform:skew(-17deg); }
+    #go-paddock .gp-nav { display:grid; gap:5px; }
+    #go-paddock .gp-nav-item { display:flex; align-items:center; gap:10px; min-height:38px; padding:8px 10px; color:var(--gp-muted); border-radius:5px; }
+    #go-paddock .gp-nav-item[aria-current] { background:var(--gp-surface); color:var(--gp-ink); box-shadow:inset 2px 0 var(--gp-racing); }
+    #go-paddock .gp-nav-item svg { width:16px; height:16px; flex-shrink:0; }
+    #go-paddock .gp-nav-label { margin:25px 10px 8px; color:var(--gp-muted); font-size:11px; letter-spacing:.05em; }
+    #go-paddock .gp-sidebar-bottom { margin-top:auto; padding:70px 10px 0; color:var(--gp-muted); font-size:11px; }
+    #go-paddock .gp-identity { border-top:1px solid var(--gp-border); padding-top:15px; display:flex; align-items:center; gap:8px; }
+    #go-paddock .gp-checker { width:18px; height:12px; background:repeating-conic-gradient(var(--gp-muted) 0% 25%,transparent 0% 50%) 0 0 / 6px 6px; opacity:.65; }
+    #go-paddock .gp-main { min-width:0; }
+    #go-paddock .gp-topbar { min-height:61px; padding:14px 26px; border-bottom:1px solid var(--gp-border); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; }
+    #go-paddock .gp-breadcrumb { display:flex; flex-wrap:wrap; gap:9px; align-items:center; }
+    #go-paddock .gp-muted { color:var(--gp-muted); }
+    #go-paddock .gp-example { font-size:11px; border:1px solid var(--gp-border); border-radius:4px; padding:3px 7px; color:var(--gp-muted); }
+    #go-paddock .gp-content { padding:28px 26px 22px; }
+    #go-paddock .gp-heading { display:flex; justify-content:space-between; align-items:flex-start; gap:20px; padding-bottom:24px; }
+    #go-paddock .gp-eyebrow { font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.06em; color:var(--gp-accent); text-transform:uppercase; }
+    #go-paddock h1 { font:500 38px/1.1 'Barlow Condensed',sans-serif; letter-spacing:-.01em; text-transform:uppercase; margin:8px 0 8px; }
+    #go-paddock h2 { font:500 14px/1.4 'Inter',sans-serif; margin:0; }
+    #go-paddock p { margin:0; }
+    #go-paddock .gp-session { display:flex; align-items:center; gap:9px; margin-top:4px; padding:7px 10px; border:1px solid var(--gp-border); border-radius:5px; font-size:11px; color:var(--gp-muted); white-space:nowrap; }
+    #go-paddock .gp-session-dot { width:6px; height:6px; background:var(--gp-good); border-radius:50%; }
+    #go-paddock .gp-toolbar { display:flex; justify-content:space-between; align-items:center; gap:13px; flex-wrap:wrap; padding-bottom:21px; }
+    #go-paddock .gp-horizons { display:flex; padding:3px; gap:3px; background:var(--gp-subtle); border:1px solid var(--gp-border); border-radius:6px; }
+    #go-paddock .gp-horizons button { min-height:34px; padding:7px 11px; border:1px solid transparent; border-radius:4px; color:var(--gp-muted); background:transparent; font-size:12px; }
+    #go-paddock .gp-horizons button[aria-pressed="true"] { background:var(--gp-surface); color:var(--gp-ink); border-color:var(--gp-border); box-shadow:0 1px 2px light-dark(#00000008,#00000030); }
+    #go-paddock .gp-horizons .gp-phase-number { font:400 11px 'IBM Plex Mono',monospace; margin-right:6px; color:var(--gp-muted); }
+    #go-paddock .gp-horizons button[aria-pressed="true"] .gp-phase-number { color:var(--gp-accent); }
+    #go-paddock .gp-cutoff { color:var(--gp-muted); font-size:11px; }
+    #go-paddock .gp-primary { border:1px solid var(--gp-border); border-radius:7px; overflow:hidden; }
+    #go-paddock .gp-panel-heading { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:17px 18px; border-bottom:1px solid var(--gp-border); }
+    #go-paddock .gp-panel-heading p { font-size:11px; color:var(--gp-muted); margin-top:3px; }
+    #go-paddock .gp-mono { font-family:'IBM Plex Mono',monospace; font-variant-numeric:tabular-nums; }
+    #go-paddock .gp-panel-label { display:flex; gap:7px; align-items:center; color:var(--gp-muted); font-size:11px; }
+    #go-paddock .gp-sectors { display:flex; gap:3px; }
+    #go-paddock .gp-sectors span { width:10px; height:4px; background:var(--gp-racing); }
+    #go-paddock .gp-sectors span:last-child { opacity:.35; }
+    #go-paddock table { border-collapse:collapse; width:100%; table-layout:fixed; }
+    #go-paddock th { background:var(--gp-sidebar); color:var(--gp-muted); font-size:11px; font-weight:400; text-align:left; padding:9px 12px; border-bottom:1px solid var(--gp-border); }
+    #go-paddock th:first-child { width:42px; text-align:center; padding-left:14px; }
+    #go-paddock th:nth-child(2) { width:35%; }
+    #go-paddock th:last-child { width:89px; text-align:right; padding-right:18px; }
+    #go-paddock td { height:67px; padding:11px 12px; border-bottom:1px solid var(--gp-border); }
+    #go-paddock tr:last-child td { border-bottom:0; }
+    #go-paddock .gp-rank { text-align:center; color:var(--gp-muted); font:400 12px 'IBM Plex Mono',monospace; padding-left:14px; }
+    #go-paddock .gp-driver { padding-left:12px; border-left:3px solid var(--gp-team-color); }
+    #go-paddock .gp-driver-name { display:block; font:500 20px/1.1 'Barlow Condensed',sans-serif; letter-spacing:.025em; text-transform:uppercase; }
+    #go-paddock .gp-driver-team { display:block; color:var(--gp-muted); font-size:11px; margin-top:4px; }
+    #go-paddock .gp-chance { display:flex; gap:12px; align-items:center; }
+    #go-paddock .gp-track { height:5px; background:var(--gp-subtle); flex:1; min-width:15px; border-radius:1px; }
+    #go-paddock .gp-fill { height:100%; background:var(--gp-team-color); border-radius:1px; }
+    #go-paddock .gp-value { width:38px; text-align:right; font-family:'IBM Plex Mono',monospace; font-variant-numeric:tabular-nums; }
+    #go-paddock .gp-delta { text-align:right; padding-right:18px; font:400 11px 'IBM Plex Mono',monospace; color:var(--gp-muted); white-space:nowrap; }
+    #go-paddock .gp-delta-positive { color:var(--gp-good); }
+    #go-paddock .gp-field-note { display:flex; flex-wrap:wrap; justify-content:space-between; gap:9px; padding:12px 18px; border-top:1px solid var(--gp-border); font-size:11px; color:var(--gp-muted); }
+    #go-paddock .gp-secondary { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:20px; }
+    #go-paddock .gp-detail { padding:17px 18px; border:1px solid var(--gp-border); border-radius:7px; }
+    #go-paddock .gp-detail-top { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:13px; }
+    #go-paddock .gp-detail p { color:var(--gp-muted); font-size:12px; }
+    #go-paddock .gp-change { color:var(--gp-good); font:400 12px 'IBM Plex Mono',monospace; }
+    #go-paddock .gp-comparison { display:flex; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:9px; font:500 22px 'Barlow Condensed',sans-serif; text-transform:uppercase; }
+    #go-paddock .gp-comparison svg { width:16px; height:16px; color:var(--gp-muted); }
+    #go-paddock .gp-comparison small { color:var(--gp-muted); font:400 12px 'IBM Plex Mono',monospace; }
+    #go-paddock .gp-uncertainty { margin-bottom:10px; display:flex; align-items:baseline; gap:8px; }
+    #go-paddock .gp-uncertainty strong { font:500 22px 'Barlow Condensed',sans-serif; }
+    #go-paddock .gp-uncertainty span { font-size:12px; color:var(--gp-muted); }
+    #go-paddock .gp-footer { display:flex; flex-wrap:wrap; justify-content:space-between; gap:10px; margin-top:22px; color:var(--gp-muted); font-size:11px; }
+    #go-paddock .gp-footer span:first-child { display:flex; align-items:center; gap:7px; }
+    #go-paddock .gp-footer svg { width:13px; height:13px; }
+    #go-paddock[data-intensity="expressive"] h1 { font-size:45px; font-style:italic; }
+    #go-paddock[data-intensity="expressive"] .gp-topbar { border-top:3px solid var(--gp-racing); }
+    #go-paddock[data-intensity="expressive"] .gp-panel-heading { background:var(--gp-highlight); }
+    @media(max-width:780px) { #go-paddock .gp-app { grid-template-columns:145px minmax(0,1fr); } #go-paddock .gp-content { padding:22px 18px; } #go-paddock .gp-topbar { padding:13px 18px; } #go-paddock .gp-sidebar { padding-left:8px; padding-right:8px; } #go-paddock .gp-brand { font-size:18px; gap:7px; margin-left:6px; } #go-paddock .gp-session { display:none; } #go-paddock .gp-secondary { grid-template-columns:1fr; } }
+    @media(max-width:570px) { #go-paddock .gp-app { grid-template-columns:1fr; } #go-paddock .gp-sidebar { display:block; border-right:0; border-bottom:1px solid var(--gp-border); padding:15px 14px 10px; } #go-paddock .gp-brand { margin:0 6px 13px; font-size:21px; } #go-paddock .gp-nav { display:flex; gap:3px; flex-wrap:wrap; } #go-paddock .gp-nav-item { font-size:12px; gap:6px; padding:7px 9px; } #go-paddock .gp-nav-item[aria-current] { box-shadow:inset 0 -2px var(--gp-racing); } #go-paddock .gp-nav-label,#go-paddock .gp-reference-nav,#go-paddock .gp-sidebar-bottom { display:none; } #go-paddock .gp-heading { padding-bottom:20px; } #go-paddock h1 { font-size:34px; } #go-paddock .gp-panel-label { display:none; } }
+    @media(max-width:380px) { #go-paddock .gp-content { padding:20px 12px; } #go-paddock .gp-topbar { padding:12px; } #go-paddock .gp-breadcrumb { font-size:12px; } #go-paddock .gp-panel-heading { padding:15px 12px; } #go-paddock th:first-child { width:25px; padding:7px 3px; } #go-paddock th:nth-child(2) { width:37%; } #go-paddock th:last-child { width:60px; padding-right:10px; } #go-paddock td,#go-paddock th { padding-left:7px; padding-right:7px; } #go-paddock .gp-rank { padding-left:3px; padding-right:3px; } #go-paddock .gp-driver { padding-left:7px; } #go-paddock .gp-chance { gap:5px; } #go-paddock .gp-delta { padding-right:10px; } #go-paddock .gp-driver-name { font-size:18px; } #go-paddock .gp-horizons button { padding:7px 8px; } }
+    @media(pointer:coarse) { #go-paddock .gp-horizons button { min-height:44px; } }
+  </style>
+  <div class="gp-app">
+    <aside class="gp-sidebar">
+      <div class="gp-brand"><span class="gp-mark" aria-hidden="true"></span>GRIDORACLE</div>
+      <nav class="gp-nav" aria-label="Design preview navigation">
+        <span class="gp-nav-item" aria-current="page"><i data-lucide="flag" aria-hidden="true"></i>Race weekend</span>
+        <span class="gp-nav-item"><i data-lucide="chart-no-axes-combined" aria-hidden="true"></i>Track record</span>
+        <span class="gp-nav-item"><i data-lucide="calendar-days" aria-hidden="true"></i>Seasons</span>
+      </nav>
+      <div class="gp-nav-label">ABOUT THE FORECAST</div>
+      <div class="gp-nav gp-reference-nav"><span class="gp-nav-item"><i data-lucide="book-open" aria-hidden="true"></i>Methodology</span><span class="gp-nav-item"><i data-lucide="database" aria-hidden="true"></i>Data sources</span></div>
+      <div class="gp-sidebar-bottom"><div class="gp-identity"><span class="gp-checker" aria-hidden="true"></span>Independent F1 forecasts</div></div>
+    </aside>
+    <div class="gp-main">
+      <header class="gp-topbar"><div class="gp-breadcrumb"><span class="gp-muted">Formula 1</span><span class="gp-muted">/</span><span>Race weekend</span></div><span class="gp-example">Design preview · Sample data</span></header>
+      <main class="gp-content">
+        <div class="gp-heading"><div><div class="gp-eyebrow">GBR / Silverstone</div><h1>British Grand Prix</h1><p class="gp-muted">The race ahead, in probabilities.</p></div><div class="gp-session"><span class="gp-session-dot" aria-hidden="true"></span><span data-session>Qualifying complete</span></div></div>
+        <div class="gp-toolbar"><div class="gp-horizons" aria-label="Forecast horizon"><button type="button" data-horizon="pre" aria-pressed="false"><span class="gp-phase-number">01</span>Pre-weekend</button><button type="button" data-horizon="post" aria-pressed="true"><span class="gp-phase-number">02</span>After qualifying</button></div><span class="gp-cutoff" data-cutoff>Cutoff: Saturday, 14:00 UTC</span></div>
+        <section class="gp-primary" aria-labelledby="gp-contenders-title">
+          <div class="gp-panel-heading"><div><h2 id="gp-contenders-title">Who could win?</h2><p>Leading contenders · 22 entrants</p></div><span class="gp-panel-label"><span class="gp-sectors" aria-hidden="true"><span></span><span></span><span></span></span>RACE FORECAST</span></div>
+          <table aria-label="Illustrative race win probabilities"><thead><tr><th scope="col">#</th><th scope="col">Driver</th><th scope="col">Win chance</th><th scope="col">Change</th></tr></thead><tbody data-rows></tbody></table>
+          <div class="gp-field-note"><span data-rest>Other 17 drivers: 10% combined</span><span>Change from pre-weekend, in pp</span></div>
+        </section>
+        <div class="gp-secondary" aria-live="polite">
+          <section class="gp-detail"><div class="gp-detail-top"><h2 data-mover-title>What changed?</h2><span class="gp-change" data-delta>+6 pp</span></div><div class="gp-comparison"><span data-mover>Norris</span><small data-before>22%</small><i data-lucide="arrow-right" aria-hidden="true"></i><span class="gp-mono" data-after>28%</span></div><p data-change-copy>Norris moves ahead after qualifying. Compare both forecasts to see how the picture changed.</p></section>
+          <section class="gp-detail"><div class="gp-detail-top"><h2>A favorite, with uncertainty</h2></div><div class="gp-uncertainty"><strong data-other-winner>72%</strong><span>chance someone else wins</span></div><p data-uncertainty-copy>Norris leads the forecast. The rest of the field is still more likely to win, collectively.</p></section>
+        </div>
+        <footer class="gp-footer"><span><i data-lucide="history" aria-hidden="true"></i>Every published forecast stays on record.</span><span>Synthetic example · Not a real prediction</span></footer>
+      </main>
+    </div>
+  </div>
+  <script>
+    (()=>{
+      const root=document.getElementById('go-paddock');
+      const design={appearance:'system',intensity:'restrained',accent:'red'};
+      let horizon='post';
+      const drivers=[
+        {name:'Norris',team:'McLaren',color:'light-dark(#b7650b,#ed9c48)',pre:22,post:28},
+        {name:'Piastri',team:'McLaren',color:'light-dark(#b7650b,#ed9c48)',pre:25,post:24},
+        {name:'Verstappen',team:'Red Bull',color:'light-dark(#4576d2,#7c9ee9)',pre:21,post:18},
+        {name:'Leclerc',team:'Ferrari',color:'light-dark(#cb4152,#ed7984)',pre:13,post:12},
+        {name:'Russell',team:'Mercedes',color:'light-dark(#1b827d,#65c6bb)',pre:8,post:8}
+      ];
+      const accents={red:{ink:'light-dark(#bd2e22,#ff7568)',fill:'#e44634',wash:'light-dark(#fdf2f0,#2c1b19)'},purple:{ink:'light-dark(#7142ad,#c4a1f3)',fill:'#9863dc',wash:'light-dark(#f6f1fc,#251d30)'}};
+      function render(){
+        root.style.colorScheme=design.appearance==='system'?'inherit':design.appearance;
+        root.dataset.intensity=design.intensity;
+        const a=accents[design.accent];
+        root.style.setProperty('--gp-accent',a.ink);root.style.setProperty('--gp-racing',a.fill);root.style.setProperty('--gp-highlight',a.wash);
+        const order=[...drivers].sort((a,b)=>b[horizon]-a[horizon]);
+        root.querySelector('[data-rows]').innerHTML=order.map((d,i)=>{
+          const change=d.post-d.pre;
+          const delta=horizon==='post'?(change>0?'+':change<0?'−':'')+Math.abs(change)+' pp':'—';
+          return '<tr style="--gp-team-color:'+d.color+'"><td class="gp-rank">'+String(i+1).padStart(2,'0')+'</td><td><div class="gp-driver"><span class="gp-driver-name">'+d.name+'</span><span class="gp-driver-team">'+d.team+'</span></div></td><td><div class="gp-chance"><div class="gp-track" aria-hidden="true"><div class="gp-fill" style="width:'+d[horizon]+'%"></div></div><span class="gp-value">'+d[horizon]+'%</span></div></td><td class="gp-delta '+(horizon==='post'&&change>0?'gp-delta-positive':'')+'">'+delta+'</td></tr>';
+        }).join('');
+        const post=horizon==='post';
+        root.querySelector('[data-rest]').textContent='Other 17 drivers: '+(100-order.reduce((sum,d)=>sum+d[horizon],0))+'% combined';
+        root.querySelector('[data-cutoff]').textContent='Cutoff: '+(post?'Saturday, 14:00 UTC':'Thursday, 12:00 UTC');
+        root.querySelector('[data-session]').textContent=post?'Qualifying complete':'Weekend yet to begin';
+        root.querySelector('[data-mover-title]').textContent=post?'What changed?':'The starting picture';
+        root.querySelector('[data-delta]').textContent=post?'+6 pp':'Pre-weekend';
+        root.querySelector('[data-mover]').textContent=post?'Norris':'Piastri';
+        root.querySelector('[data-before]').textContent=post?'22%':'Win chance';
+        root.querySelector('[data-after]').textContent=post?'28%':'25%';
+        root.querySelector('[data-change-copy]').textContent=post?'Norris moves ahead after qualifying. Compare both forecasts to see how the picture changed.':'Piastri leads on historical form. This forecast uses no information from the upcoming sessions.';
+        root.querySelector('[data-other-winner]').textContent=(100-order[0][horizon])+'%';
+        root.querySelector('[data-uncertainty-copy]').textContent=order[0].name+' leads the forecast. The rest of the field is still more likely to win, collectively.';
+        root.querySelectorAll('[data-horizon]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.horizon===horizon)));
+      }
+      root.querySelectorAll('[data-horizon]').forEach(b=>b.addEventListener('click',()=>{horizon=b.dataset.horizon;render();}));
+      render();
+      if(globalThis.Tweak){
+        const tweak=new Tweak({container:root,onChange:render});
+        tweak.addSelect(design,'intensity',{label:'F1 treatment',options:[{label:'Understated paddock',value:'restrained'},{label:'Broadcast accents',value:'expressive'}]});
+        tweak.addSelect(design,'accent',{label:'Accent',options:[{label:'Race red',value:'red'},{label:'Sector purple',value:'purple'}]});
+        tweak.addSelect(design,'appearance',{label:'Appearance',options:[{label:'Follow device',value:'system'},{label:'Light',value:'light'},{label:'Dark',value:'dark'}]});
+      }
+    })();
+  </script>
+</div>

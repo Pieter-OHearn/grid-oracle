@@ -14,46 +14,29 @@ evaluates accuracy after the race completes.
 ## How to run the project
 docker-compose up --build
 
-## GitHub project
+## Work assignment workflow
 
-- **Repo:** `Pieter-OHearn/grid-oracle`
-- **Project board:** `GridOracle MVP` (project number **3**, owner `Pieter-OHearn`)
-- **Board columns:** Backlog → Ready → In progress → In review → Done
-- **Ticket format:** issues titled `TICKET NNN — Short description`
+The multi-season rebuild uses the `WPxx` workplans. Read `AGENTS.md`,
+`PLAN.md`, `WORKPLANS.md`, `DECISIONS.md`, and the assigned state record in
+`docs/workplans/` before editing. That workflow takes precedence over the
+historical ticket process below.
 
-### CLI quick reference
-```bash
-# List all issues
-gh issue list --repo Pieter-OHearn/grid-oracle --state all
+Use conventional branches and commits for workplans, such as
+`feature/wp03-immutable-provenance` and
+`feat(provenance): add immutable forecast run lineage (WP03)`. A workplan is
+reviewable only after its branch is pushed and a ready-for-review GitHub PR to
+`main` exists. Do not create or move GitHub issues as status tracking.
 
-# View a specific ticket
-gh issue view <number> --repo Pieter-OHearn/grid-oracle --json title,body
+### Legacy ticket workflow
 
-# List project board items
-gh project item-list 3 --owner Pieter-OHearn --format json
-
-# Add an issue to the board
-gh project item-add 3 --owner Pieter-OHearn --url <issue-url>
-```
-
-## How to work on a ticket
-
-When asked to work on a ticket, follow these steps in order:
-
-1. Read the ticket from the GitHub project (see CLI reference above) — get the
-   full title, description, tasks, and acceptance criteria
-2. Create a new branch from `main` using the format: `ticket/001-short-description`
-3. Complete all tasks listed in the ticket
-4. Ensure all acceptance criteria are met before finishing
-5. Commit your work with clear commit messages referencing the ticket number
-   e.g. `[TICKET 001] Add docker-compose and monorepo scaffold`
-6. Raise a pull request to `main` with:
-   - Title matching the ticket title
-   - Body summarising what was done and how acceptance criteria were met
-   - Link to the original GitHub issue
-7. Move the ticket to the `Ready for Review` column on the kanban board
+Apply this only when the owner explicitly assigns an existing historical
+`TICKET NNN` GitHub issue. Read that issue before editing, use its prescribed
+`ticket/NNN-short-description` branch and commit format, then open its PR to
+`main`. Do not use this legacy process for WPxx work.
 
 ## Frontend design reference
+
+For the multi-season rebuild, the owner's 2026-09-28 approval supersedes the older reference below. Use `docs/design/APPROVED_UI.md` and its preserved concept, then follow WP10–12 in `WORKPLANS.md`. Read `AGENTS.md` and `PLAN.md` before starting an assigned workplan.
 
 The `dashboard/design/` directory contains a Figma "Make Code" export of the approved
 UI designs. These files are **visual references only** — do NOT copy their file

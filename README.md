@@ -2,6 +2,12 @@
 
 Formula 1 race prediction platform. Uses machine learning to predict finishing positions, stores predictions, and evaluates accuracy after each race.
 
+## Continuing development
+
+Start with [PLAN.md](PLAN.md) for the September 2026 repository review and build roadmap. The [ideal state](docs/IDEAL_STATE.md), [workplans](WORKPLANS.md), and [decisions](DECISIONS.md) describe the proposed multi-season product, prediction-engine rebuild, UI redesign and homelab deployment. These are plans; the current application has not yet been rebuilt to match them.
+
+For agent assignments, use the [execution guide and package state records](docs/workplans/README.md). A fresh agent starts at [HANDOFF.md](HANDOFF.md). The owner-approved visual direction is preserved in [the design reference](docs/design/APPROVED_UI.md).
+
 ## Project structure
 
 ```

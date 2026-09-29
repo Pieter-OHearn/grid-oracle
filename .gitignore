@@ -31,6 +31,10 @@ dashboard/build/
 # Claude Code
 .claude/
 
+# Local agent/runtime traces
+.codex/
+.ticket-workflow/
+
 # OS
 .DS_Store
 Thumbs.db

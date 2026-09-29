@@ -1,0 +1,2271 @@
+{
+  "retrieved_at": "2026-09-28T16:04:29.674132+00:00",
+  "method": "Equal race weighting; all result entrants including retirements/DNS/DSQ; official position numeric order; final grid zero placed last; qualifying reranked among result entrants; ties by driver ID; historical corrected records, not as-of snapshots.",
+  "seasons": [
+    {
+      "season": 2022,
+      "races": 22,
+      "result_rows": 440,
+      "raw_status_counts": {
+        "+1 Lap": 80,
+        "+2 Laps": 6,
+        "+6 Laps": 1,
+        "Accident": 8,
+        "Collision": 10,
+        "Collision damage": 12,
+        "Cooling system": 1,
+        "Differential": 1,
+        "Engine": 7,
+        "Finished": 279,
+        "Front wing": 1,
+        "Fuel leak": 1,
+        "Fuel pressure": 2,
+        "Fuel pump": 1,
+        "Gearbox": 4,
+        "Hydraulics": 4,
+        "Mechanical": 1,
+        "Oil leak": 1,
+        "Power Unit": 6,
+        "Power loss": 1,
+        "Spun off": 2,
+        "Suspension": 1,
+        "Turbo": 1,
+        "Undertray": 2,
+        "Vibrations": 1,
+        "Water leak": 2,
+        "Water pressure": 2,
+        "Water pump": 1,
+        "Withdrew": 1
+      },
+      "qualifying_excluded": [],
+      "baselines": {
+        "final_grid": {
+          "races": 22,
+          "mae": 3.940909,
+          "exact": 0.122727,
+          "winner": 0.454545,
+          "top3_overlap": 0.636364,
+          "top10_overlap": 0.727273
+        },
+        "qualifying_order": {
+          "races": 22,
+          "mae": 3.690909,
+          "exact": 0.120455,
+          "winner": 0.454545,
+          "top3_overlap": 0.636364,
+          "top10_overlap": 0.763636
+        }
+      }
+    },
+    {
+      "season": 2023,
+      "races": 22,
+      "result_rows": 440,
+      "raw_status_counts": {
+        "Accident": 3,
+        "Collision damage": 2,
+        "Did not start": 3,
+        "Disqualified": 2,
+        "Finished": 304,
+        "Lapped": 70,
+        "Retired": 53,
+        "Undertray": 1,
+        "Withdrew": 2
+      },
+      "qualifying_excluded": [],
+      "baselines": {
+        "final_grid": {
+          "races": 22,
+          "mae": 3.754545,
+          "exact": 0.138636,
+          "winner": 0.636364,
+          "top3_overlap": 0.636364,
+          "top10_overlap": 0.736364
+        },
+        "qualifying_order": {
+          "races": 22,
+          "mae": 3.690909,
+          "exact": 0.129545,
+          "winner": 0.681818,
+          "top3_overlap": 0.621212,
+          "top10_overlap": 0.740909
+        }
+      }
+    },
+    {
+      "season": 2024,
+      "races": 24,
+      "result_rows": 479,
+      "raw_status_counts": {
+        "Did not start": 3,
+        "Disqualified": 2,
+        "Finished": 287,
+        "Lapped": 138,
+        "Retired": 49
+      },
+      "qualifying_excluded": [],
+      "baselines": {
+        "final_grid": {
+          "races": 24,
+          "mae": 2.895614,
+          "exact": 0.154276,
+          "winner": 0.458333,
+          "top3_overlap": 0.666667,
+          "top10_overlap": 0.8375
+        },
+        "qualifying_order": {
+          "races": 24,
+          "mae": 2.846053,
+          "exact": 0.154167,
+          "winner": 0.5,
+          "top3_overlap": 0.625,
+          "top10_overlap": 0.845833
+        }
+      }
+    },
+    {
+      "season": 2025,
+      "races": 24,
+      "result_rows": 479,
+      "raw_status_counts": {
+        "Did not start": 3,
+        "Disqualified": 6,
+        "Finished": 330,
+        "Lapped": 89,
+        "Retired": 51
+      },
+      "qualifying_excluded": [
+        {
+          "round": 21,
+          "missing_drivers": ["bortoleto"]
+        }
+      ],
+      "baselines": {
+        "final_grid": {
+          "races": 24,
+          "mae": 3.344298,
+          "exact": 0.183991,
+          "winner": 0.666667,
+          "top3_overlap": 0.75,
+          "top10_overlap": 0.779167
+        },
+        "qualifying_order": {
+          "races": 23,
+          "mae": 3.337529,
+          "exact": 0.178947,
+          "winner": 0.652174,
+          "top3_overlap": 0.753623,
+          "top10_overlap": 0.773913
+        }
+      }
+    }
+  ],
+  "overall": {
+    "final_grid": {
+      "races": 92,
+      "mae": 3.468021,
+      "exact": 0.150744,
+      "winner": 0.554348,
+      "top3_overlap": 0.673913,
+      "top10_overlap": 0.771739
+    },
+    "qualifying_order": {
+      "races": 91,
+      "mae": 3.378774,
+      "exact": 0.146327,
+      "winner": 0.571429,
+      "top3_overlap": 0.659341,
+      "top10_overlap": 0.782418
+    }
+  },
+  "race_metrics": [
+    {
+      "season": 2022,
+      "round": 1,
+      "race": "Bahrain Grand Prix",
+      "date": "2022-03-20",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 4.4,
+        "exact": 0.15,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.7
+      },
+      "qualifying_order": {
+        "mae": 4.4,
+        "exact": 0.15,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.7
+      }
+    },
+    {
+      "season": 2022,
+      "round": 2,
+      "race": "Saudi Arabian Grand Prix",
+      "date": "2022-03-27",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 2.3,
+        "exact": 0.3,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.8
+      },
+      "qualifying_order": {
+        "mae": 3.1,
+        "exact": 0.1,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.8
+      }
+    },
+    {
+      "season": 2022,
+      "round": 3,
+      "race": "Australian Grand Prix",
+      "date": "2022-04-10",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 3.9,
+        "exact": 0.05,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.7
+      },
+      "qualifying_order": {
+        "mae": 3.8,
+        "exact": 0.05,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.7
+      }
+    },
+    {
+      "season": 2022,
+      "round": 4,
+      "race": "Emilia Romagna Grand Prix",
+      "date": "2022-04-24",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 5.0,
+        "exact": 0.05,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.6
+      },
+      "qualifying_order": {
+        "mae": 5.1,
+        "exact": 0.15,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.7
+      }
+    },
+    {
+      "season": 2022,
+      "round": 5,
+      "race": "Miami Grand Prix",
+      "date": "2022-05-08",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 4.0,
+        "exact": 0.1,
+        "winner": 0.0,
+        "top3_overlap": 1.0,
+        "top10_overlap": 0.6
+      },
+      "qualifying_order": {
+        "mae": 3.6,
+        "exact": 0.3,
+        "winner": 0.0,
+        "top3_overlap": 1.0,
+        "top10_overlap": 0.7
+      }
+    },
+    {
+      "season": 2022,
+      "round": 6,
+      "race": "Spanish Grand Prix",
+      "date": "2022-05-22",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 4.0,
+        "exact": 0.05,
+        "winner": 0.0,
+        "top3_overlap": 0.3333333333333333,
+        "top10_overlap": 0.6
+      },
+      "qualifying_order": {
+        "mae": 4.0,
+        "exact": 0.0,
+        "winner": 0.0,
+        "top3_overlap": 0.3333333333333333,
+        "top10_overlap": 0.6
+      }
+    },
+    {
+      "season": 2022,
+      "round": 7,
+      "race": "Monaco Grand Prix",
+      "date": "2022-05-29",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 2.6,
+        "exact": 0.15,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.9
+      },
+      "qualifying_order": {
+        "mae": 2.6,
+        "exact": 0.15,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.9
+      }
+    },
+    {
+      "season": 2022,
+      "round": 8,
+      "race": "Azerbaijan Grand Prix",
+      "date": "2022-06-12",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 4.4,
+        "exact": 0.05,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.7
+      },
+      "qualifying_order": {
+        "mae": 4.4,
+        "exact": 0.05,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.7
+      }
+    },
+    {
+      "season": 2022,
+      "round": 9,
+      "race": "Canadian Grand Prix",
+      "date": "2022-06-19",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 4.3,
+        "exact": 0.05,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.7
+      },
+      "qualifying_order": {
+        "mae": 4.3,
+        "exact": 0.05,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.7
+      }
+    },
+    {
+      "season": 2022,
+      "round": 10,
+      "race": "British Grand Prix",
+      "date": "2022-07-03",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 4.3,
+        "exact": 0.15,
+        "winner": 1.0,
+        "top3_overlap": 0.3333333333333333,
+        "top10_overlap": 0.7
+      },
+      "qualifying_order": {
+        "mae": 4.3,
+        "exact": 0.15,
+        "winner": 1.0,
+        "top3_overlap": 0.3333333333333333,
+        "top10_overlap": 0.7
+      }
+    },
+    {
+      "season": 2022,
+      "round": 11,
+      "race": "Austrian Grand Prix",
+      "date": "2022-07-10",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 3.7,
+        "exact": 0.1,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.8
+      },
+      "qualifying_order": {
+        "mae": 3.5,
+        "exact": 0.15,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.8
+      }
+    },
+    {
+      "season": 2022,
+      "round": 12,
+      "race": "French Grand Prix",
+      "date": "2022-07-24",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 3.6,
+        "exact": 0.15,
+        "winner": 0.0,
+        "top3_overlap": 0.3333333333333333,
+        "top10_overlap": 0.8
+      },
+      "qualifying_order": {
+        "mae": 4.2,
+        "exact": 0.0,
+        "winner": 0.0,
+        "top3_overlap": 0.3333333333333333,
+        "top10_overlap": 0.7
+      }
+    },
+    {
+      "season": 2022,
+      "round": 13,
+      "race": "Hungarian Grand Prix",
+      "date": "2022-07-31",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 4.1,
+        "exact": 0.05,
+        "winner": 0.0,
+        "top3_overlap": 0.3333333333333333,
+        "top10_overlap": 0.8
+      },
+      "qualifying_order": {
+        "mae": 4.1,
+        "exact": 0.05,
+        "winner": 0.0,
+        "top3_overlap": 0.3333333333333333,
+        "top10_overlap": 0.8
+      }
+    },
+    {
+      "season": 2022,
+      "round": 14,
+      "race": "Belgian Grand Prix",
+      "date": "2022-08-28",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 5.5,
+        "exact": 0.05,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.6
+      },
+      "qualifying_order": {
+        "mae": 2.9,
+        "exact": 0.05,
+        "winner": 1.0,
+        "top3_overlap": 1.0,
+        "top10_overlap": 0.8
+      }
+    },
+    {
+      "season": 2022,
+      "round": 15,
+      "race": "Dutch Grand Prix",
+      "date": "2022-09-04",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 2.7,
+        "exact": 0.35,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.8
+      },
+      "qualifying_order": {
+        "mae": 2.7,
+        "exact": 0.35,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.8
+      }
+    },
+    {
+      "season": 2022,
+      "round": 16,
+      "race": "Italian Grand Prix",
+      "date": "2022-09-11",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 5.7,
+        "exact": 0.05,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.7
+      },
+      "qualifying_order": {
+        "mae": 2.6,
+        "exact": 0.2,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.8
+      }
+    },
+    {
+      "season": 2022,
+      "round": 17,
+      "race": "Singapore Grand Prix",
+      "date": "2022-10-02",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 3.8,
+        "exact": 0.05,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.7
+      },
+      "qualifying_order": {
+        "mae": 3.9,
+        "exact": 0.05,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.7
+      }
+    },
+    {
+      "season": 2022,
+      "round": 18,
+      "race": "Japanese Grand Prix",
+      "date": "2022-10-09",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 2.9,
+        "exact": 0.3,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.9
+      },
+      "qualifying_order": {
+        "mae": 2.9,
+        "exact": 0.3,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.9
+      }
+    },
+    {
+      "season": 2022,
+      "round": 19,
+      "race": "United States Grand Prix",
+      "date": "2022-10-23",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 5.4,
+        "exact": 0.1,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.6
+      },
+      "qualifying_order": {
+        "mae": 4.3,
+        "exact": 0.05,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.7
+      }
+    },
+    {
+      "season": 2022,
+      "round": 20,
+      "race": "Mexico City Grand Prix",
+      "date": "2022-10-30",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 2.6,
+        "exact": 0.15,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.9
+      },
+      "qualifying_order": {
+        "mae": 2.7,
+        "exact": 0.15,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.9
+      }
+    },
+    {
+      "season": 2022,
+      "round": 21,
+      "race": "S\u00e3o Paulo Grand Prix",
+      "date": "2022-11-13",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 4.5,
+        "exact": 0.1,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.6
+      },
+      "qualifying_order": {
+        "mae": 5.0,
+        "exact": 0.05,
+        "winner": 0.0,
+        "top3_overlap": 0.3333333333333333,
+        "top10_overlap": 0.8
+      }
+    },
+    {
+      "season": 2022,
+      "round": 22,
+      "race": "Abu Dhabi Grand Prix",
+      "date": "2022-11-20",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 3.0,
+        "exact": 0.15,
+        "winner": 1.0,
+        "top3_overlap": 1.0,
+        "top10_overlap": 0.8
+      },
+      "qualifying_order": {
+        "mae": 2.8,
+        "exact": 0.1,
+        "winner": 1.0,
+        "top3_overlap": 1.0,
+        "top10_overlap": 0.9
+      }
+    },
+    {
+      "season": 2023,
+      "round": 1,
+      "race": "Bahrain Grand Prix",
+      "date": "2023-03-05",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 4.2,
+        "exact": 0.15,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.7
+      },
+      "qualifying_order": {
+        "mae": 4.2,
+        "exact": 0.15,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.7
+      }
+    },
+    {
+      "season": 2023,
+      "round": 2,
+      "race": "Saudi Arabian Grand Prix",
+      "date": "2023-03-19",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 3.8,
+        "exact": 0.1,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.7
+      },
+      "qualifying_order": {
+        "mae": 3.5,
+        "exact": 0.15,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.8
+      }
+    },
+    {
+      "season": 2023,
+      "round": 3,
+      "race": "Australian Grand Prix",
+      "date": "2023-04-02",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 5.7,
+        "exact": 0.1,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.5
+      },
+      "qualifying_order": {
+        "mae": 5.7,
+        "exact": 0.1,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.5
+      }
+    },
+    {
+      "season": 2023,
+      "round": 4,
+      "race": "Azerbaijan Grand Prix",
+      "date": "2023-04-30",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 2.2,
+        "exact": 0.1,
+        "winner": 0.0,
+        "top3_overlap": 1.0,
+        "top10_overlap": 0.9
+      },
+      "qualifying_order": {
+        "mae": 2.0,
+        "exact": 0.15,
+        "winner": 0.0,
+        "top3_overlap": 1.0,
+        "top10_overlap": 0.9
+      }
+    },
+    {
+      "season": 2023,
+      "round": 5,
+      "race": "Miami Grand Prix",
+      "date": "2023-05-07",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 2.9,
+        "exact": 0.15,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.9
+      },
+      "qualifying_order": {
+        "mae": 2.9,
+        "exact": 0.15,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.9
+      }
+    },
+    {
+      "season": 2023,
+      "round": 6,
+      "race": "Monaco Grand Prix",
+      "date": "2023-05-28",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 2.1,
+        "exact": 0.3,
+        "winner": 1.0,
+        "top3_overlap": 1.0,
+        "top10_overlap": 0.9
+      },
+      "qualifying_order": {
+        "mae": 2.3,
+        "exact": 0.2,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.9
+      }
+    },
+    {
+      "season": 2023,
+      "round": 7,
+      "race": "Spanish Grand Prix",
+      "date": "2023-06-04",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 3.6,
+        "exact": 0.2,
+        "winner": 1.0,
+        "top3_overlap": 0.3333333333333333,
+        "top10_overlap": 0.7
+      },
+      "qualifying_order": {
+        "mae": 3.8,
+        "exact": 0.2,
+        "winner": 1.0,
+        "top3_overlap": 0.3333333333333333,
+        "top10_overlap": 0.7
+      }
+    },
+    {
+      "season": 2023,
+      "round": 8,
+      "race": "Canadian Grand Prix",
+      "date": "2023-06-18",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 4.3,
+        "exact": 0.15,
+        "winner": 1.0,
+        "top3_overlap": 1.0,
+        "top10_overlap": 0.6
+      },
+      "qualifying_order": {
+        "mae": 4.1,
+        "exact": 0.1,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.6
+      }
+    },
+    {
+      "season": 2023,
+      "round": 9,
+      "race": "Austrian Grand Prix",
+      "date": "2023-07-02",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 3.2,
+        "exact": 0.15,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.8
+      },
+      "qualifying_order": {
+        "mae": 3.2,
+        "exact": 0.15,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.8
+      }
+    },
+    {
+      "season": 2023,
+      "round": 10,
+      "race": "British Grand Prix",
+      "date": "2023-07-09",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 3.0,
+        "exact": 0.25,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.9
+      },
+      "qualifying_order": {
+        "mae": 3.0,
+        "exact": 0.15,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.9
+      }
+    },
+    {
+      "season": 2023,
+      "round": 11,
+      "race": "Hungarian Grand Prix",
+      "date": "2023-07-23",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 3.8,
+        "exact": 0.05,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.7
+      },
+      "qualifying_order": {
+        "mae": 3.8,
+        "exact": 0.05,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.7
+      }
+    },
+    {
+      "season": 2023,
+      "round": 12,
+      "race": "Belgian Grand Prix",
+      "date": "2023-07-30",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 3.3,
+        "exact": 0.1,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.8
+      },
+      "qualifying_order": {
+        "mae": 3.1,
+        "exact": 0.15,
+        "winner": 1.0,
+        "top3_overlap": 1.0,
+        "top10_overlap": 0.8
+      }
+    },
+    {
+      "season": 2023,
+      "round": 13,
+      "race": "Dutch Grand Prix",
+      "date": "2023-08-27",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 4.7,
+        "exact": 0.1,
+        "winner": 1.0,
+        "top3_overlap": 0.3333333333333333,
+        "top10_overlap": 0.7
+      },
+      "qualifying_order": {
+        "mae": 4.7,
+        "exact": 0.1,
+        "winner": 1.0,
+        "top3_overlap": 0.3333333333333333,
+        "top10_overlap": 0.7
+      }
+    },
+    {
+      "season": 2023,
+      "round": 14,
+      "race": "Italian Grand Prix",
+      "date": "2023-09-03",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 2.4,
+        "exact": 0.0,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.9
+      },
+      "qualifying_order": {
+        "mae": 2.4,
+        "exact": 0.0,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.9
+      }
+    },
+    {
+      "season": 2023,
+      "round": 15,
+      "race": "Singapore Grand Prix",
+      "date": "2023-09-17",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 4.6,
+        "exact": 0.1,
+        "winner": 1.0,
+        "top3_overlap": 0.3333333333333333,
+        "top10_overlap": 0.6
+      },
+      "qualifying_order": {
+        "mae": 4.6,
+        "exact": 0.1,
+        "winner": 1.0,
+        "top3_overlap": 0.3333333333333333,
+        "top10_overlap": 0.6
+      }
+    },
+    {
+      "season": 2023,
+      "round": 16,
+      "race": "Japanese Grand Prix",
+      "date": "2023-09-24",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 2.6,
+        "exact": 0.25,
+        "winner": 1.0,
+        "top3_overlap": 1.0,
+        "top10_overlap": 0.8
+      },
+      "qualifying_order": {
+        "mae": 2.6,
+        "exact": 0.25,
+        "winner": 1.0,
+        "top3_overlap": 1.0,
+        "top10_overlap": 0.8
+      }
+    },
+    {
+      "season": 2023,
+      "round": 17,
+      "race": "Qatar Grand Prix",
+      "date": "2023-10-08",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 4.2,
+        "exact": 0.2,
+        "winner": 1.0,
+        "top3_overlap": 0.3333333333333333,
+        "top10_overlap": 0.8
+      },
+      "qualifying_order": {
+        "mae": 4.0,
+        "exact": 0.1,
+        "winner": 1.0,
+        "top3_overlap": 0.3333333333333333,
+        "top10_overlap": 0.8
+      }
+    },
+    {
+      "season": 2023,
+      "round": 18,
+      "race": "United States Grand Prix",
+      "date": "2023-10-22",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 5.4,
+        "exact": 0.1,
+        "winner": 0.0,
+        "top3_overlap": 0.3333333333333333,
+        "top10_overlap": 0.6
+      },
+      "qualifying_order": {
+        "mae": 5.3,
+        "exact": 0.2,
+        "winner": 0.0,
+        "top3_overlap": 0.3333333333333333,
+        "top10_overlap": 0.6
+      }
+    },
+    {
+      "season": 2023,
+      "round": 19,
+      "race": "Mexico City Grand Prix",
+      "date": "2023-10-29",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 4.2,
+        "exact": 0.05,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.7
+      },
+      "qualifying_order": {
+        "mae": 4.1,
+        "exact": 0.05,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.7
+      }
+    },
+    {
+      "season": 2023,
+      "round": 20,
+      "race": "S\u00e3o Paulo Grand Prix",
+      "date": "2023-11-05",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 4.7,
+        "exact": 0.05,
+        "winner": 1.0,
+        "top3_overlap": 0.3333333333333333,
+        "top10_overlap": 0.7
+      },
+      "qualifying_order": {
+        "mae": 4.5,
+        "exact": 0.05,
+        "winner": 1.0,
+        "top3_overlap": 0.3333333333333333,
+        "top10_overlap": 0.7
+      }
+    },
+    {
+      "season": 2023,
+      "round": 21,
+      "race": "Las Vegas Grand Prix",
+      "date": "2023-11-19",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 5.6,
+        "exact": 0.1,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.5
+      },
+      "qualifying_order": {
+        "mae": 5.3,
+        "exact": 0.0,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.5
+      }
+    },
+    {
+      "season": 2023,
+      "round": 22,
+      "race": "Abu Dhabi Grand Prix",
+      "date": "2023-11-26",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 2.1,
+        "exact": 0.3,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.8
+      },
+      "qualifying_order": {
+        "mae": 2.1,
+        "exact": 0.3,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.8
+      }
+    },
+    {
+      "season": 2024,
+      "round": 1,
+      "race": "Bahrain Grand Prix",
+      "date": "2024-03-02",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 2.3,
+        "exact": 0.1,
+        "winner": 1.0,
+        "top3_overlap": 0.3333333333333333,
+        "top10_overlap": 0.9
+      },
+      "qualifying_order": {
+        "mae": 2.3,
+        "exact": 0.1,
+        "winner": 1.0,
+        "top3_overlap": 0.3333333333333333,
+        "top10_overlap": 0.9
+      }
+    },
+    {
+      "season": 2024,
+      "round": 2,
+      "race": "Saudi Arabian Grand Prix",
+      "date": "2024-03-09",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 2.5,
+        "exact": 0.05,
+        "winner": 1.0,
+        "top3_overlap": 1.0,
+        "top10_overlap": 0.8
+      },
+      "qualifying_order": {
+        "mae": 2.5,
+        "exact": 0.05,
+        "winner": 1.0,
+        "top3_overlap": 1.0,
+        "top10_overlap": 0.8
+      }
+    },
+    {
+      "season": 2024,
+      "round": 3,
+      "race": "Australian Grand Prix",
+      "date": "2024-03-24",
+      "entrants": 19,
+      "final_grid": {
+        "mae": 3.8947368421052633,
+        "exact": 0.05263157894736842,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.8
+      },
+      "qualifying_order": {
+        "mae": 4.105263157894737,
+        "exact": 0.0,
+        "winner": 0.0,
+        "top3_overlap": 0.3333333333333333,
+        "top10_overlap": 0.8
+      }
+    },
+    {
+      "season": 2024,
+      "round": 4,
+      "race": "Japanese Grand Prix",
+      "date": "2024-04-07",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 2.2,
+        "exact": 0.2,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 1.0
+      },
+      "qualifying_order": {
+        "mae": 2.2,
+        "exact": 0.2,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 1.0
+      }
+    },
+    {
+      "season": 2024,
+      "round": 5,
+      "race": "Chinese Grand Prix",
+      "date": "2024-04-21",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 2.9,
+        "exact": 0.1,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.9
+      },
+      "qualifying_order": {
+        "mae": 2.9,
+        "exact": 0.1,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.9
+      }
+    },
+    {
+      "season": 2024,
+      "round": 6,
+      "race": "Miami Grand Prix",
+      "date": "2024-05-05",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 2.8,
+        "exact": 0.15,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.8
+      },
+      "qualifying_order": {
+        "mae": 2.7,
+        "exact": 0.2,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.8
+      }
+    },
+    {
+      "season": 2024,
+      "round": 7,
+      "race": "Emilia Romagna Grand Prix",
+      "date": "2024-05-19",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 2.1,
+        "exact": 0.15,
+        "winner": 1.0,
+        "top3_overlap": 1.0,
+        "top10_overlap": 0.8
+      },
+      "qualifying_order": {
+        "mae": 2.2,
+        "exact": 0.15,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.8
+      }
+    },
+    {
+      "season": 2024,
+      "round": 8,
+      "race": "Monaco Grand Prix",
+      "date": "2024-05-26",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 0.9,
+        "exact": 0.7,
+        "winner": 1.0,
+        "top3_overlap": 1.0,
+        "top10_overlap": 1.0
+      },
+      "qualifying_order": {
+        "mae": 1.5,
+        "exact": 0.6,
+        "winner": 1.0,
+        "top3_overlap": 1.0,
+        "top10_overlap": 1.0
+      }
+    },
+    {
+      "season": 2024,
+      "round": 9,
+      "race": "Canadian Grand Prix",
+      "date": "2024-06-09",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 4.0,
+        "exact": 0.05,
+        "winner": 0.0,
+        "top3_overlap": 1.0,
+        "top10_overlap": 0.8
+      },
+      "qualifying_order": {
+        "mae": 4.0,
+        "exact": 0.05,
+        "winner": 0.0,
+        "top3_overlap": 1.0,
+        "top10_overlap": 0.8
+      }
+    },
+    {
+      "season": 2024,
+      "round": 10,
+      "race": "Spanish Grand Prix",
+      "date": "2024-06-23",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 1.5,
+        "exact": 0.25,
+        "winner": 0.0,
+        "top3_overlap": 1.0,
+        "top10_overlap": 0.9
+      },
+      "qualifying_order": {
+        "mae": 1.2,
+        "exact": 0.35,
+        "winner": 0.0,
+        "top3_overlap": 1.0,
+        "top10_overlap": 1.0
+      }
+    },
+    {
+      "season": 2024,
+      "round": 11,
+      "race": "Austrian Grand Prix",
+      "date": "2024-06-30",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 3.2,
+        "exact": 0.1,
+        "winner": 0.0,
+        "top3_overlap": 0.3333333333333333,
+        "top10_overlap": 0.7
+      },
+      "qualifying_order": {
+        "mae": 3.2,
+        "exact": 0.1,
+        "winner": 0.0,
+        "top3_overlap": 0.3333333333333333,
+        "top10_overlap": 0.7
+      }
+    },
+    {
+      "season": 2024,
+      "round": 12,
+      "race": "British Grand Prix",
+      "date": "2024-07-07",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 2.6,
+        "exact": 0.15,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.9
+      },
+      "qualifying_order": {
+        "mae": 2.5,
+        "exact": 0.2,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.9
+      }
+    },
+    {
+      "season": 2024,
+      "round": 13,
+      "race": "Hungarian Grand Prix",
+      "date": "2024-07-21",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 2.5,
+        "exact": 0.1,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.8
+      },
+      "qualifying_order": {
+        "mae": 2.5,
+        "exact": 0.1,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.8
+      }
+    },
+    {
+      "season": 2024,
+      "round": 14,
+      "race": "Belgian Grand Prix",
+      "date": "2024-07-28",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 2.8,
+        "exact": 0.15,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.8
+      },
+      "qualifying_order": {
+        "mae": 2.6,
+        "exact": 0.05,
+        "winner": 0.0,
+        "top3_overlap": 0.3333333333333333,
+        "top10_overlap": 0.9
+      }
+    },
+    {
+      "season": 2024,
+      "round": 15,
+      "race": "Dutch Grand Prix",
+      "date": "2024-08-25",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 2.5,
+        "exact": 0.2,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.9
+      },
+      "qualifying_order": {
+        "mae": 2.6,
+        "exact": 0.15,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.8
+      }
+    },
+    {
+      "season": 2024,
+      "round": 16,
+      "race": "Italian Grand Prix",
+      "date": "2024-09-01",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 2.1,
+        "exact": 0.2,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.9
+      },
+      "qualifying_order": {
+        "mae": 2.1,
+        "exact": 0.2,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.9
+      }
+    },
+    {
+      "season": 2024,
+      "round": 17,
+      "race": "Azerbaijan Grand Prix",
+      "date": "2024-09-15",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 4.4,
+        "exact": 0.15,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.8
+      },
+      "qualifying_order": {
+        "mae": 4.4,
+        "exact": 0.0,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.8
+      }
+    },
+    {
+      "season": 2024,
+      "round": 18,
+      "race": "Singapore Grand Prix",
+      "date": "2024-09-22",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 2.7,
+        "exact": 0.15,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.9
+      },
+      "qualifying_order": {
+        "mae": 2.7,
+        "exact": 0.15,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.9
+      }
+    },
+    {
+      "season": 2024,
+      "round": 19,
+      "race": "United States Grand Prix",
+      "date": "2024-10-20",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 3.8,
+        "exact": 0.05,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.6
+      },
+      "qualifying_order": {
+        "mae": 2.6,
+        "exact": 0.15,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.7
+      }
+    },
+    {
+      "season": 2024,
+      "round": 20,
+      "race": "Mexico City Grand Prix",
+      "date": "2024-10-27",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 3.4,
+        "exact": 0.15,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.9
+      },
+      "qualifying_order": {
+        "mae": 3.4,
+        "exact": 0.15,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.9
+      }
+    },
+    {
+      "season": 2024,
+      "round": 21,
+      "race": "S\u00e3o Paulo Grand Prix",
+      "date": "2024-11-03",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 4.5,
+        "exact": 0.05,
+        "winner": 0.0,
+        "top3_overlap": 0.0,
+        "top10_overlap": 0.7
+      },
+      "qualifying_order": {
+        "mae": 4.5,
+        "exact": 0.05,
+        "winner": 0.0,
+        "top3_overlap": 0.0,
+        "top10_overlap": 0.7
+      }
+    },
+    {
+      "season": 2024,
+      "round": 22,
+      "race": "Las Vegas Grand Prix",
+      "date": "2024-11-23",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 3.0,
+        "exact": 0.3,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.9
+      },
+      "qualifying_order": {
+        "mae": 2.8,
+        "exact": 0.35,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.9
+      }
+    },
+    {
+      "season": 2024,
+      "round": 23,
+      "race": "Qatar Grand Prix",
+      "date": "2024-12-01",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 2.7,
+        "exact": 0.1,
+        "winner": 0.0,
+        "top3_overlap": 0.3333333333333333,
+        "top10_overlap": 0.8
+      },
+      "qualifying_order": {
+        "mae": 2.6,
+        "exact": 0.15,
+        "winner": 1.0,
+        "top3_overlap": 0.3333333333333333,
+        "top10_overlap": 0.8
+      }
+    },
+    {
+      "season": 2024,
+      "round": 24,
+      "race": "Abu Dhabi Grand Prix",
+      "date": "2024-12-08",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 4.2,
+        "exact": 0.05,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.8
+      },
+      "qualifying_order": {
+        "mae": 4.2,
+        "exact": 0.1,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.8
+      }
+    },
+    {
+      "season": 2025,
+      "round": 1,
+      "race": "Australian Grand Prix",
+      "date": "2025-03-16",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 4.7,
+        "exact": 0.05,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.7
+      },
+      "qualifying_order": {
+        "mae": 4.7,
+        "exact": 0.05,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.7
+      }
+    },
+    {
+      "season": 2025,
+      "round": 2,
+      "race": "Chinese Grand Prix",
+      "date": "2025-03-23",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 4.9,
+        "exact": 0.1,
+        "winner": 1.0,
+        "top3_overlap": 1.0,
+        "top10_overlap": 0.6
+      },
+      "qualifying_order": {
+        "mae": 4.9,
+        "exact": 0.1,
+        "winner": 1.0,
+        "top3_overlap": 1.0,
+        "top10_overlap": 0.6
+      }
+    },
+    {
+      "season": 2025,
+      "round": 3,
+      "race": "Japanese Grand Prix",
+      "date": "2025-04-06",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 0.9,
+        "exact": 0.55,
+        "winner": 1.0,
+        "top3_overlap": 1.0,
+        "top10_overlap": 1.0
+      },
+      "qualifying_order": {
+        "mae": 1.0,
+        "exact": 0.55,
+        "winner": 1.0,
+        "top3_overlap": 1.0,
+        "top10_overlap": 1.0
+      }
+    },
+    {
+      "season": 2025,
+      "round": 4,
+      "race": "Bahrain Grand Prix",
+      "date": "2025-04-13",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 3.2,
+        "exact": 0.1,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.8
+      },
+      "qualifying_order": {
+        "mae": 3.1,
+        "exact": 0.15,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.8
+      }
+    },
+    {
+      "season": 2025,
+      "round": 5,
+      "race": "Saudi Arabian Grand Prix",
+      "date": "2025-04-20",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 2.8,
+        "exact": 0.2,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.8
+      },
+      "qualifying_order": {
+        "mae": 2.8,
+        "exact": 0.2,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.8
+      }
+    },
+    {
+      "season": 2025,
+      "round": 6,
+      "race": "Miami Grand Prix",
+      "date": "2025-05-04",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 2.5,
+        "exact": 0.2,
+        "winner": 0.0,
+        "top3_overlap": 0.3333333333333333,
+        "top10_overlap": 0.9
+      },
+      "qualifying_order": {
+        "mae": 2.5,
+        "exact": 0.15,
+        "winner": 0.0,
+        "top3_overlap": 0.3333333333333333,
+        "top10_overlap": 0.9
+      }
+    },
+    {
+      "season": 2025,
+      "round": 7,
+      "race": "Emilia Romagna Grand Prix",
+      "date": "2025-05-18",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 3.6,
+        "exact": 0.1,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.7
+      },
+      "qualifying_order": {
+        "mae": 3.7,
+        "exact": 0.05,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.7
+      }
+    },
+    {
+      "season": 2025,
+      "round": 8,
+      "race": "Monaco Grand Prix",
+      "date": "2025-05-25",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 2.8,
+        "exact": 0.2,
+        "winner": 1.0,
+        "top3_overlap": 1.0,
+        "top10_overlap": 0.9
+      },
+      "qualifying_order": {
+        "mae": 2.6,
+        "exact": 0.2,
+        "winner": 1.0,
+        "top3_overlap": 1.0,
+        "top10_overlap": 0.9
+      }
+    },
+    {
+      "season": 2025,
+      "round": 9,
+      "race": "Spanish Grand Prix",
+      "date": "2025-06-01",
+      "entrants": 19,
+      "final_grid": {
+        "mae": 3.263157894736842,
+        "exact": 0.3157894736842105,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.9
+      },
+      "qualifying_order": {
+        "mae": 3.263157894736842,
+        "exact": 0.3157894736842105,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.9
+      }
+    },
+    {
+      "season": 2025,
+      "round": 10,
+      "race": "Canadian Grand Prix",
+      "date": "2025-06-15",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 3.2,
+        "exact": 0.2,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.7
+      },
+      "qualifying_order": {
+        "mae": 3.3,
+        "exact": 0.15,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.7
+      }
+    },
+    {
+      "season": 2025,
+      "round": 11,
+      "race": "Austrian Grand Prix",
+      "date": "2025-06-29",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 3.2,
+        "exact": 0.25,
+        "winner": 1.0,
+        "top3_overlap": 1.0,
+        "top10_overlap": 0.7
+      },
+      "qualifying_order": {
+        "mae": 3.2,
+        "exact": 0.25,
+        "winner": 1.0,
+        "top3_overlap": 1.0,
+        "top10_overlap": 0.7
+      }
+    },
+    {
+      "season": 2025,
+      "round": 12,
+      "race": "British Grand Prix",
+      "date": "2025-07-06",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 4.4,
+        "exact": 0.1,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.7
+      },
+      "qualifying_order": {
+        "mae": 4.2,
+        "exact": 0.15,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.7
+      }
+    },
+    {
+      "season": 2025,
+      "round": 13,
+      "race": "Belgian Grand Prix",
+      "date": "2025-07-27",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 2.9,
+        "exact": 0.1,
+        "winner": 0.0,
+        "top3_overlap": 1.0,
+        "top10_overlap": 0.8
+      },
+      "qualifying_order": {
+        "mae": 2.9,
+        "exact": 0.1,
+        "winner": 0.0,
+        "top3_overlap": 1.0,
+        "top10_overlap": 0.8
+      }
+    },
+    {
+      "season": 2025,
+      "round": 14,
+      "race": "Hungarian Grand Prix",
+      "date": "2025-08-03",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 2.3,
+        "exact": 0.15,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.9
+      },
+      "qualifying_order": {
+        "mae": 2.3,
+        "exact": 0.15,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.9
+      }
+    },
+    {
+      "season": 2025,
+      "round": 15,
+      "race": "Dutch Grand Prix",
+      "date": "2025-08-31",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 6.0,
+        "exact": 0.05,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.5
+      },
+      "qualifying_order": {
+        "mae": 6.0,
+        "exact": 0.05,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.5
+      }
+    },
+    {
+      "season": 2025,
+      "round": 16,
+      "race": "Italian Grand Prix",
+      "date": "2025-09-07",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 3.0,
+        "exact": 0.35,
+        "winner": 1.0,
+        "top3_overlap": 1.0,
+        "top10_overlap": 0.8
+      },
+      "qualifying_order": {
+        "mae": 2.6,
+        "exact": 0.3,
+        "winner": 1.0,
+        "top3_overlap": 1.0,
+        "top10_overlap": 0.8
+      }
+    },
+    {
+      "season": 2025,
+      "round": 17,
+      "race": "Azerbaijan Grand Prix",
+      "date": "2025-09-21",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 2.6,
+        "exact": 0.25,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.9
+      },
+      "qualifying_order": {
+        "mae": 2.6,
+        "exact": 0.25,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.9
+      }
+    },
+    {
+      "season": 2025,
+      "round": 18,
+      "race": "Singapore Grand Prix",
+      "date": "2025-10-05",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 2.3,
+        "exact": 0.25,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.9
+      },
+      "qualifying_order": {
+        "mae": 2.4,
+        "exact": 0.2,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.9
+      }
+    },
+    {
+      "season": 2025,
+      "round": 19,
+      "race": "United States Grand Prix",
+      "date": "2025-10-19",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 2.9,
+        "exact": 0.2,
+        "winner": 1.0,
+        "top3_overlap": 1.0,
+        "top10_overlap": 0.8
+      },
+      "qualifying_order": {
+        "mae": 2.9,
+        "exact": 0.2,
+        "winner": 1.0,
+        "top3_overlap": 1.0,
+        "top10_overlap": 0.8
+      }
+    },
+    {
+      "season": 2025,
+      "round": 20,
+      "race": "Mexico City Grand Prix",
+      "date": "2025-10-26",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 3.4,
+        "exact": 0.15,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.8
+      },
+      "qualifying_order": {
+        "mae": 3.7,
+        "exact": 0.2,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.8
+      }
+    },
+    {
+      "season": 2025,
+      "round": 21,
+      "race": "S\u00e3o Paulo Grand Prix",
+      "date": "2025-11-09",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 3.3,
+        "exact": 0.2,
+        "winner": 1.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.9
+      },
+      "qualifying_order": null
+    },
+    {
+      "season": 2025,
+      "round": 22,
+      "race": "Las Vegas Grand Prix",
+      "date": "2025-11-23",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 5.6,
+        "exact": 0.1,
+        "winner": 0.0,
+        "top3_overlap": 0.3333333333333333,
+        "top10_overlap": 0.5
+      },
+      "qualifying_order": {
+        "mae": 5.6,
+        "exact": 0.1,
+        "winner": 0.0,
+        "top3_overlap": 0.3333333333333333,
+        "top10_overlap": 0.5
+      }
+    },
+    {
+      "season": 2025,
+      "round": 23,
+      "race": "Qatar Grand Prix",
+      "date": "2025-11-30",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 3.9,
+        "exact": 0.05,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.8
+      },
+      "qualifying_order": {
+        "mae": 3.9,
+        "exact": 0.05,
+        "winner": 0.0,
+        "top3_overlap": 0.6666666666666666,
+        "top10_overlap": 0.8
+      }
+    },
+    {
+      "season": 2025,
+      "round": 24,
+      "race": "Abu Dhabi Grand Prix",
+      "date": "2025-12-07",
+      "entrants": 20,
+      "final_grid": {
+        "mae": 2.6,
+        "exact": 0.2,
+        "winner": 1.0,
+        "top3_overlap": 1.0,
+        "top10_overlap": 0.7
+      },
+      "qualifying_order": {
+        "mae": 2.6,
+        "exact": 0.2,
+        "winner": 1.0,
+        "top3_overlap": 1.0,
+        "top10_overlap": 0.7
+      }
+    }
+  ],
+  "sources": [
+    {
+      "url": "https://api.jolpi.ca/ergast/f1/2022/results/?limit=100&offset=0",
+      "sha256": "545424231206080742645c24f95c1f61f55fa13d1063389e084b120590e2bd73"
+    },
+    {
+      "url": "https://api.jolpi.ca/ergast/f1/2022/results/?limit=100&offset=100",
+      "sha256": "042f3bf558bf42bb7f2dac96e708a250c12ec5c578e829acd240e1202cf713c5"
+    },
+    {
+      "url": "https://api.jolpi.ca/ergast/f1/2022/results/?limit=100&offset=200",
+      "sha256": "e464f2cda33953489c63bcd3684d63361bc1f278ce560d096fb0f6cd59722335"
+    },
+    {
+      "url": "https://api.jolpi.ca/ergast/f1/2022/results/?limit=100&offset=300",
+      "sha256": "83f3dfef8020a8935c895afea3d84c62a8d84c6e5924ccc59f58f6c9e62c5640"
+    },
+    {
+      "url": "https://api.jolpi.ca/ergast/f1/2022/results/?limit=100&offset=400",
+      "sha256": "1858df4c0c8c368057dcebe9d5657c9ac35bdef823c8ed6c8af8868bc8be6d8f"
+    },
+    {
+      "url": "https://api.jolpi.ca/ergast/f1/2022/qualifying/?limit=100&offset=0",
+      "sha256": "a59264a8f9c10b6ac1d8aea3a9d4bf6ccf8a2700568161db3e3ac8a2e539545d"
+    },
+    {
+      "url": "https://api.jolpi.ca/ergast/f1/2022/qualifying/?limit=100&offset=100",
+      "sha256": "f0e4c581c6e53eb36f3b443afa83a874614c3b504b524e7aa63d6194efb7caef"
+    },
+    {
+      "url": "https://api.jolpi.ca/ergast/f1/2022/qualifying/?limit=100&offset=200",
+      "sha256": "0167fa8c56b94f5fccc874d396a6a8950c11bb0816f2a1870c4e790bb0a72487"
+    },
+    {
+      "url": "https://api.jolpi.ca/ergast/f1/2022/qualifying/?limit=100&offset=300",
+      "sha256": "3cab523f08f2de49ba0c86596879f03ee226fba0c2102cf82ece5f24929e4083"
+    },
+    {
+      "url": "https://api.jolpi.ca/ergast/f1/2022/qualifying/?limit=100&offset=400",
+      "sha256": "583c2a57f96ea00bca9361da589eab2bd007da36dff7ff76f96583d1f89fcb1c"
+    },
+    {
+      "url": "https://api.jolpi.ca/ergast/f1/2023/results/?limit=100&offset=0",
+      "sha256": "3226151d335623afb1ffe0e804d47c1e6704f4fd6b7b73fca6acf97ba04a4e56"
+    },
+    {
+      "url": "https://api.jolpi.ca/ergast/f1/2023/results/?limit=100&offset=100",
+      "sha256": "90a3c80afc3e3c120725e1bc75459d316edc5eababdb150bcaf1ec4784bd45a0"
+    },
+    {
+      "url": "https://api.jolpi.ca/ergast/f1/2023/results/?limit=100&offset=200",
+      "sha256": "5bc493da764d4ad926af42150e97f3dd6f440d7be394303ee5f38bde64bd864a"
+    },
+    {
+      "url": "https://api.jolpi.ca/ergast/f1/2023/results/?limit=100&offset=300",
+      "sha256": "b787d5940216b57b8998cc169a88a0e57564d1869b9bf61962ea39ecacb3fb2e"
+    },
+    {
+      "url": "https://api.jolpi.ca/ergast/f1/2023/results/?limit=100&offset=400",
+      "sha256": "0627399a545b9710ac3c4260fc8743aba09ce40f5629019c18eac45c47ea193c"
+    },
+    {
+      "url": "https://api.jolpi.ca/ergast/f1/2023/qualifying/?limit=100&offset=0",
+      "sha256": "094d40364d686a8eaf983ffd1d93267a1d77fc4f0ed8a23cd21fd5e33bd5ad39"
+    },
+    {
+      "url": "https://api.jolpi.ca/ergast/f1/2023/qualifying/?limit=100&offset=100",
+      "sha256": "a2939a8d97c15540b40aa8ff9453582e56d77093e2813a3866e4429cf1bc2d48"
+    },
+    {
+      "url": "https://api.jolpi.ca/ergast/f1/2023/qualifying/?limit=100&offset=200",
+      "sha256": "9342d31c4dd8bd05c51e41e7336578c1e4dbb874772a480c010da129fc2467b1"
+    },
+    {
+      "url": "https://api.jolpi.ca/ergast/f1/2023/qualifying/?limit=100&offset=300",
+      "sha256": "0c2f56cce6d9f8edd949ba21e8bc48ee4f5427d6df8306a386d49b1ec621351d"
+    },
+    {
+      "url": "https://api.jolpi.ca/ergast/f1/2023/qualifying/?limit=100&offset=400",
+      "sha256": "362b10a868ec19c97b1e5b336e29749fba9b8f1a70bc249da34145c612631018"
+    },
+    {
+      "url": "https://api.jolpi.ca/ergast/f1/2024/results/?limit=100&offset=0",
+      "sha256": "fba9af8aef4ac7bb6b2fa4d45e5136e11950a463ec4faa114840f3c055edb81d"
+    },
+    {
+      "url": "https://api.jolpi.ca/ergast/f1/2024/results/?limit=100&offset=100",
+      "sha256": "0ee83afde9842e01cffe4b5f5f4740a22143470ed45ca2c361922d13f8e90b6f"
+    },
+    {
+      "url": "https://api.jolpi.ca/ergast/f1/2024/results/?limit=100&offset=200",
+      "sha256": "f5334be83a8858556f796ad4a49068b2286b48177a51be2600c875dd79d5bc52"
+    },
+    {
+      "url": "https://api.jolpi.ca/ergast/f1/2024/results/?limit=100&offset=300",
+      "sha256": "44bce2c02c18e1118dc0249682a5837880d2895996a1f5f09930429061ac83bf"
+    },
+    {
+      "url": "https://api.jolpi.ca/ergast/f1/2024/results/?limit=100&offset=400",
+      "sha256": "d0abfa6dfc9eeeb8a7a8960500dbebef1f70b869aacdb0212e02c24727e61c58"
+    },
+    {
+      "url": "https://api.jolpi.ca/ergast/f1/2024/qualifying/?limit=100&offset=0",
+      "sha256": "800a9ea1e2a247c1f0d0fa22774d569e505bbea4ba6c337b053144c1e7cfec20"
+    },
+    {
+      "url": "https://api.jolpi.ca/ergast/f1/2024/qualifying/?limit=100&offset=100",
+      "sha256": "6863e42ec409adc137e24a68874da4cfc78e2db085b017ab03fe92af72ef6bea"
+    },
+    {
+      "url": "https://api.jolpi.ca/ergast/f1/2024/qualifying/?limit=100&offset=200",
+      "sha256": "5b0296f8fff001aea53d3e5d26a895760c85d25c6a2d4a0329a7e2a53f43098d"
+    },
+    {
+      "url": "https://api.jolpi.ca/ergast/f1/2024/qualifying/?limit=100&offset=300",
+      "sha256": "5abd92acacfd66fbf990cff9e856978f955f8053fdcf8d5602f41ed8f202c832"
+    },
+    {
+      "url": "https://api.jolpi.ca/ergast/f1/2024/qualifying/?limit=100&offset=400",
+      "sha256": "23cf8d2a50926a422b6df820f965f42881d1f4285d664181412bf724e61b9780"
+    },
+    {
+      "url": "https://api.jolpi.ca/ergast/f1/2025/results/?limit=100&offset=0",
+      "sha256": "cf4464a6b89f85f9632ab853061fbec89993ae995365bc377afded7c9da946a6"
+    },
+    {
+      "url": "https://api.jolpi.ca/ergast/f1/2025/results/?limit=100&offset=100",
+      "sha256": "9ed04b2441b3ff17cfb717fe7887778216f06c95b0b9003ffa9b51befbfa924c"
+    },
+    {
+      "url": "https://api.jolpi.ca/ergast/f1/2025/results/?limit=100&offset=200",
+      "sha256": "877327fcc99f91b1027bd47f3c52ff55212b7155302b79baeb46236867e035b8"
+    },
+    {
+      "url": "https://api.jolpi.ca/ergast/f1/2025/results/?limit=100&offset=300",
+      "sha256": "ca8df94a1d2a11a4190a948c50f9364b522cefc4124dc02a0733fee7fad969c7"
+    },
+    {
+      "url": "https://api.jolpi.ca/ergast/f1/2025/results/?limit=100&offset=400",
+      "sha256": "3a10a9b570c4b87b135f59ddd6a8783ad69db2f2582827b774462feeb9519f75"
+    },
+    {
+      "url": "https://api.jolpi.ca/ergast/f1/2025/qualifying/?limit=100&offset=0",
+      "sha256": "3f19b4958ca6457f6fb4ac23e780f7cd0695115541aa92d030d82e0ef130ff3c"
+    },
+    {
+      "url": "https://api.jolpi.ca/ergast/f1/2025/qualifying/?limit=100&offset=100",
+      "sha256": "1fdc74db4d0c842a9b64321d24ce1c73f3bb995cfd885265709630a4f2bb0b7e"
+    },
+    {
+      "url": "https://api.jolpi.ca/ergast/f1/2025/qualifying/?limit=100&offset=200",
+      "sha256": "a67594fbec1bb61b5ad49183d1395d8cd72d9ab805886ee383b65ff72a8da7c5"
+    },
+    {
+      "url": "https://api.jolpi.ca/ergast/f1/2025/qualifying/?limit=100&offset=300",
+      "sha256": "587ab63ecf026c5a2cbfa56e168afefff8895e8ffa0536e3944f40d8c7ba423a"
+    },
+    {
+      "url": "https://api.jolpi.ca/ergast/f1/2025/qualifying/?limit=100&offset=400",
+      "sha256": "441fa3656474d57e6c31a065af3bbd9c217de38ac7d23221719dbe7559113728"
+    }
+  ]
+}
