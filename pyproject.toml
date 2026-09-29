@@ -16,6 +16,7 @@ api = [
     "uvicorn==0.34.0",
 ]
 pipeline = [
+    "alembic==1.14.1",
     "apscheduler==3.10.4",
     "fastf1==3.8.1",
     "numpy==2.2.0",
