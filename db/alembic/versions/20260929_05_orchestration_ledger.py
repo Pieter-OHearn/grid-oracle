@@ -28,6 +28,10 @@ def upgrade() -> None:
         "weather_snapshots",
         sa.Column("release_at", sa.DateTime(timezone=True), nullable=True),
     )
+    op.add_column(
+        "weather_snapshots",
+        sa.Column("valid_at", sa.DateTime(timezone=True), nullable=True),
+    )
     op.create_table(
         "orchestration_jobs",
         sa.Column("job_key", sa.String(220), primary_key=True),
@@ -76,6 +80,7 @@ def downgrade() -> None:
     op.drop_table("orchestration_job_dependencies")
     op.drop_index("ix_orchestration_jobs_due", table_name="orchestration_jobs")
     op.drop_table("orchestration_jobs")
+    op.drop_column("weather_snapshots", "valid_at")
     op.drop_column("weather_snapshots", "release_at")
     op.drop_column("weather_snapshots", "issue_at")
     op.drop_column("weather_snapshots", "availability")

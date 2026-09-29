@@ -2,6 +2,7 @@
 
 import argparse
 import logging
+import os
 import signal
 import sys
 from datetime import datetime, timedelta, timezone
@@ -12,12 +13,26 @@ from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
 from pipeline.config import load_pipeline_settings
-from pipeline.ingest.calendar_sync import sync_season_calendar
+from pipeline.ingest.calendar_sync import sync_season_calendar, to_orchestration_event
 from pipeline.ingest.fetch_qualifying import ingest_event as ingest_qualifying_event
 from pipeline.ingest.fetch_results import ingest_event as ingest_results_event
 from pipeline.ingest.fetch_weather import fetch_and_store_weather
 from pipeline.ingest.upsert_helpers import get_engine
 from pipeline.ml import workflow as ml_workflow
+from pipeline.orchestration import (
+    EVALUATE,
+    POST_FEATURE,
+    POST_PREDICT,
+    POST_PUBLISH,
+    PRE_FEATURE,
+    PRE_PREDICT,
+    PRE_PUBLISH,
+    QUALIFY_INGEST,
+    RESULT_INGEST,
+    JobBlocked,
+    JobLedger,
+    RetryableJobError,
+)
 
 post_race_pipeline = ml_workflow.post_race_pipeline
 _get_latest_model_version_id_for_race = ml_workflow._get_latest_model_version_id_for_race
@@ -42,6 +57,64 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 for _noisy in ("fastf1", "req", "core", "logger", "_api", "apscheduler"):
     logging.getLogger(_noisy).setLevel(logging.CRITICAL)
 logger = logging.getLogger(__name__)
+
+
+def _active_entries(engine: Engine, race_id: int) -> int:
+    with engine.connect() as conn:
+        return int(
+            conn.execute(
+                text("SELECT COUNT(*) FROM event_entries WHERE race_id=:race_id AND status='active'"),
+                {"race_id": race_id},
+            ).scalar_one()
+        )
+
+
+def _run_durable_job(job, engine: Engine) -> None:
+    """Execute only ingestion/evaluation in the durable path.
+
+    Legacy prediction writes cannot satisfy WP03's immutable horizon contract,
+    so the live feature/predict/publish adapter remains deliberately blocked
+    until it is supplied with a provenance-aware model runner. This is safer
+    than silently publishing through the old mutable predictions table.
+    """
+    if job.kind == QUALIFY_INGEST:
+        if not ingest_qualifying_event(job.payload["season"], job.payload["round"], engine):
+            raise RetryableJobError("qualifying provider has not published a complete response")
+        return
+    if job.kind == RESULT_INGEST:
+        if not ingest_results_event(job.payload["season"], job.payload["round"], engine):
+            raise RetryableJobError("race result provider has not published a complete response")
+        return
+    if job.kind == EVALUATE:
+        model_version_id = _get_latest_model_version_id(engine)
+        if model_version_id is None:
+            raise JobBlocked("no persisted model version is eligible for evaluation")
+        ml_evaluate.run(job.race_id, model_version_id, engine)
+        return
+    if job.kind in {PRE_FEATURE, PRE_PREDICT, PRE_PUBLISH, POST_FEATURE, POST_PREDICT, POST_PUBLISH}:
+        raise JobBlocked("provenance-aware horizon publication adapter is not configured")
+    raise JobBlocked(f"unrecognised durable job kind {job.kind}")
+
+
+def _durable_tick(ledger: JobLedger, engine: Engine, worker: str) -> None:
+    ledger.run_once(
+        worker,
+        {
+            kind: lambda job, kind=kind: _run_durable_job(job, engine)
+            for kind in (
+                PRE_FEATURE,
+                PRE_PREDICT,
+                PRE_PUBLISH,
+                QUALIFY_INGEST,
+                POST_FEATURE,
+                POST_PREDICT,
+                POST_PUBLISH,
+                RESULT_INGEST,
+                EVALUATE,
+            )
+        },
+    )
+
 
 # ---------------------------------------------------------------------------
 # Configurable grace periods
@@ -389,7 +462,7 @@ def main() -> None:
     args = parser.parse_args()
     # Scheduler mode is explicitly opt-in and validates configuration before it
     # creates jobs or performs any provider work.
-    load_pipeline_settings(require_weather_key=True)
+    settings = load_pipeline_settings(require_weather_key=True)
 
     engine = get_engine()
 
@@ -407,7 +480,22 @@ def main() -> None:
         logger.warning("No events found for season %d — calendar may not be available yet", args.season)
 
     scheduler = BlockingScheduler(timezone=timezone.utc)
-    _schedule_events(scheduler, events, engine)
+    if settings.durable_scheduler_enabled:
+        ledger = JobLedger(engine)
+        for event in events:
+            ledger.reconcile(to_orchestration_event(event, _active_entries(engine, event["race_id"])))
+        worker = f"scheduler-{os.getpid()}"
+        scheduler.add_job(
+            _durable_tick,
+            "interval",
+            seconds=30,
+            args=[ledger, engine, worker],
+            id="durable-ledger-tick",
+            replace_existing=True,
+        )
+        logger.info("Durable WP04 ledger scheduler enabled; legacy DateTrigger jobs disabled")
+    else:
+        _schedule_events(scheduler, events, engine)
     _list_jobs(scheduler)
 
     def _shutdown(signum, frame):

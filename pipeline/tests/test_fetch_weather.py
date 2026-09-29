@@ -187,7 +187,8 @@ def test_parse_forecast_uses_race_valid_interval_and_keeps_dry_distinct():
     result = parse_forecast(data, race_start, race_start + timedelta(hours=2))
     assert result["availability"] == "available"
     assert result["rain_probability"] == 0.0
-    assert result["release_at"] == race_start
+    assert result["release_at"] is None
+    assert result["valid_at"] == race_start
 
 
 def test_parse_forecast_marks_interval_without_provider_data_unavailable():

@@ -95,10 +95,10 @@ def insert_weather_snapshot(conn, race_id: int, snapshot: dict) -> None:
             """
             INSERT INTO weather_snapshots
                 (race_id, captured_at, rain_probability, temp_celsius, wind_speed, conditions,
-                 availability, issue_at, release_at)
+                 availability, issue_at, release_at, valid_at)
             VALUES
                 (:race_id, :captured_at, :rain_probability, :temp_celsius, :wind_speed, :conditions,
-                 :availability, :issue_at, :release_at)
+                 :availability, :issue_at, :release_at, :valid_at)
             """
         ),
         {
@@ -111,6 +111,7 @@ def insert_weather_snapshot(conn, race_id: int, snapshot: dict) -> None:
             "availability": snapshot.get("availability", "available"),
             "issue_at": snapshot.get("issue_at"),
             "release_at": snapshot.get("release_at"),
+            "valid_at": snapshot.get("valid_at"),
         },
     )
 
@@ -154,6 +155,7 @@ def parse_forecast(
             "conditions": "unavailable",
             "issue_at": datetime.now(timezone.utc),
             "release_at": None,
+            "valid_at": None,
         }
 
     # pop (probability of precipitation) is 0.0-1.0; convert to 0-100 percentage
@@ -175,7 +177,10 @@ def parse_forecast(
         "wind_speed": round(wind_speed, 2) if wind_speed is not None else None,
         "conditions": conditions,
         "issue_at": datetime.now(timezone.utc),
-        "release_at": _forecast_timestamp(entry),
+        # Provider release time is unavailable in this endpoint; valid time is
+        # stored separately and never mislabelled as a release timestamp.
+        "release_at": None,
+        "valid_at": _forecast_timestamp(entry),
     }
 
 

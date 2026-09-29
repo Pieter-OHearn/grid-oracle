@@ -259,6 +259,7 @@ def _is_wet_race_forecast(conn: Connection, race_id: int) -> bool:
             SELECT rain_probability
             FROM weather_snapshots
             WHERE race_id = :rid
+              AND availability = 'available'
             ORDER BY captured_at DESC
             LIMIT 1
             """

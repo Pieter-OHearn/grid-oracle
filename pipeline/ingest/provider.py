@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import random
 import time
 from dataclasses import dataclass
@@ -56,15 +57,17 @@ class ProviderAdapter:
         session: requests.Session | Any = requests,
     ) -> tuple[dict[str, Any], Path]:
         error: Exception | None = None
+        body: Any = None
         for attempt in range(attempts):
             self._budget_wait()
+            self._used += 1  # an attempted request consumes provider budget too
             try:
                 response = session.get(url, params=params, headers={"User-Agent": self.user_agent}, timeout=(5, 30))
-                self._used += 1
                 if response.status_code == 429:
                     raise requests.HTTPError("429 rate limited", response=response)
                 response.raise_for_status()
                 payload = response.json()
+                body = payload
                 if not isinstance(payload, dict):
                     raise ProviderContractError("provider payload must be an object")
                 validator(payload)
@@ -77,10 +80,36 @@ class ProviderAdapter:
                 ProviderContractError,
             ) as exc:
                 error = exc
-                if attempt + 1 < attempts:
-                    self.sleep(min(30.0, 0.5 * 2**attempt) + self.random() * 0.25)
+                response = getattr(exc, "response", None)
+                if response is not None:
+                    try:
+                        body = response.json()
+                    except ValueError:
+                        body = getattr(response, "text", None)
+                retryable = not isinstance(exc, requests.HTTPError) or getattr(response, "status_code", 0) in {
+                    429,
+                    408,
+                    425,
+                    500,
+                    502,
+                    503,
+                    504,
+                }
+                if retryable and attempt + 1 < attempts:
+                    retry_after = getattr(response, "headers", {}).get("Retry-After") if response else None
+                    try:
+                        delay = (
+                            float(retry_after)
+                            if retry_after is not None
+                            else min(30.0, 0.5 * 2**attempt) + self.random() * 0.25
+                        )
+                    except ValueError:
+                        delay = min(30.0, 0.5 * 2**attempt) + self.random() * 0.25
+                    self.sleep(delay)
+                    continue
+                break
         assert error is not None
-        self._quarantine(url, str(error))
+        self._quarantine(url, str(error), body)
         raise error
 
     def _snapshot(self, payload: Mapping[str, Any]) -> Path:
@@ -88,17 +117,22 @@ class ProviderAdapter:
         digest = sha256(raw).hexdigest()
         path = self.snapshot_root / self.name / f"{digest}.json"
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_bytes(raw)
+        temporary = path.with_suffix(".tmp")
+        temporary.write_bytes(raw)
+        os.replace(temporary, path)
         return path
 
-    def _quarantine(self, url: str, reason: str) -> Path:
+    def _quarantine(self, url: str, reason: str, body: Any = None) -> Path:
         raw = json.dumps(
-            {"provider": self.name, "url": url, "reason": reason, "at": datetime.now(UTC).isoformat()}, sort_keys=True
+            {"provider": self.name, "url": url, "reason": reason, "body": body, "at": datetime.now(UTC).isoformat()},
+            sort_keys=True,
         ).encode()
         digest = sha256(raw).hexdigest()
         path = self.snapshot_root / "quarantine" / f"{digest}.json"
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_bytes(raw)
+        temporary = path.with_suffix(".tmp")
+        temporary.write_bytes(raw)
+        os.replace(temporary, path)
         return path
 
 

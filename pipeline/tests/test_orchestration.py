@@ -1,7 +1,7 @@
 from datetime import UTC, datetime, timedelta
 
 import pytest
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 
 from pipeline.orchestration import (
     EVALUATE,
@@ -38,9 +38,32 @@ def event(*, race_id=7, lifecycle="scheduled", sprint=False):
 
 
 def ledger_at(now):
-    ledger = JobLedger(create_engine("sqlite://"), Clock(now))
+    ledger = JobLedger(ledger_engine(), Clock(now))
     ledger.reconcile(event())
     return ledger
+
+
+def ledger_engine():
+    """Minimal test schema; production schema is created only by Alembic."""
+    engine = create_engine("sqlite://")
+    with engine.begin() as conn:
+        conn.execute(
+            text("""CREATE TABLE orchestration_jobs (
+            job_key TEXT PRIMARY KEY, race_id INTEGER, kind TEXT, due_at TIMESTAMP,
+            payload JSON, status TEXT, attempts INTEGER, lease_owner TEXT,
+            lease_until TIMESTAMP, last_error TEXT, completed_at TIMESTAMP,
+            created_at TIMESTAMP, updated_at TIMESTAMP)""")
+        )
+        conn.execute(
+            text("""CREATE TABLE orchestration_job_dependencies (
+            job_key TEXT, dependency_key TEXT, PRIMARY KEY (job_key, dependency_key))""")
+        )
+        conn.execute(
+            text("""CREATE TABLE orchestration_calendar_revisions (
+            race_id INTEGER, fingerprint TEXT, observed_at TIMESTAMP, payload JSON,
+            PRIMARY KEY (race_id, fingerprint))""")
+        )
+    return engine
 
 
 def drain(ledger):
@@ -54,7 +77,7 @@ def drain(ledger):
 @pytest.mark.parametrize(
     "now,expected",
     [
-        (datetime(2026, 3, 14, 14, 59, tzinfo=UTC), {PRE_FEATURE}),
+        (datetime(2026, 3, 14, 14, 58, tzinfo=UTC), {PRE_FEATURE}),
         (datetime(2026, 3, 14, 16, tzinfo=UTC), {POST_PUBLISH}),
         (datetime(2026, 3, 15, 16, tzinfo=UTC), {RESULT_INGEST, EVALUATE}),
     ],
@@ -84,7 +107,7 @@ def test_incomplete_qualifying_is_visibly_blocked():
 
 
 def test_duplicate_workers_claim_only_one_job():
-    ledger = ledger_at(datetime(2026, 3, 14, 14, 59, tzinfo=UTC))
+    ledger = ledger_at(datetime(2026, 3, 14, 14, 58, tzinfo=UTC))
     first = ledger.claim_due("one")
     second = ledger.claim_due("two")
     assert first is not None
@@ -94,8 +117,8 @@ def test_duplicate_workers_claim_only_one_job():
 
 
 def test_expired_lease_is_recovered_after_restart():
-    clock = Clock(datetime(2026, 3, 14, 14, 59, tzinfo=UTC))
-    ledger = JobLedger(create_engine("sqlite://"), clock)
+    clock = Clock(datetime(2026, 3, 14, 14, 58, tzinfo=UTC))
+    ledger = JobLedger(ledger_engine(), clock)
     ledger.reconcile(event())
     job = ledger.claim_due("crashed", timedelta(seconds=1))
     assert job is not None
@@ -120,11 +143,13 @@ def test_revised_calendar_supersedes_pending_jobs_and_rebuilds_snapshot():
             __import__("sqlalchemy").text("SELECT count(*) FROM orchestration_jobs WHERE status='superseded'")
         ).scalar_one()
     assert superseded > 0
+    ledger.now = Clock(datetime(2026, 3, 14, 16, tzinfo=UTC))
+    assert ledger.claim_due("new-schedule") is not None
 
 
 def test_sprint_cutoff_uses_first_competitive_timestamp_and_postponed_has_no_jobs():
     sprint_jobs = {job.kind: job for job in weekend_graph(event(sprint=True))}
-    assert sprint_jobs[PRE_FEATURE].due_at == datetime(2026, 3, 13, 13, 59, tzinfo=UTC)
+    assert sprint_jobs[PRE_FEATURE].due_at == datetime(2026, 3, 12, 13, 59, tzinfo=UTC)
     assert weekend_graph(event(lifecycle="postponed")) == []
 
 
@@ -135,3 +160,30 @@ def test_weather_interval_distinguishes_unavailable_from_dry():
     dry = select_weather_for_interval([{"valid_at": start, "rain_probability": 0}], start, end)
     assert dry["availability"] == "available"
     assert dry["rain_probability"] == 0
+
+
+def test_sprint_restart_after_sprint_qualifying_blocks_pre_chain_at_its_own_cutoff():
+    clock = Clock(datetime(2026, 3, 13, 15, tzinfo=UTC))
+    ledger = JobLedger(ledger_engine(), clock)
+    ledger.reconcile(event(sprint=True))
+    assert ledger.claim_due("late") is None
+    graph = {job.kind: job for job in weekend_graph(event(sprint=True))}
+    assert ledger.status(graph[PRE_FEATURE].key) == "blocked"
+    assert ledger.status(graph["pre_weekend.predict"].key) == "blocked"
+
+
+def test_retry_is_delayed_and_terminal_failure_cascades_to_dependents():
+    clock = Clock(datetime(2026, 3, 14, 14, 58, tzinfo=UTC))
+    ledger = JobLedger(ledger_engine(), clock)
+    ledger.reconcile(event())
+    job = ledger.claim_due("worker")
+    assert job is not None
+    ledger.finish(job, "worker", RuntimeError("provider lag"))
+    assert ledger.status(job.key) == "pending"
+    assert ledger.claim_due("too-soon") is None
+    clock.value += timedelta(seconds=16)
+    retry = ledger.claim_due("worker")
+    assert retry is not None
+    ledger.finish(retry, "worker", JobBlocked("invalid field"))
+    assert ledger.status(retry.key) == "blocked"
+    assert ledger.status({job.kind: job for job in weekend_graph(event())}["pre_weekend.predict"].key) == "blocked"

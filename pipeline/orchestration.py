@@ -33,6 +33,14 @@ class JobBlocked(RuntimeError):
     """An eligibility/contract failure that must remain visible to operators."""
 
 
+class RetryableJobError(RuntimeError):
+    """A transient failure; the ledger schedules a bounded delayed retry."""
+
+
+class LeaseLost(RuntimeError):
+    """A worker tried to finish work after losing its lease."""
+
+
 @dataclass(frozen=True)
 class EventSchedule:
     race_id: int
@@ -71,8 +79,8 @@ class Job:
     payload: dict[str, Any]
 
 
-def _key(race_id: int, kind: str) -> str:
-    return f"race:{race_id}:{kind}"
+def _key(race_id: int, fingerprint: str, kind: str) -> str:
+    return f"race:{race_id}:{fingerprint[:16]}:{kind}"
 
 
 def weekend_graph(event: EventSchedule) -> list[Job]:
@@ -85,6 +93,10 @@ def weekend_graph(event: EventSchedule) -> list[Job]:
     if event.lifecycle in {"cancelled", "postponed"}:
         return []
     pre_cutoff = event.first_competitive() - timedelta(minutes=1)
+    # A chain needs room to complete before the contract cutoff.  It becomes
+    # eligible a day ahead (or immediately when a calendar arrives later), but
+    # it can never start or publish after the deadline.
+    pre_due = pre_cutoff - timedelta(days=1)
     qualifying = event.timestamp("Qualifying")
     race = event.timestamp("Race")
     payload = {
@@ -94,11 +106,12 @@ def weekend_graph(event: EventSchedule) -> list[Job]:
         "schedule_fingerprint": schedule_fingerprint(event),
         "race_start": race.isoformat(),
         "qualifying_start": qualifying.isoformat(),
+        "pre_cutoff": pre_cutoff.isoformat(),
     }
     specs = (
-        (PRE_FEATURE, pre_cutoff, ()),
-        (PRE_PREDICT, pre_cutoff, (PRE_FEATURE,)),
-        (PRE_PUBLISH, pre_cutoff, (PRE_PREDICT,)),
+        (PRE_FEATURE, pre_due, ()),
+        (PRE_PREDICT, pre_due, (PRE_FEATURE,)),
+        (PRE_PUBLISH, pre_due, (PRE_PREDICT,)),
         (QUALIFY_INGEST, qualifying + timedelta(minutes=45), ()),
         (POST_FEATURE, qualifying + timedelta(minutes=45), (QUALIFY_INGEST,)),
         (POST_PREDICT, qualifying + timedelta(minutes=45), (POST_FEATURE,)),
@@ -109,11 +122,14 @@ def weekend_graph(event: EventSchedule) -> list[Job]:
     )
     return [
         Job(
-            key=_key(event.race_id, kind),
+            key=_key(event.race_id, payload["schedule_fingerprint"], kind),
             race_id=event.race_id,
             kind=kind,
             due_at=due,
-            payload={**payload, "depends_on": [_key(event.race_id, dep) for dep in dependencies]},
+            payload={
+                **payload,
+                "depends_on": [_key(event.race_id, payload["schedule_fingerprint"], dep) for dep in dependencies],
+            },
         )
         for kind, due, dependencies in specs
     ]
@@ -135,36 +151,9 @@ class JobLedger:
         self.engine, self.now = engine, now
 
     def initialize(self) -> None:
-        with self.engine.begin() as conn:
-            conn.execute(
-                text("""
-                CREATE TABLE IF NOT EXISTS orchestration_jobs (
-                  job_key VARCHAR(220) PRIMARY KEY, race_id INTEGER NOT NULL,
-                  kind VARCHAR(80) NOT NULL, due_at TIMESTAMP NOT NULL,
-                  payload JSON NOT NULL, status VARCHAR(20) NOT NULL,
-                  attempts INTEGER NOT NULL DEFAULT 0, lease_owner VARCHAR(100),
-                  lease_until TIMESTAMP, last_error TEXT, completed_at TIMESTAMP,
-                  created_at TIMESTAMP NOT NULL, updated_at TIMESTAMP NOT NULL
-                )
-            """)
-            )
-            conn.execute(
-                text("""
-                CREATE TABLE IF NOT EXISTS orchestration_job_dependencies (
-                  job_key VARCHAR(220) NOT NULL, dependency_key VARCHAR(220) NOT NULL,
-                  PRIMARY KEY (job_key, dependency_key)
-                )
-            """)
-            )
-            conn.execute(
-                text("""
-                CREATE TABLE IF NOT EXISTS orchestration_calendar_revisions (
-                  race_id INTEGER NOT NULL, fingerprint VARCHAR(64) NOT NULL,
-                  observed_at TIMESTAMP NOT NULL, payload JSON NOT NULL,
-                  PRIMARY KEY (race_id, fingerprint)
-                )
-            """)
-            )
+        """Fail clearly when the Alembic-owned ledger migration is missing."""
+        with self.engine.connect() as conn:
+            conn.execute(text("SELECT 1 FROM orchestration_jobs WHERE 1=0"))
 
     def reconcile(self, event: EventSchedule) -> None:
         """Upsert a graph and supersede pending jobs when a calendar changes."""
@@ -179,11 +168,8 @@ class JobLedger:
             ).fetchall()
             if old and all(row[0] != fingerprint for row in old):
                 conn.execute(
-                    text(
-                        "UPDATE orchestration_jobs SET status='superseded', "
-                        "updated_at=:now WHERE race_id=:race_id "
-                        "AND status='pending'"
-                    ),
+                    text("""UPDATE orchestration_jobs SET status='superseded', updated_at=:now
+                    WHERE race_id=:race_id AND status IN ('pending', 'running')"""),
                     {"race_id": event.race_id, "now": now},
                 )
             conn.execute(
@@ -202,7 +188,11 @@ class JobLedger:
                     text("""INSERT INTO orchestration_jobs
                     (job_key, race_id, kind, due_at, payload, status, attempts, created_at, updated_at)
                     VALUES (:job_key,:race_id,:kind,:due_at,:payload,'pending',0,:now,:now)
-                    ON CONFLICT (job_key) DO NOTHING"""),
+                    ON CONFLICT (job_key) DO UPDATE SET
+                      due_at=excluded.due_at, payload=excluded.payload,
+                      status=CASE WHEN orchestration_jobs.status='superseded' THEN 'pending'
+                                  ELSE orchestration_jobs.status END,
+                      updated_at=excluded.updated_at"""),
                     {
                         "job_key": job.key,
                         "race_id": job.race_id,
@@ -219,7 +209,7 @@ class JobLedger:
                         {"job_key": job.key, "dependency_key": dependency},
                     )
 
-    def claim_due(self, worker: str, lease_for: timedelta = timedelta(minutes=5)) -> Job | None:
+    def claim_due(self, worker: str, lease_for: timedelta = timedelta(minutes=30)) -> Job | None:
         now = self.now()
         with self.engine.begin() as conn:
             while row := conn.execute(
@@ -235,14 +225,15 @@ class JobLedger:
                 {"now": now},
             ).fetchone():
                 payload = json.loads(row[4]) if isinstance(row[4], str) else row[4]
-                qualifying_at = datetime.fromisoformat(payload["qualifying_start"].replace("Z", "+00:00"))
-                if row[2].startswith("pre_weekend.") and now >= qualifying_at:
+                pre_cutoff = datetime.fromisoformat(payload["pre_cutoff"].replace("Z", "+00:00"))
+                if row[2].startswith("pre_weekend.") and now >= pre_cutoff:
                     conn.execute(
                         text("""UPDATE orchestration_jobs SET status='blocked',
                         last_error='pre-weekend cutoff elapsed before execution',
                         updated_at=:now WHERE job_key=:job_key"""),
                         {"now": now, "job_key": row[0]},
                     )
+                    self._cascade_blocked(conn, row[0], "dependency missed pre-weekend cutoff", now)
                     continue
                 updated = conn.execute(
                     text("""UPDATE orchestration_jobs SET status='running', attempts=attempts+1,
@@ -254,17 +245,67 @@ class JobLedger:
                     return Job(row[0], row[1], row[2], row[3], payload)
             return None
 
-    def recover_expired_leases(self) -> int:
+    def _cascade_blocked(self, conn: Any, dependency_key: str, reason: str, now: datetime) -> None:
+        """Make terminal dependency failures visible instead of leaving stale pending jobs."""
+        frontier = [dependency_key]
+        while frontier:
+            key = frontier.pop()
+            children = (
+                conn.execute(
+                    text("SELECT job_key FROM orchestration_job_dependencies WHERE dependency_key=:key"),
+                    {"key": key},
+                )
+                .scalars()
+                .all()
+            )
+            for child in children:
+                updated = conn.execute(
+                    text("""UPDATE orchestration_jobs SET status='blocked', last_error=:reason,
+                    updated_at=:now WHERE job_key=:job_key AND status IN ('pending', 'running')"""),
+                    {"reason": reason, "now": now, "job_key": child},
+                ).rowcount
+                if updated:
+                    frontier.append(child)
+
+    def recover_expired_leases(self, max_attempts: int = 12) -> int:
         now = self.now()
         with self.engine.begin() as conn:
-            return conn.execute(
+            expired = conn.execute(
                 text("""UPDATE orchestration_jobs SET status='pending', lease_owner=NULL, lease_until=NULL,
                 updated_at=:now, last_error='lease expired; reconciled for retry'
-                WHERE status='running' AND lease_until < :now"""),
-                {"now": now},
+                WHERE status='running' AND lease_until < :now AND attempts < :max_attempts"""),
+                {"now": now, "max_attempts": max_attempts},
             ).rowcount
+            terminal = (
+                conn.execute(
+                    text("""SELECT job_key FROM orchestration_jobs WHERE status='running'
+                AND lease_until < :now AND attempts >= :max_attempts"""),
+                    {"now": now, "max_attempts": max_attempts},
+                )
+                .scalars()
+                .all()
+            )
+            for key in terminal:
+                conn.execute(
+                    text("""UPDATE orchestration_jobs SET status='blocked', lease_owner=NULL,
+                    lease_until=NULL, last_error='lease expired after retry budget', updated_at=:now
+                    WHERE job_key=:job_key"""),
+                    {"now": now, "job_key": key},
+                )
+                self._cascade_blocked(conn, key, "dependency lease retry budget exhausted", now)
+            return expired + len(terminal)
 
-    def finish(self, job: Job, worker: str, error: Exception | None = None, max_attempts: int = 4) -> None:
+    def heartbeat(self, job: Job, worker: str, lease_for: timedelta = timedelta(minutes=30)) -> None:
+        with self.engine.begin() as conn:
+            updated = conn.execute(
+                text("""UPDATE orchestration_jobs SET lease_until=:lease_until, updated_at=:now
+                WHERE job_key=:job_key AND status='running' AND lease_owner=:worker"""),
+                {"lease_until": self.now() + lease_for, "now": self.now(), "job_key": job.key, "worker": worker},
+            ).rowcount
+            if updated != 1:
+                raise LeaseLost(f"lease lost for {job.key}")
+
+    def finish(self, job: Job, worker: str, error: Exception | None = None, max_attempts: int = 12) -> None:
         now = self.now()
         if error is None:
             status, message = "succeeded", None
@@ -273,19 +314,25 @@ class JobLedger:
         else:
             status, message = "pending", str(error)
         with self.engine.begin() as conn:
-            conn.execute(
+            retry_at = now + timedelta(seconds=min(900, 15 * 2 ** max(0, self.attempts(job.key) - 1)))
+            updated = conn.execute(
                 text("""UPDATE orchestration_jobs SET status=:status, lease_owner=NULL, lease_until=NULL,
-                last_error=:message, completed_at=:completed_at, updated_at=:now
+                last_error=:message, completed_at=:completed_at, due_at=:due_at, updated_at=:now
                 WHERE job_key=:job_key AND status='running' AND lease_owner=:worker"""),
                 {
                     "status": status,
                     "message": message,
                     "completed_at": now if status == "succeeded" else None,
+                    "due_at": retry_at if status == "pending" else job.due_at,
                     "now": now,
                     "job_key": job.key,
                     "worker": worker,
                 },
-            )
+            ).rowcount
+            if updated != 1:
+                raise LeaseLost(f"lease lost before finishing {job.key}")
+            if status == "blocked":
+                self._cascade_blocked(conn, job.key, f"dependency blocked: {message}", now)
 
     def attempts(self, job_key: str) -> int:
         with self.engine.connect() as conn:
@@ -326,9 +373,16 @@ def qualifying_publication_ready(*, ingested_entries: int, expected_entries: int
 
 
 def select_weather_for_interval(records: Iterable[dict[str, Any]], start: datetime, end: datetime) -> dict[str, Any]:
-    """Select weather overlapping the race interval; unknown is never rewritten dry."""
-    matches = [record for record in records if start <= record["valid_at"].astimezone(UTC) <= end]
+    """Select the earliest provider point within the race interval.
+
+    Provider point forecasts have no duration metadata, so "overlap" means a
+    provider-valid timestamp in the interval.  This is deliberately identical
+    to ``fetch_weather._select_race_interval_entry``.
+    """
+    matches = sorted(
+        (record for record in records if start <= record["valid_at"].astimezone(UTC) <= end),
+        key=lambda record: record["valid_at"],
+    )
     if not matches:
         return {"availability": "unavailable", "rain_probability": None}
-    rainy = max(matches, key=lambda record: record.get("rain_probability") or 0)
-    return {"availability": "available", **rainy}
+    return {"availability": "available", **matches[0]}

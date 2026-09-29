@@ -13,6 +13,7 @@ class ConfigurationError(ValueError):
 class PipelineSettings:
     database_url: str
     openweather_api_key: str | None
+    durable_scheduler_enabled: bool
 
 
 def load_pipeline_settings(env: dict[str, str] | None = None, *, require_weather_key: bool = False) -> PipelineSettings:
@@ -29,4 +30,9 @@ def load_pipeline_settings(env: dict[str, str] | None = None, *, require_weather
         raise ConfigurationError(
             "OPENWEATHER_API_KEY is required for scheduler mode; sample mode never starts the scheduler."
         )
-    return PipelineSettings(database_url=database_url, openweather_api_key=weather_key)
+    durable = values.get("GRIDORACLE_DURABLE_SCHEDULER", "").strip().lower() in {"1", "true", "yes"}
+    return PipelineSettings(
+        database_url=database_url,
+        openweather_api_key=weather_key,
+        durable_scheduler_enabled=durable,
+    )
