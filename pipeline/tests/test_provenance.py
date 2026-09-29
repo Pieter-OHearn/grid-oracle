@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
+from decimal import Decimal
 
 import pytest
 from gridoracle.provenance.artifacts import (
@@ -12,9 +13,9 @@ from gridoracle.provenance.artifacts import (
 from gridoracle.provenance.store import (
     ForecastEntry,
     ForecastRunInput,
-    IdempotencyConflict,
     ImmutableProvenanceStore,
     ProvenanceError,
+    _values_match,
 )
 from scripts.db_migrate import LEGACY_CORE_TABLES, upgrade_database
 from sqlalchemy import create_engine, text
@@ -60,6 +61,16 @@ def provenance(tmp_path):
                     """
                 ),
                 {"recorded_at": NOW.isoformat()},
+            )
+            connection.execute(
+                text(
+                    """
+                    INSERT INTO event_sessions
+                    (race_id, kind, scheduled_at, revision, status)
+                    VALUES (7, 'race', :scheduled_at, 1, 'scheduled')
+                    """
+                ),
+                {"scheduled_at": RACE_START.isoformat()},
             )
         artifacts = ContentAddressedArtifactStore(tmp_path / "artifacts")
         store = ImmutableProvenanceStore(engine, artifacts)
@@ -150,7 +161,7 @@ def test_two_horizons_coexist_and_identical_retry_preserves_history(provenance):
     assert store.create_forecast_run(pre) == pre_id
     store.add_entry_outputs(pre_id, _entries())
     store.add_entry_outputs(pre_id, _entries())
-    assert store.publish(pre_id, race_start_at=RACE_START, published_at=NOW) == pre_id
+    assert store.publish(pre_id, published_at=NOW) == pre_id
 
     post = _run(
         key="post-qualifying-7",
@@ -159,7 +170,7 @@ def test_two_horizons_coexist_and_identical_retry_preserves_history(provenance):
     )
     post_id = store.create_forecast_run(post)
     store.add_entry_outputs(post_id, _entries())
-    store.publish(post_id, race_start_at=RACE_START, published_at=NOW + timedelta(days=1))
+    store.publish(post_id, published_at=NOW + timedelta(days=1))
 
     with engine.connect() as connection:
         publications = connection.execute(
@@ -172,11 +183,45 @@ def test_two_horizons_coexist_and_identical_retry_preserves_history(provenance):
     assert publications == [("post_qualifying", post_id), ("pre_weekend", pre_id)]
     assert outputs == 2
 
-    with pytest.raises(IdempotencyConflict, match="different immutable output"):
+    with pytest.raises(ProvenanceError, match="published forecast"):
         store.add_entry_outputs(
             pre_id,
             [ForecastEntry("entry:driver-1", {"win_probability": 0.1, "rank": 1})],
         )
+
+
+def test_entry_count_and_publication_time_are_enforced(provenance):
+    store, engine, _artifacts = provenance
+    run_id = store.create_forecast_run(_run(key="field-cap"))
+    with pytest.raises(ProvenanceError, match="exceed"):
+        store.add_entry_outputs(
+            run_id,
+            [
+                *_entries(),
+                ForecastEntry("entry:driver-3", {"win_probability": 0.0, "rank": 3}),
+            ],
+        )
+
+    future_issue = _run(key="before-issue", issue_at=NOW + timedelta(hours=1))
+    future_id = store.create_forecast_run(future_issue)
+    store.add_entry_outputs(future_id, _entries())
+    with pytest.raises(ProvenanceError, match="before issue"):
+        store.publish(future_id, published_at=NOW)
+
+    sealed_id = store.create_forecast_run(_run(key="database-field-cap"))
+    store.add_entry_outputs(sealed_id, _entries())
+    with pytest.raises(Exception, match="immutable forecast field"):
+        with engine.begin() as connection:
+            connection.execute(
+                text(
+                    """
+                    INSERT INTO forecast_entry_outputs
+                    (forecast_run_id, entry_key, output, output_sha256)
+                    VALUES (:run_id, 'entry:driver-3', '{}', 'not-a-real-hash')
+                    """
+                ),
+                {"run_id": sealed_id},
+            )
 
 
 def test_incomplete_field_and_post_race_run_cannot_publish(provenance):
@@ -184,17 +229,13 @@ def test_incomplete_field_and_post_race_run_cannot_publish(provenance):
     incomplete_id = store.create_forecast_run(_run(key="partial-field"))
     store.add_entry_outputs(incomplete_id, _entries()[:1])
     with pytest.raises(ProvenanceError, match="incomplete field"):
-        store.publish(incomplete_id, race_start_at=RACE_START, published_at=NOW)
+        store.publish(incomplete_id, published_at=NOW)
 
     post_race = _run(key="after-race", issue_at=RACE_START + timedelta(minutes=1))
     post_race_id = store.create_forecast_run(post_race)
     store.add_entry_outputs(post_race_id, _entries())
     with pytest.raises(ProvenanceError, match="post-race output"):
-        store.publish(
-            post_race_id,
-            race_start_at=RACE_START,
-            published_at=RACE_START + timedelta(minutes=2),
-        )
+        store.publish(post_race_id, published_at=RACE_START + timedelta(minutes=2))
 
 
 def test_invalid_hash_and_model_path_mismatch_fail(provenance):
@@ -211,6 +252,15 @@ def test_invalid_hash_and_model_path_mismatch_fail(provenance):
         artifacts.put_bytes("datasets/declared-bad", b"bytes", declared_sha256="f" * 64)
 
     other_model = artifacts.put_bytes("models/not-champion", b"different-model")
+    with pytest.raises(ProvenanceError, match="require model_version_id"):
+        store.record_model_manifest(
+            model_manifest_id="no-model-version",
+            model_id="not-champion",
+            artifact_path=other_model.path,
+            sha256=other_model.sha256,
+            manifest={},
+            model_version_id=None,
+        )
     with pytest.raises(ProvenanceError, match="model ID/artifact path mismatch"):
         store.record_model_manifest(
             model_manifest_id="wrong-path",
@@ -218,6 +268,7 @@ def test_invalid_hash_and_model_path_mismatch_fail(provenance):
             artifact_path=other_model.path,
             sha256=other_model.sha256,
             manifest={},
+            model_version_id=3,
         )
 
 
@@ -225,7 +276,7 @@ def test_evaluation_revisions_and_fresh_reproduction_do_not_change_forecast(prov
     store, engine, artifacts = provenance
     run_id = store.create_forecast_run(_run(key="evaluation-target"))
     store.add_entry_outputs(run_id, _entries())
-    store.publish(run_id, race_start_at=RACE_START, published_at=NOW)
+    store.publish(run_id, published_at=NOW)
     with engine.connect() as connection:
         before = connection.execute(
             text("SELECT output_sha256 FROM forecast_entry_outputs WHERE forecast_run_id = :run_id ORDER BY entry_key"),
@@ -271,6 +322,45 @@ def test_evaluation_revisions_and_fresh_reproduction_do_not_change_forecast(prov
             )
 
 
+def test_evaluation_rejects_other_race_result_and_schedule_is_database_owned(provenance):
+    store, engine, _artifacts = provenance
+    run_id = store.create_forecast_run(_run(key="race-bound-evaluation"))
+    store.add_entry_outputs(run_id, _entries())
+    with engine.begin() as connection:
+        connection.execute(text("INSERT INTO races (id) VALUES (8)"))
+        connection.execute(
+            text(
+                """
+                INSERT INTO result_revisions
+                (race_id, revision, source, reason, is_official, recorded_at)
+                VALUES (8, 1, 'fixture', 'other race', 1, :recorded_at)
+                """
+            ),
+            {"recorded_at": NOW.isoformat()},
+        )
+        connection.execute(
+            text(
+                """
+                INSERT INTO event_sessions
+                (race_id, kind, scheduled_at, revision, status)
+                VALUES (7, 'race', :scheduled_at, 2, 'revised')
+                """
+            ),
+            {"scheduled_at": (NOW - timedelta(minutes=1)).isoformat()},
+        )
+    with pytest.raises(ProvenanceError, match="result revision must belong"):
+        store.record_evaluation(
+            evaluation_id="wrong-race",
+            forecast_run_id=run_id,
+            result_revision_id=3,
+            evaluator_manifest={},
+            metrics={},
+            evaluated_at=NOW,
+        )
+    with pytest.raises(ProvenanceError, match="post-race output"):
+        store.publish(run_id, published_at=NOW)
+
+
 def test_legacy_import_preserves_known_values_without_inventing_lineage(provenance):
     store, engine, _artifacts = provenance
     legacy_time = datetime(2024, 11, 3, 8, 30, tzinfo=timezone.utc)
@@ -295,10 +385,12 @@ def test_legacy_import_preserves_known_values_without_inventing_lineage(provenan
     with engine.connect() as connection:
         row = connection.execute(
             text(
-                "SELECT provenance_grade, issue_at, input_manifest FROM forecast_runs WHERE forecast_run_id = :run_id"
+                "SELECT horizon, provenance_grade, issue_at, input_manifest "
+                "FROM forecast_runs WHERE forecast_run_id = :run_id"
             ),
             {"run_id": run_id},
         ).one()
+    assert row.horizon == "unknown"
     assert row.provenance_grade == "legacy_unverified"
     assert legacy_time.isoformat() in str(row.issue_at)
     assert "unknown_fields" in row.input_manifest
@@ -315,4 +407,23 @@ def test_legacy_import_preserves_known_values_without_inventing_lineage(provenan
     assert "legacy_prediction_id" in str(preserved)
     assert "0.8" in str(preserved)
     with pytest.raises(ProvenanceError, match="legacy_unverified"):
-        store.publish(run_id, race_start_at=RACE_START, published_at=NOW)
+        store.publish(run_id, published_at=NOW)
+
+
+def test_postgresql_decoded_values_and_decimal_legacy_outputs_are_supported(provenance):
+    store, _engine, _artifacts = provenance
+    assert _values_match("manifest", {"seed": 7}, '{"seed":7}')
+    assert _values_match("retrieved_at", NOW, NOW.isoformat())
+    run_id = store.import_legacy_forecast(
+        race_id=7,
+        model_version_id=3,
+        created_at=NOW,
+        entries=[ForecastEntry("legacy:decimal", {"confidence_score": Decimal("0.8000")})],
+        legacy_key="decimal-output",
+    )
+    with store.engine.connect() as connection:
+        output = connection.execute(
+            text("SELECT output FROM forecast_entry_outputs WHERE forecast_run_id = :run_id"),
+            {"run_id": run_id},
+        ).scalar_one()
+    assert "0.8000" in output

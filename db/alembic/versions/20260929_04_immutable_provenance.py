@@ -81,6 +81,70 @@ def _drop_immutable_triggers() -> None:
             op.execute(f"DROP TRIGGER trg_{table}_immutable_delete")
 
 
+def _publication_entry_trigger() -> None:
+    dialect = op.get_bind().dialect.name
+    if dialect == "postgresql":
+        op.execute(
+            """
+            CREATE FUNCTION gridoracle_prevent_invalid_entry_append()
+            RETURNS trigger AS $$
+            BEGIN
+                IF EXISTS (
+                    SELECT 1 FROM forecast_publications
+                    WHERE forecast_run_id = NEW.forecast_run_id
+                ) THEN
+                    RAISE EXCEPTION 'cannot append entries to a published forecast run';
+                END IF;
+                IF (
+                    SELECT count(*) FROM forecast_entry_outputs
+                    WHERE forecast_run_id = NEW.forecast_run_id
+                ) >= (
+                    SELECT expected_entry_count FROM forecast_runs
+                    WHERE forecast_run_id = NEW.forecast_run_id
+                ) THEN
+                    RAISE EXCEPTION 'entry outputs exceed the declared field size';
+                END IF;
+                RETURN NEW;
+            END;
+            $$ LANGUAGE plpgsql
+            """
+        )
+        op.execute(
+            """
+            CREATE TRIGGER trg_forecast_entry_outputs_append
+            BEFORE INSERT ON forecast_entry_outputs
+            FOR EACH ROW EXECUTE FUNCTION gridoracle_prevent_invalid_entry_append()
+            """
+        )
+    else:
+        op.execute(
+            """
+            CREATE TRIGGER trg_forecast_entry_outputs_append
+            BEFORE INSERT ON forecast_entry_outputs
+            WHEN EXISTS (
+                SELECT 1 FROM forecast_publications
+                WHERE forecast_run_id = NEW.forecast_run_id
+            ) OR (
+                SELECT count(*) FROM forecast_entry_outputs
+                WHERE forecast_run_id = NEW.forecast_run_id
+            ) >= (
+                SELECT expected_entry_count FROM forecast_runs
+                WHERE forecast_run_id = NEW.forecast_run_id
+            )
+            BEGIN
+                SELECT RAISE(ABORT, 'invalid append to immutable forecast field');
+            END
+            """
+        )
+
+
+def _drop_publication_entry_trigger() -> None:
+    dialect = op.get_bind().dialect.name
+    op.execute("DROP TRIGGER trg_forecast_entry_outputs_append")
+    if dialect == "postgresql":
+        op.execute("DROP FUNCTION gridoracle_prevent_invalid_entry_append()")
+
+
 def upgrade() -> None:
     op.create_table(
         "raw_provider_snapshots",
@@ -121,7 +185,7 @@ def upgrade() -> None:
             "model_version_id",
             sa.Integer(),
             sa.ForeignKey("model_versions.id"),
-            nullable=True,
+            nullable=False,
         ),
         sa.Column("artifact_path", sa.String(length=700), nullable=False, unique=True),
         sa.Column("sha256", sa.String(length=64), nullable=False, unique=True),
@@ -196,7 +260,7 @@ def upgrade() -> None:
         sa.Column("reproduction_tolerance", sa.Float(), nullable=False),
         sa.Column("run_fingerprint", sa.String(length=64), nullable=False, unique=True),
         sa.CheckConstraint(
-            "horizon IN ('pre_weekend', 'post_qualifying')",
+            "horizon IN ('pre_weekend', 'post_qualifying', 'unknown')",
             name="ck_forecast_runs_horizon",
         ),
         sa.CheckConstraint(
@@ -251,9 +315,11 @@ def upgrade() -> None:
         sa.Column("published_at", sa.DateTime(timezone=True), nullable=False),
     )
     _immutable_triggers()
+    _publication_entry_trigger()
 
 
 def downgrade() -> None:
+    _drop_publication_entry_trigger()
     _drop_immutable_triggers()
     for table in (
         "forecast_publications",

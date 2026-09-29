@@ -17,7 +17,10 @@ models/<model-id>/sha256/<lowercase-sha256>
 The database stores the logical path and SHA-256 separately. Both must verify
 before a raw snapshot, dataset, feature snapshot, model or calibrator manifest
 is inserted. A model manifest additionally requires its path to match its
-declared model ID exactly. Absolute paths, traversal and incorrect hashes fail.
+declared model ID exactly and a non-null legacy `model_version_id`. Files are
+first fsynced at an unpublished same-directory temporary path, then atomically
+linked into their content-addressed path. Absolute paths, traversal and
+incorrect hashes fail.
 
 Example model manifest:
 
@@ -42,14 +45,19 @@ legacy timing/lineage.
 
 The run ID is a SHA-256 fingerprint of this immutable input. Retry with the
 same idempotency key and fingerprint returns the original run; a different
-payload fails. Entry output rows are similarly write-once and content-hashed.
+payload fails. This comparison normalizes PostgreSQL-decoded JSON and timestamp
+values rather than comparing driver return types. Entry output rows are
+similarly write-once and content-hashed; no append is allowed after publication
+or once the declared field size is reached.
 
 Publication inserts one immutable `forecast_publications` pointer, keyed by
 `race_id` and horizon, in the same transaction that checks the exact expected
 field count. Thus pre-weekend and post-qualifying pointers coexist, while a
 partial field, post-race issue/publish time, result-linked run or conflicting
-pointer cannot become a live forecast. A pointer is deliberately not a “latest
-model” selector.
+pointer cannot become a live forecast. `publish` reads the latest persisted
+`event_sessions` `race` revision inside its transaction, so callers cannot
+supply a stale race start; it also rejects publication before issue time. A
+pointer is deliberately not a “latest model” selector.
 
 ## Evaluation and result corrections
 
@@ -81,7 +89,9 @@ never inferred. `import_legacy_predictions` is the explicit, non-automatic
 operator action that groups existing `predictions` rows by their known race,
 model and creation time before calling that importer. It is never invoked by
 Alembic or application startup. Legacy records cannot be published as live
-forecasts.
+forecasts. Their horizon is stored as `unknown`, not guessed as pre-weekend or
+post-qualifying. Importing a field and its output rows is one transaction, and
+legacy `NUMERIC` confidence values are retained as their exact decimal text.
 
 Do not downgrade a database containing WP03 history as a normal rollback: the
 Alembic downgrade removes the additive tables and therefore requires a verified

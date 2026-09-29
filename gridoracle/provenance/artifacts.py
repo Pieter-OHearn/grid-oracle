@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import os
 import re
 from dataclasses import dataclass
 from hashlib import sha256
 from pathlib import Path, PurePosixPath
+from tempfile import mkstemp
 from typing import Final
 
 _SHA256_RE: Final = re.compile(r"^[0-9a-f]{64}$")
@@ -75,11 +77,22 @@ class ContentAddressedArtifactStore:
         logical_path = f"{namespace}/sha256/{digest}"
         target = self.root / logical_path
         target.parent.mkdir(parents=True, exist_ok=True)
+        file_descriptor, temporary_path = mkstemp(
+            prefix=".artifact-", dir=target.parent
+        )
         try:
-            with target.open("xb") as artifact:
+            with os.fdopen(file_descriptor, "wb") as artifact:
                 artifact.write(content)
-        except FileExistsError:
-            self.verify(logical_path, digest)
+                artifact.flush()
+                os.fsync(artifact.fileno())
+            try:
+                # link(2) refuses to replace an existing target. That gives
+                # concurrent writers a read-only, fully-written winner.
+                os.link(temporary_path, target)
+            except FileExistsError:
+                self.verify(logical_path, digest)
+        finally:
+            Path(temporary_path).unlink(missing_ok=True)
         return ArtifactRef(logical_path, digest, len(content))
 
     def verify(self, logical_path: str, expected_sha256: str) -> ArtifactRef:
