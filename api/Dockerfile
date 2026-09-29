@@ -9,6 +9,10 @@ COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev --extra api
 
 COPY api ./api
+COPY gridoracle ./gridoracle
+COPY scripts ./scripts
+COPY db/alembic ./db/alembic
+COPY alembic.ini ./
 
 ENV PATH="/app/.venv/bin:$PATH"
 
