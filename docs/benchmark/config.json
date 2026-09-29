@@ -1,0 +1,34 @@
+{
+  "protocol_version": "wp06-v1",
+  "primary_metric": "winner_log_loss",
+  "epsilon": 1e-15,
+  "seed": 6062026,
+  "bootstrap_replicates": 2000,
+  "block_races": 4,
+  "calibration_bins": 10,
+  "rank_temperature": 4.0,
+  "baselines": {
+    "pre_weekend": ["uniform", "standings", "recent_form"],
+    "post_qualifying": ["uniform", "standings", "recent_form", "qualifying"]
+  },
+  "promotion": {
+    "min_races": 40,
+    "min_blocks": 10,
+    "min_mean_log_loss_improvement": 0.01,
+    "min_paired_ci_lower": 0.0,
+    "max_rank_mae_regression": 0.1,
+    "max_rank_correlation_drop": 0.02,
+    "max_top_k_overlap_drop": 0.02,
+    "max_winner_hit_drop": 0.02,
+    "max_brier_regression": 0.005,
+    "max_ece_regression": 0.01,
+    "max_ece": 0.05,
+    "min_coverage": 0.95,
+    "max_coverage_drop": 0.0,
+    "slice_min_races": 10,
+    "max_slice_log_loss_regression": 0.1,
+    "max_inference_seconds_per_race": 2.0,
+    "max_peak_rss_mib": 1024,
+    "min_shadow_races": 6
+  }
+}
