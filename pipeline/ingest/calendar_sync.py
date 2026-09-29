@@ -11,6 +11,7 @@ import pandas as pd
 from sqlalchemy.engine import Engine
 
 from pipeline.ingest.upsert_helpers import upsert_circuit_from_event, upsert_race
+from pipeline.orchestration import EventSchedule
 
 logger = logging.getLogger(__name__)
 
@@ -103,3 +104,15 @@ def _to_utc_datetime(val: Any) -> datetime:
     if val.tzinfo is None:
         val = val.replace(tzinfo=timezone.utc)
     return val
+
+
+def to_orchestration_event(event: dict, expected_entries: int) -> EventSchedule:
+    """Convert a refreshed provider calendar event into a timestamped job graph input."""
+    return EventSchedule(
+        race_id=event["race_id"],
+        season=event["season"],
+        round_number=event["round"],
+        sessions=event["session_times"],
+        expected_entries=expected_entries,
+        lifecycle=event.get("lifecycle", "scheduled"),
+    )

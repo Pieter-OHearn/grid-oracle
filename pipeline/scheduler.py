@@ -129,12 +129,21 @@ def _compute_job_times(event: dict) -> list[tuple[str, datetime]]:
                 race_time + timedelta(minutes=RACE_GRACE_MINUTES),
             )
         )
-        jobs.append(
-            (
-                JOB_PREDICTIONS_PREWEEKEND,
-                _compute_preweekend_thursday(race_time),
+        # Do not infer a cutoff from a date or weekday. Calendar revisions and
+        # sprint weekends change real session timestamps; the durable WP04
+        # graph applies the same rule with dependencies and a ledger.
+        competitive = [
+            value
+            for name, value in session_times.items()
+            if "practice" not in name.casefold() and "testing" not in name.casefold()
+        ]
+        if competitive:
+            jobs.append(
+                (
+                    JOB_PREDICTIONS_PREWEEKEND,
+                    min(competitive) - timedelta(minutes=1),
+                )
             )
-        )
 
     if quali_time:
         jobs.append(
@@ -236,18 +245,17 @@ def _should_catch_up(job_type: str, event: dict, engine: Engine) -> bool:
             row = conn.execute(
                 text("""
                     SELECT is_completed,
-                           (SELECT COUNT(*) FROM race_results WHERE race_id = :rid),
-                           (SELECT COUNT(*) FROM predictions WHERE race_id = :rid)
+                           (SELECT COUNT(*) FROM race_results WHERE race_id = :rid)
                     FROM races WHERE id = :rid
                 """),
                 {"rid": race_id},
             ).fetchone()
             if row is None:
                 return False
-            is_completed, result_count, prediction_count = row
-            # Skip if race already completed, results already present, or predictions
-            # already generated (post_race_pipeline already ran, e.g. via bootstrap).
-            if is_completed or result_count > 0 or prediction_count > 0:
+            is_completed, result_count = row
+            # Result catch-up is independent of publication state: an existing
+            # forecast must never suppress ingestion/evaluation after a race.
+            if is_completed or result_count > 0:
                 return False
             return True
 
