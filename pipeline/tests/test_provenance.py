@@ -32,6 +32,16 @@ def provenance(tmp_path):
         with engine.begin() as connection:
             for table in sorted(LEGACY_CORE_TABLES):
                 connection.execute(text(f"CREATE TABLE {table} (id INTEGER PRIMARY KEY)"))
+            for column in (
+                "race_id INTEGER",
+                "model_version_id INTEGER",
+                "driver_id INTEGER",
+                "constructor_id INTEGER",
+                "predicted_position INTEGER",
+                "confidence_score REAL",
+                "created_at TEXT",
+            ):
+                connection.execute(text(f"ALTER TABLE predictions ADD COLUMN {column}"))
             connection.execute(text("INSERT INTO races (id) VALUES (7)"))
             connection.execute(text("INSERT INTO model_versions (id) VALUES (3)"))
     finally:
@@ -264,13 +274,24 @@ def test_evaluation_revisions_and_fresh_reproduction_do_not_change_forecast(prov
 def test_legacy_import_preserves_known_values_without_inventing_lineage(provenance):
     store, engine, _artifacts = provenance
     legacy_time = datetime(2024, 11, 3, 8, 30, tzinfo=timezone.utc)
-    run_id = store.import_legacy_forecast(
-        race_id=7,
-        model_version_id=3,
-        created_at=legacy_time,
-        entries=[ForecastEntry("entry:driver-1", {"position": 1})],
-        legacy_key="prediction-42",
-    )
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                """
+                INSERT INTO predictions
+                (id, race_id, model_version_id, driver_id, constructor_id,
+                 predicted_position, confidence_score, created_at)
+                VALUES
+                (41, 7, 3, 101, 201, 1, 0.8, :created_at),
+                (42, 7, 3, 102, 201, 2, 0.2, :created_at)
+                """
+            ),
+            {"created_at": legacy_time.isoformat()},
+        )
+    imported = store.import_legacy_predictions()
+    assert len(imported) == 1
+    assert store.import_legacy_predictions() == imported
+    run_id = imported[0]
     with engine.connect() as connection:
         row = connection.execute(
             text(
@@ -281,5 +302,17 @@ def test_legacy_import_preserves_known_values_without_inventing_lineage(provenan
     assert row.provenance_grade == "legacy_unverified"
     assert legacy_time.isoformat() in str(row.issue_at)
     assert "unknown_fields" in row.input_manifest
+    with engine.connect() as connection:
+        preserved = connection.execute(
+            text(
+                """
+                SELECT output FROM forecast_entry_outputs
+                WHERE forecast_run_id = :run_id ORDER BY entry_key
+                """
+            ),
+            {"run_id": run_id},
+        ).fetchall()
+    assert "legacy_prediction_id" in str(preserved)
+    assert "0.8" in str(preserved)
     with pytest.raises(ProvenanceError, match="legacy_unverified"):
         store.publish(run_id, race_start_at=RACE_START, published_at=NOW)

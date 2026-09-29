@@ -543,6 +543,56 @@ class ImmutableProvenanceStore:
         self.add_entry_outputs(run_id, materialised)
         return run_id
 
+    def import_legacy_predictions(self) -> list[str]:
+        """Explicitly import existing legacy rows without guessing their lineage.
+
+        This is intentionally an operator-invoked action, not an Alembic data
+        migration: it can be dry-run reviewed by querying ``predictions`` first
+        and never runs during application startup. Rows sharing the known race,
+        model and creation time become one `legacy_unverified` field.
+        """
+        with self.engine.connect() as conn:
+            rows = conn.execute(
+                text(
+                    """
+                    SELECT id, race_id, model_version_id, driver_id,
+                           constructor_id, predicted_position,
+                           confidence_score, created_at
+                    FROM predictions
+                    ORDER BY race_id, model_version_id, created_at, id
+                    """
+                )
+            ).fetchall()
+        grouped: dict[tuple[int, int | None, str | None], list[Any]] = {}
+        for row in rows:
+            key = (row.race_id, row.model_version_id, _timestamp(_utc(row.created_at)))
+            grouped.setdefault(key, []).append(row)
+        imported: list[str] = []
+        for (race_id, model_version_id, created_at), prediction_rows in grouped.items():
+            key = f"race:{race_id}:model:{model_version_id}:created:{created_at}"
+            entries = [
+                ForecastEntry(
+                    entry_key=f"legacy:driver:{row.driver_id}",
+                    output={
+                        "legacy_prediction_id": row.id,
+                        "constructor_id": row.constructor_id,
+                        "predicted_position": row.predicted_position,
+                        "confidence_score": row.confidence_score,
+                    },
+                )
+                for row in prediction_rows
+            ]
+            imported.append(
+                self.import_legacy_forecast(
+                    race_id=race_id,
+                    model_version_id=model_version_id,
+                    created_at=_utc(created_at),
+                    entries=entries,
+                    legacy_key=key,
+                )
+            )
+        return imported
+
     def verify_reproduction(
         self,
         forecast_run_id: str,

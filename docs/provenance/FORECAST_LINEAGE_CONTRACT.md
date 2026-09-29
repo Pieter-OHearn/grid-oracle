@@ -77,7 +77,11 @@ Alembic revision `20260929_04` is additive. It leaves the old tables and reads
 available. `import_legacy_forecast` preserves legacy prediction values, known
 creation timestamps and model-version ID as `legacy_unverified`; unknown
 cutoff, availability and artifact lineage are explicitly recorded as unknown,
-never inferred. Legacy records cannot be published as live forecasts.
+never inferred. `import_legacy_predictions` is the explicit, non-automatic
+operator action that groups existing `predictions` rows by their known race,
+model and creation time before calling that importer. It is never invoked by
+Alembic or application startup. Legacy records cannot be published as live
+forecasts.
 
 Do not downgrade a database containing WP03 history as a normal rollback: the
 Alembic downgrade removes the additive tables and therefore requires a verified
