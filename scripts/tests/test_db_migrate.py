@@ -1,7 +1,9 @@
 import shutil
+from datetime import date
 
 import pytest
 from sqlalchemy import create_engine, inspect, text
+from sqlalchemy.exc import IntegrityError
 
 from scripts.db_migrate import (
     LEGACY_CORE_TABLES,
@@ -69,6 +71,56 @@ def test_upgrade_populated_fixture_then_restore_backup(tmp_path):
             assert (
                 connection.execute(text("SELECT count(*) FROM races")).scalar_one() == 2
             )
+        with engine.begin() as connection:
+            connection.execute(
+                text("INSERT INTO drivers (id, full_name) VALUES (2, 'New Driver')")
+            )
+            connection.execute(text("INSERT INTO races (id, season) VALUES (3, 2027)"))
+            connection.execute(
+                text(
+                    """
+                    INSERT INTO entity_aliases
+                    (entity_kind, identity_key, provider, provider_key, valid_from)
+                    VALUES ('driver', 'driver:old', 'ergast', 'MSC', :valid_from)
+                    """
+                ),
+                {"valid_from": date(2006, 1, 1)},
+            )
+            connection.execute(
+                text(
+                    """
+                    INSERT INTO entity_aliases
+                    (entity_kind, identity_key, provider, provider_key, valid_from)
+                    VALUES ('driver', 'driver:new', 'ergast', 'MSC', :valid_from)
+                    """
+                ),
+                {"valid_from": date(2021, 1, 1)},
+            )
+        with engine.connect() as connection:
+            assert (
+                connection.execute(
+                    text("SELECT identity_key FROM drivers WHERE id = 2")
+                ).scalar_one()
+                == "driver:internal:2"
+            )
+            assert (
+                connection.execute(
+                    text("SELECT event_key FROM races WHERE id = 3")
+                ).scalar_one()
+                == "event:internal:3"
+            )
+        with pytest.raises(IntegrityError), engine.begin() as connection:
+            connection.execute(
+                text(
+                    """
+                    INSERT INTO entity_aliases
+                    (entity_kind, identity_key, provider, provider_key, valid_from)
+                    VALUES ('driver', 'driver:duplicate', 'ergast', 'MSC',
+                            :valid_from)
+                    """
+                ),
+                {"valid_from": date(2021, 1, 1)},
+            )
     finally:
         engine.dispose()
 
@@ -79,7 +131,7 @@ def test_upgrade_populated_fixture_then_restore_backup(tmp_path):
         assert "alembic_version" not in inspect(after_rollback).get_table_names()
         with after_rollback.connect() as connection:
             assert (
-                connection.execute(text("SELECT count(*) FROM races")).scalar_one() == 2
+                connection.execute(text("SELECT count(*) FROM races")).scalar_one() == 3
             )
     finally:
         after_rollback.dispose()

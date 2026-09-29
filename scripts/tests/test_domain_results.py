@@ -15,9 +15,14 @@ from gridoracle.domain.results import (
         ("+1 Lap", 13, CanonicalResultStatus.LAPPED, True),
         ("Retired", 14, CanonicalResultStatus.CLASSIFIED_RETIREMENT, True),
         ("Retired", None, CanonicalResultStatus.RETIRED_UNCLASSIFIED, False),
+        ("Hydraulics", 17, CanonicalResultStatus.CLASSIFIED_RETIREMENT, True),
+        ("Gearbox", None, CanonicalResultStatus.RETIRED_UNCLASSIFIED, False),
+        ("Collision", 18, CanonicalResultStatus.CLASSIFIED_RETIREMENT, True),
+        ("Withdrew", None, CanonicalResultStatus.DNS, False),
         ("DNS", None, CanonicalResultStatus.DNS, False),
         ("DSQ", None, CanonicalResultStatus.DSQ, False),
-        ("provider-new-status", 15, CanonicalResultStatus.UNKNOWN, False),
+        ("Not classified", 15, CanonicalResultStatus.UNKNOWN, False),
+        (None, None, CanonicalResultStatus.UNKNOWN, False),
     ],
 )
 def test_provider_status_target_policy(raw_status, official_rank, expected, eligible):

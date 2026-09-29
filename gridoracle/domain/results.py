@@ -41,9 +41,17 @@ class ResultClassification:
         )
 
 
-_DNS = {"dns", "did not start", "not started", "withdrawn"}
+_DNS = {"dns", "did not start", "not started", "withdrawn", "withdrew"}
 _DSQ = {"dsq", "disqualified", "excluded"}
 _RETIRED = {"retired", "ret", "dnf", "did not finish", "accident", "engine"}
+_UNINTERPRETABLE = {
+    "not classified",
+    "107% rule",
+    "did not qualify",
+    "not qualified",
+    "did not prequalify",
+    "unknown",
+}
 
 
 def classify_result(
@@ -64,6 +72,8 @@ def classify_result(
         status = CanonicalResultStatus.FINISHED
     elif "lap" in normalized or normalized.startswith("+"):
         status = CanonicalResultStatus.LAPPED
+    elif normalized in _UNINTERPRETABLE or not normalized:
+        status = CanonicalResultStatus.UNKNOWN
     elif normalized in _RETIRED:
         status = (
             CanonicalResultStatus.CLASSIFIED_RETIREMENT
@@ -71,7 +81,15 @@ def classify_result(
             else CanonicalResultStatus.RETIRED_UNCLASSIFIED
         )
     else:
-        status = CanonicalResultStatus.UNKNOWN
+        # Ergast/FastF1 often records a mechanical or incident reason rather
+        # than the literal word "Retired". A positive official classification
+        # is authoritative, so preserve it as a classified retirement; an
+        # unranked non-finish stays visible but cannot become a target label.
+        status = (
+            CanonicalResultStatus.CLASSIFIED_RETIREMENT
+            if official_rank is not None
+            else CanonicalResultStatus.RETIRED_UNCLASSIFIED
+        )
     return ResultClassification(raw_status, status, official_rank)
 
 

@@ -33,14 +33,16 @@ differ when excluded rows create an official-rank gap.
 | --- | --- | --- |
 | `finished` | `Finished` | include when `official_rank` is positive |
 | `lapped` | `Lapped`, `+1 Lap`, `+N Laps` | include when `official_rank` is positive |
-| `classified_retirement` | `Retired`/`DNF` with an official rank | include; it remains visibly a retirement |
-| `retired_unclassified` | `Retired`/`DNF` without official rank | preserve, exclude from target |
-| `dns` | `DNS`, `Did not start`, withdrawn | preserve, exclude/mask from target |
+| `classified_retirement` | `Retired`/`DNF` or FastF1/Ergast reason (`Hydraulics`, `Collision`, `Gearbox`) with an official rank | include; it remains visibly a retirement |
+| `retired_unclassified` | `Retired`/`DNF` or provider retirement reason without official rank | preserve, exclude from target |
+| `dns` | `DNS`, `Did not start`, withdrawn, `Withdrew` | preserve, exclude/mask from target |
 | `dsq` | `DSQ`, `Disqualified`, excluded | preserve, exclude/mask from target |
 | `unknown` | any unrecognized or absent status | preserve raw value, exclude and quarantine coverage |
 
 Duplicate official ranks are invalid for target construction and block scoring.
-Unknown status never becomes a DNF. Official points and countback are stored as
+Explicitly uninterpretable statuses (`Not classified`, `107% Rule`, `Did not
+qualify`) and absent status remain unknown; unknown status never becomes a DNF.
+Official points and countback are stored as
 official facts and are not inferred from `internal_rank`; championship scoring
 and promotion policies are independently versioned ruleset concerns.
 
@@ -49,7 +51,9 @@ and promotion policies are independently versioned ruleset concerns.
 Every durable entity has an immutable string `identity_key`, distinct from a
 provider ID and display name. The migration assigns existing rows
 `legacy:<kind>:<numeric-id>` without merging them. Provider IDs and old names
-belong in aliases with a source and validity range.
+belong in aliases with a source and a half-open validity range
+`[valid_from, valid_to)`. A provider key may be reused by different identities
+only for non-overlapping validity ranges.
 
 | Entity | Stable identity | Change policy |
 | --- | --- | --- |
