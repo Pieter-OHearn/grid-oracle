@@ -1,0 +1,58 @@
+{
+  "at": "2026-09-29T19:19:29.777103+00:00",
+  "id": "wp06-64cc925d647b4c0a86268dd3ec396715",
+  "metadata": {
+    "code_files": {
+      "docs/evidence/baseline_audit.py": "2f84f1ad12922f9b18fef1ad4b7fe0f61ee2e5acdc048d94f841e51f18c39dfd",
+      "gridoracle/domain/results.py": "a4b37198fc4cb8e2f43a1943e282fb2262aec2b3944053a696ffbd3be7ff41e5",
+      "gridoracle/domain/targets.py": "c6260e172e15fc8ef5c9c3cf96701c4913603379f0348851ecef5f5c42860dfd",
+      "pipeline/benchmark/__init__.py": "004cbe6ab5b7876f5c6f7297d5f3681ec8d44f7e0298618d2e17c93705971ff0",
+      "pipeline/benchmark/__main__.py": "d3870dcf3f89f463036c39b1f019f859a9875c611b7d08638754cec0824fb0fd",
+      "pipeline/benchmark/artifacts.py": "1f35fa12885ade04d278955f56ff1d7759dee3f43beddc63c49a940559593803",
+      "pipeline/benchmark/audit.py": "3e870bf7efd49265ba17055da7c31d0907877423a60d2210a744a22775821860",
+      "pipeline/benchmark/baselines.py": "b682ac4e512a9a0e3f963d9280415c7cd401f1f2c7e28dc5672189bdce81585d",
+      "pipeline/benchmark/data.py": "8f981beddc71e4ad7947ffc3e0b14eb3b89b56f29b717177277572e084db2f7d",
+      "pipeline/benchmark/evaluation.py": "818c77a64af21f0139630bc0acfd72465034e6dd632d5ca96bad6de9eb9f0105",
+      "pipeline/benchmark/fitting.py": "20932bfd79e1fa73f7d3fac9b84b0bf80e29d453c758dff0bb3950e06b89c4b2",
+      "pipeline/benchmark/metrics.py": "22c536e97074be63874897b74649ebb1a1572fc9d3b6c04469a8307d6431f906",
+      "pipeline/benchmark/promotion.py": "88e7424e6517ffcb9d1c4fb6284bea59d1bfd17a78b1d3dbb4281bb1143496df",
+      "pipeline/benchmark/registry.py": "de1d686c6001e1e3e412c15122587e557b04cdded73de15a19520ff5503c63f5",
+      "pipeline/benchmark/report.py": "e32092e4cb5ff41fef86892920a3d2ee2cd8ac0ae15748550e896ac7e07f9069",
+      "pipeline/benchmark/runtime.py": "a93dfb8d42bca0314316682ea34c355942f51c05001a4d9caeaf79d367b82011",
+      "pipeline/benchmark/splits.py": "a3dcb9d9e8ec75b2f6d920b2e303bd6e394615ff44ed6da20785f2ee1f79df36",
+      "pipeline/benchmark/temporal.py": "c4d3f3ffac9156b5832ae141b51201827ea544b0569cfd59ecbfec444436ca7f",
+      "pipeline/benchmark/uncertainty.py": "15c147549ff59b4d923349e2796f396ce0669bdcdc5e61d5d2ad3e84e8ef76f3",
+      "pipeline/dataset/historical.py": "189de0d63b8b7d76cfda07d64bb832ce52c63643eb26385c4a7f1fb1cca47dfd",
+      "pipeline/tests/test_benchmark.py": "7c8d824d92d8f250b03f6d192014bf08d82e75d0404674bcfd4fbbf4f36c12a9"
+    },
+    "code_sha256": "1b1776a92f192ff5bf6c8d421397bf31dfd9e5608b7833305167ea9a9b9f65a0",
+    "compute": {
+      "accelerator": "none; CPU only",
+      "cpu_count": 8,
+      "machine": "arm64",
+      "platform": "macOS-26.5.2-arm64-arm-64bit",
+      "processor": "arm",
+      "threads": {
+        "MKL_NUM_THREADS": "library default",
+        "OMP_NUM_THREADS": "library default",
+        "OPENBLAS_NUM_THREADS": "library default"
+      }
+    },
+    "config_sha256": "ae23f6654319f2457e52c89972bd4f693f62d005e25b8d72b8b4f701030865d6",
+    "dataset_sha256": "21153f3a012bede74987f713d37e8100b2d556f60ffbcced5ca3a578c0c577a2",
+    "dependency_lock_sha256": "3837160a2f8338aec547a9a3a01f868560f6edc118807b356dd71f379abffd3d",
+    "git_dirty": false,
+    "git_revision": "f624c1486ba8886399729d73699668ccf487ad89",
+    "protocol_sha256": "e93c19e079501313bd8839dd5b2202f0d6aa42ba0a104a4353fe5929b63cb345",
+    "python": "3.12.13 (main, Mar  3 2026, 12:39:30) [Clang 21.0.0 (clang-2100.0.123.102)]",
+    "seed": 6062026,
+    "split_sha256": "0cce74e9da0a6e72e75c982c832fdf441b589641cb29872c762b543e061e89aa",
+    "versions": {
+      "numpy": "2.2.0",
+      "pandas": "2.2.3",
+      "pyarrow": "23.0.1",
+      "pytest": "8.3.5"
+    }
+  },
+  "status": "started"
+}
