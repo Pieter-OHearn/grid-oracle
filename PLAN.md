@@ -85,9 +85,9 @@ The coordinator updates this overview when assigning or integrating work. Detail
 | ------------------------------ | ---------- | ---------------------- | ---------------------------------------------------- |
 | [WP01](docs/workplans/WP01.md) | `complete` | None                   | Integrated as `3cb5bd1c`                             |
 | [WP02](docs/workplans/WP02.md) | `complete` | WP01                   | Integrated as `ce9690e` through PR #95               |
-| [WP03](docs/workplans/WP03.md) | `ready`    | WP02                   | Acceptance, PR review and integration                |
-| [WP04](docs/workplans/WP04.md) | `waiting`  | WP02, WP03             | Acceptance, review and integration                   |
-| [WP05](docs/workplans/WP05.md) | `waiting`  | WP03, WP04             | Acceptance, review and integration                   |
+| [WP03](docs/workplans/WP03.md) | `complete` | WP02                   | Integrated as `9c57877` through PR #96               |
+| [WP04](docs/workplans/WP04.md) | `complete` | WP02, WP03             | Integrated as `f2a722a` through PR #97               |
+| [WP05](docs/workplans/WP05.md) | `ready`    | WP03, WP04             | Acceptance, review and integration                   |
 | [WP06](docs/workplans/WP06.md) | `waiting`  | WP05                   | Acceptance, review and integration                   |
 | [WP07](docs/workplans/WP07.md) | `waiting`  | WP06                   | Acceptance, review and integration                   |
 | [WP08](docs/workplans/WP08.md) | `waiting`  | WP06                   | Acceptance, review and integration                   |
@@ -104,7 +104,10 @@ WP13/WP14 include separate start and finish gates. Every package, including thos
 
 ## Exact next action for the next implementation agent
 
-Assign **WP03** next to build immutable forecast provenance. Its agent starts from current `main`, creates `feature/wp03-immutable-provenance`, and follows the branch/commit/PR protocol. WP10 design-system work is also independently assignable; coordinate any shared component or contract changes.
+Assign **WP05** next to build audited historical datasets and feature contracts.
+Its agent starts from current `main`, creates an isolated WP05 branch, and
+follows the branch/commit/PR protocol. WP10 design-system work is also
+independently assignable; coordinate any shared component or contract changes.
 
 The model winner, deployment host and public route remain unresolved; their decision gates are specified, so they need not block unrelated ready work.
 
