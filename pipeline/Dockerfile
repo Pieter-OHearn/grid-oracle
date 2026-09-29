@@ -9,6 +9,7 @@ COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev --extra pipeline
 
 COPY pipeline ./pipeline
+COPY gridoracle ./gridoracle
 
 ENV PATH="/app/.venv/bin:$PATH"
 

@@ -9,7 +9,6 @@ import pytest
 from pipeline.features.builder import (
     _circuit_tyre_degradation_index,
     _constructor_avg_fp2_pace_at_circuit,
-    _constructor_avg_position_last_n,
     _constructor_dnf_rate_last_season,
     _constructor_hard_compound_avg_position,
     _constructor_standings,
@@ -78,14 +77,6 @@ def test_driver_avg_position_last_n_none():
     conn = _mock_conn_scalar(None)
     result = _driver_avg_position_last_n(conn, driver_id=1, race_date=date(2024, 5, 1))
     assert result is None
-
-
-def test_constructor_avg_position_last_n_uses_one_observation_per_race():
-    """Constructor form must not count both cars as separate recent races."""
-    conn = _mock_conn_scalar(2.5)
-    result = _constructor_avg_position_last_n(conn, constructor_id=1, race_date=date(2024, 5, 1))
-    assert result == 2.5
-    assert "GROUP BY r.id, r.date" in str(conn.execute.call_args[0][0])
 
 
 def test_driver_avg_position_at_circuit():

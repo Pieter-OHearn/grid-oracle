@@ -1,6 +1,6 @@
 # WP05 coverage matrix
 
-Source: immutable manifest `3b73e717b0cf52f93df145f46f9dff32f91f72b1b68c57acfb2442402bd1be20`.
+Source: immutable manifest `6ff6b63b470900cb1d55513d91e9362851948d04133b8cd2b216bb7dccf671d2`.
 Every partition has source quality `archived_retrieval_known_asof_unknown` and
 is excluded from as-of evaluation until authentic availability evidence exists.
 
@@ -17,7 +17,7 @@ is excluded from as-of evaluation until authentic availability evidence exists.
 | Result sessions / qualifying sessions | 92 / 92 |
 | Exact duplicate reconciled rows | 0 |
 | Identity conflicts | 0 |
-| Missing driver form / reliability values | 62 / 62 |
+| Missing driver form / reliability values | 76 / 62 |
 | Missing constructor last-three values | 48 |
 | Missing current qualifying fields in combined horizon report | 1 post-qualifying row; all 1,838 pre-weekend rows are structurally excluded |
 | Exclusions | As-of evaluation, sprint points, weather, degradation/compound proxies |

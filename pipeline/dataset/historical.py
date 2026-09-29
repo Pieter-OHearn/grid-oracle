@@ -26,7 +26,7 @@ import pandas as pd
 from gridoracle.domain.results import CanonicalResultStatus, classify_result
 
 AVAILABILITY_ARCHIVED_UNKNOWN_AS_OF = "archived_retrieval_known_asof_unknown"
-DATASET_CONTRACT_VERSION = "2026.1-wp05"
+DATASET_CONTRACT_VERSION = "2026.2-wp05"
 
 
 class FeatureHorizon(StrEnum):
@@ -193,12 +193,18 @@ class FeatureRegistry:
         unexpected = set(frame.columns) - allowed - reserved
         if unexpected:
             raise ValueError(f"unregistered feature columns for {horizon}: {sorted(unexpected)}")
-        disallowed = {
-            definition.name for definition in self._definitions.values() if horizon not in definition.horizons
-        }
+        disallowed = self.forbidden_for(horizon)
         present = disallowed & set(frame.columns)
         if present:
             raise ValueError(f"features forbidden at {horizon}: {sorted(present)}")
+
+    def forbidden_for(self, horizon: FeatureHorizon) -> set[str]:
+        """Return feature names that must not exist in this horizon's frame."""
+        return {definition.name for definition in self._definitions.values() if horizon not in definition.horizons}
+
+    def fingerprint(self) -> str:
+        """Stable registry digest included in every output/checkpoint contract."""
+        return sha256(_canonical_json(self.dictionary())).hexdigest()
 
     def dictionary(self) -> list[dict[str, object]]:
         return [
@@ -309,6 +315,10 @@ class DatasetBackfill:
         """
         results: dict[tuple[int, int, str], dict[str, object]] = {}
         qualifying: dict[tuple[int, int, str], dict[str, object]] = {}
+        conflicted: dict[str, set[tuple[int, int, str]]] = {
+            "results": set(),
+            "qualifying": set(),
+        }
         duplicates: Counter[str] = Counter()
         conflicts: list[dict[str, object]] = []
         sessions: Counter[str] = Counter()
@@ -326,6 +336,8 @@ class DatasetBackfill:
                     driver_id = str(row["Driver"]["driverId"])
                     constructor_id = str(row["Constructor"]["constructorId"])
                     key = (season, round_number, driver_id)
+                    if key in conflicted[kind]:
+                        continue
                     record = {
                         "season": season,
                         "round": round_number,
@@ -342,7 +354,10 @@ class DatasetBackfill:
                         "retrieved_at": snapshot.retrieved_at,
                     }
                     if kind == "results":
-                        official_rank = _positive_int(row.get("position"))
+                        # Jolpica's numeric ``position`` is a provider order and
+                        # also appears on R/D/W/N rows.  Only positionText proves
+                        # an official classified result for the WP02 target.
+                        official_rank = _positive_int(row.get("positionText"))
                         status = str(row.get("status", ""))
                         classification = classify_result(status, official_rank)
                         record.update(
@@ -375,6 +390,7 @@ class DatasetBackfill:
                             }
                         )
                         target.pop(key, None)
+                        conflicted[kind].add(key)
         report = {
             "duplicates": dict(sorted(duplicates.items())),
             "identity_conflicts": sorted(conflicts, key=lambda item: _canonical_json(item)),
@@ -396,14 +412,20 @@ class DatasetBackfill:
 
     @staticmethod
     def _standings(frame: pd.DataFrame, key: str) -> pd.Series:
+        """Race-only competition ranks; equal points share one rank."""
         values: dict[tuple[int, int, str], int] = {}
         for season, season_rows in frame.groupby("season", sort=True):
             totals: defaultdict[str, float] = defaultdict(float)
             for round_number, event_rows in season_rows.groupby("round", sort=True):
-                ranks = {
-                    entity: position
-                    for position, entity in enumerate(sorted(totals, key=lambda item: (-totals[item], item)), start=1)
-                }
+                ranks: dict[str, int] = {}
+                previous_points: float | None = None
+                rank = 0
+                for position, entity in enumerate(sorted(totals, key=lambda item: (-totals[item], item)), start=1):
+                    points = totals[entity]
+                    if points != previous_points:
+                        rank = position
+                        previous_points = points
+                    ranks[entity] = rank
                 for entity in event_rows[key]:
                     values[(int(season), int(round_number), str(entity))] = ranks.get(
                         entity, len(ranks) + 1 if ranks else 1
@@ -416,14 +438,15 @@ class DatasetBackfill:
             dtype="int64",
         )
 
-    def _features(self, results: pd.DataFrame, qualifying: pd.DataFrame) -> pd.DataFrame:
-        if results.empty:
-            return pd.DataFrame()
-        rows = results.copy().sort_values(["season", "round", "driver_identity_key"], kind="stable")
-        rows["race_order"] = pd.factorize(rows["race_key"], sort=True)[0]
+    @staticmethod
+    def _rolling_last_three(values: pd.Series) -> pd.Series:
+        return values.shift().rolling(3, min_periods=1).mean()
+
+    def _add_driver_feature_tiers(self, rows: pd.DataFrame) -> pd.DataFrame:
+        """Add vectorized driver recency and reliability features."""
         classified = rows["finish_position"].where(rows["target_eligible"])
         rows["driver_finish_mean_last_3"] = classified.groupby(rows["driver_identity_key"], sort=False).transform(
-            lambda item: item.shift().rolling(3, min_periods=1).mean()
+            self._rolling_last_three
         )
         rows["driver_recency_races"] = rows.groupby("driver_identity_key", sort=False).cumcount()
         reliable = (
@@ -432,21 +455,25 @@ class DatasetBackfill:
             .astype(float)
         )
         rows["driver_reliability_rate_last_3"] = reliable.groupby(rows["driver_identity_key"], sort=False).transform(
-            lambda item: item.shift().rolling(3, min_periods=1).mean()
+            self._rolling_last_three
         )
+        return rows
 
+    def _add_constructor_feature_tiers(self, rows: pd.DataFrame) -> pd.DataFrame:
+        """Aggregate once per constructor/race before vectorized form windows."""
+        classified = rows["finish_position"].where(rows["target_eligible"])
         constructor_race = (
             rows.assign(classified_finish=classified)
             .groupby(["season", "round", "constructor_identity_key"], as_index=False, sort=True)
-            .agg(constructor_finish=("classified_finish", "mean"), constructor_points=("points", "sum"))
+            .agg(constructor_finish=("classified_finish", "mean"))
         )
         constructor_race["constructor_finish_mean_last_3"] = constructor_race.groupby(
             "constructor_identity_key", sort=False
-        )["constructor_finish"].transform(lambda item: item.shift().rolling(3, min_periods=1).mean())
+        )["constructor_finish"].transform(self._rolling_last_three)
         constructor_race["constructor_recency_races"] = constructor_race.groupby(
             "constructor_identity_key", sort=False
         ).cumcount()
-        rows = rows.merge(
+        return rows.merge(
             constructor_race[
                 [
                     "season",
@@ -460,22 +487,31 @@ class DatasetBackfill:
             how="left",
             validate="many_to_one",
         )
+
+    def _add_standing_features(self, rows: pd.DataFrame) -> pd.DataFrame:
+        """Attach explicitly race-only, tie-safe standings features."""
         rows["driver_championship_position_race_only"] = self._standings(rows, "driver_identity_key")
         rows["constructor_championship_position_race_only"] = self._standings(rows, "constructor_identity_key")
+        return rows
 
+    @staticmethod
+    def _join_qualifying(rows: pd.DataFrame, qualifying: pd.DataFrame) -> pd.DataFrame:
+        """Join post-qualifying pace fields without supplying a grid proxy."""
         qualifying_rows = qualifying.reindex(
             columns=["season", "round", "driver_identity_key", "qualifying_position"]
         ).copy()
         field_sizes = qualifying_rows.groupby(["season", "round"])["driver_identity_key"].transform("nunique")
         qualifying_rows["qualifying_normalized_position"] = qualifying_rows["qualifying_position"] / field_sizes
-        joined = rows.merge(
+        return rows.merge(
             qualifying_rows,
             on=["season", "round", "driver_identity_key"],
             how="left",
             validate="one_to_one",
         )
-        output: list[pd.DataFrame] = []
-        common = [
+
+    @staticmethod
+    def _common_columns() -> list[str]:
+        return [
             "season",
             "round",
             "race_key",
@@ -483,60 +519,75 @@ class DatasetBackfill:
             "constructor_identity_key",
             "availability_quality",
         ]
+
+    def _horizon_frame(self, joined: pd.DataFrame, horizon: FeatureHorizon) -> pd.DataFrame:
+        """Build one horizon's structurally valid output frame."""
+        common = self._common_columns()
+        pre_columns = [
+            *common,
+            "driver_finish_mean_last_3",
+            "constructor_finish_mean_last_3",
+            "driver_recency_races",
+            "constructor_recency_races",
+            "driver_reliability_rate_last_3",
+            "driver_championship_position_race_only",
+            "constructor_championship_position_race_only",
+        ]
         pre = joined[
             [
-                *common,
-                "driver_finish_mean_last_3",
-                "constructor_finish_mean_last_3",
-                "driver_recency_races",
-                "constructor_recency_races",
-                "driver_reliability_rate_last_3",
-                "driver_championship_position_race_only",
-                "constructor_championship_position_race_only",
+                *pre_columns,
             ]
         ].copy()
-        pre["horizon"] = FeatureHorizon.PRE_WEEKEND.value
-        pre["cutoff"] = "before_first_competitive_session"
+        pre["horizon"] = horizon.value
+        pre["cutoff"] = (
+            "before_first_competitive_session"
+            if horizon is FeatureHorizon.PRE_WEEKEND
+            else "after_verified_qualifying_before_race"
+        )
         pre["asof_eligible"] = False
         pre["entry_provenance"] = "reconstructed_from_result_entry"
-        pre["missing__qualifying"] = True
+        if horizon is FeatureHorizon.PRE_WEEKEND:
+            pre["missing__qualifying"] = True
+            pre["missing__history"] = pre["driver_finish_mean_last_3"].isna()
+            self.registry.validate_columns(pre, horizon)
+            return pre
+        pre["qualifying_position"] = joined["qualifying_position"]
+        pre["qualifying_normalized_position"] = joined["qualifying_normalized_position"]
+        pre["missing__qualifying"] = pre["qualifying_position"].isna()
         pre["missing__history"] = pre["driver_finish_mean_last_3"].isna()
-        output.append(pre)
-        post = joined.copy()
-        post["horizon"] = FeatureHorizon.POST_QUALIFYING.value
-        post["cutoff"] = "after_verified_qualifying_before_race"
-        post["asof_eligible"] = False
-        post["entry_provenance"] = "reconstructed_from_result_entry"
-        post["missing__qualifying"] = post["qualifying_position"].isna()
-        post["missing__history"] = post["driver_finish_mean_last_3"].isna()
-        output.append(
-            post[
-                [
-                    *pre.columns.tolist(),
-                    "qualifying_position",
-                    "qualifying_normalized_position",
-                ]
-            ]
-        )
-        combined = (
-            pd.concat(output, ignore_index=True)
+        self.registry.validate_columns(pre, horizon)
+        return pre
+
+    def _features(self, results: pd.DataFrame, qualifying: pd.DataFrame) -> pd.DataFrame:
+        """Compose feature tiers and the two independent horizon frames."""
+        if results.empty:
+            return pd.DataFrame()
+        rows = results.copy().sort_values(["season", "round", "driver_identity_key"], kind="stable")
+        rows = self._add_driver_feature_tiers(rows)
+        rows = self._add_constructor_feature_tiers(rows)
+        rows = self._add_standing_features(rows)
+        joined = self._join_qualifying(rows, qualifying)
+        return (
+            pd.concat(
+                [self._horizon_frame(joined, horizon) for horizon in FeatureHorizon],
+                ignore_index=True,
+            )
             .sort_values(["season", "round", "horizon", "driver_identity_key"], kind="stable")
             .reset_index(drop=True)
         )
-        return combined
 
     def features_for_horizon(self, features: pd.DataFrame, horizon: FeatureHorizon) -> pd.DataFrame:
         """Return a structural horizon view, removing forbidden columns entirely."""
-        forbidden = {
-            definition.name for definition in self.registry._definitions.values() if horizon not in definition.horizons
-        }
+        forbidden = self.registry.forbidden_for(horizon)
         frame = features[features["horizon"] == horizon.value].drop(columns=forbidden, errors="ignore")
         self.registry.validate_columns(frame, horizon)
         return frame
 
-    def build(self) -> tuple[pd.DataFrame, dict[str, object]]:
-        results, qualifying, audit = self._reconcile()
-        features = self._features(results, qualifying)
+    @staticmethod
+    def _audit_report(
+        results: pd.DataFrame, qualifying: pd.DataFrame, features: pd.DataFrame, audit: dict[str, object]
+    ) -> dict[str, object]:
+        """Attach count/null coverage to reconciliation evidence."""
         nulls = {column: int(value) for column, value in features.isna().sum().sort_index().items() if value}
         audit.update(
             {
@@ -553,7 +604,85 @@ class DatasetBackfill:
                 },
             }
         )
-        return features, audit
+        return audit
+
+    @staticmethod
+    def _limit_to_requested_seasons(
+        results: pd.DataFrame, qualifying: pd.DataFrame, seasons: set[int] | None
+    ) -> tuple[pd.DataFrame, pd.DataFrame]:
+        """Keep only history needed through the latest requested season."""
+        if not seasons:
+            return results, qualifying
+        through_season = max(seasons)
+        return (
+            results[results["season"] <= through_season].copy(),
+            qualifying[qualifying["season"] <= through_season].copy(),
+        )
+
+    def _build_reconciled(
+        self,
+        results: pd.DataFrame,
+        qualifying: pd.DataFrame,
+        audit: dict[str, object],
+        seasons: set[int] | None,
+    ) -> tuple[pd.DataFrame, dict[str, object]]:
+        scoped_results, scoped_qualifying = self._limit_to_requested_seasons(results, qualifying, seasons)
+        features = self._features(scoped_results, scoped_qualifying)
+        if seasons:
+            features = features[features["season"].isin(seasons)].reset_index(drop=True)
+            scoped_results = scoped_results[scoped_results["season"].isin(seasons)]
+            scoped_qualifying = scoped_qualifying[scoped_qualifying["season"].isin(seasons)]
+        return features, self._audit_report(scoped_results, scoped_qualifying, features, dict(audit))
+
+    def build(self, *, seasons: Iterable[int] | None = None) -> tuple[pd.DataFrame, dict[str, object]]:
+        """Build all or selected output seasons while retaining required history."""
+        results, qualifying, audit = self._reconcile()
+        requested = set(seasons) if seasons is not None else None
+        return self._build_reconciled(results, qualifying, audit, requested)
+
+    def _feature_contract_hash(self) -> str:
+        """Fingerprint implementation and registry so stale frames get a new root."""
+        return sha256(
+            _canonical_json(
+                {
+                    "contract_version": self.contract_version,
+                    "implementation_sha256": sha256(Path(__file__).read_bytes()).hexdigest(),
+                    "registry_sha256": self.registry.fingerprint(),
+                }
+            )
+        ).hexdigest()
+
+    @staticmethod
+    def _frame_hash(frame: pd.DataFrame) -> str:
+        normalized = frame.where(pd.notna(frame), None)
+        return sha256(_canonical_json(normalized.to_dict(orient="records"))).hexdigest()
+
+    @staticmethod
+    def _checkpoint_path(root: Path, season: int, horizon: FeatureHorizon) -> tuple[Path, Path, Path]:
+        relative = Path(f"season={season}") / f"horizon={horizon.value}" / "features.parquet"
+        path = root / relative
+        return relative, path, path.with_suffix(".checkpoint.json")
+
+    @staticmethod
+    def _checkpoint_key(record: Mapping[str, object]) -> tuple[int, str]:
+        return int(record["season"]), str(record["session"])
+
+    def _read_checkpoints(self, root: Path, source_hash: str, feature_hash: str) -> list[dict[str, object]]:
+        """Read every verified checkpoint so partial runs compose one manifest."""
+        outputs: list[dict[str, object]] = []
+        for checkpoint_path in sorted(root.glob("season=*/horizon=*/features.checkpoint.json")):
+            checkpoint = json.loads(checkpoint_path.read_text())
+            relative = checkpoint_path.with_suffix("").with_suffix(".parquet").relative_to(root)
+            parquet_path = root / relative
+            if (
+                checkpoint.get("source_manifest_sha256") != source_hash
+                or checkpoint.get("feature_contract_sha256") != feature_hash
+                or not parquet_path.is_file()
+                or checkpoint.get("parquet_sha256") != sha256(parquet_path.read_bytes()).hexdigest()
+            ):
+                raise ValueError(f"checkpoint mismatch for {relative}; create a new dataset version")
+            outputs.append({"path": relative.as_posix(), **checkpoint})
+        return sorted(outputs, key=lambda record: (int(record["season"]), str(record["session"])))
 
     def write(self, root: Path, *, seasons: Iterable[int] | None = None) -> dict[str, object]:
         """Write versioned Parquet, checkpoints and an immutable manifest.
@@ -561,34 +690,40 @@ class DatasetBackfill:
         ``seasons`` permits resumable backfills.  Completed season/session
         checkpoint data is content-addressed by the source snapshot manifest.
         """
-        features, report = self.build()
-        selected = set(seasons) if seasons is not None else set(features["season"].unique())
+        results, qualifying, audit = self._reconcile()
+        available = set(int(season) for season in results["season"].unique())
+        selected = set(seasons) if seasons is not None else available
+        unknown = selected - available
+        if unknown:
+            raise ValueError(f"requested seasons absent from source snapshots: {sorted(unknown)}")
+        features, report = self._build_reconciled(results, qualifying, audit, selected)
         source_manifest = self.source_manifest()
         source_hash = sha256(_canonical_json(source_manifest)).hexdigest()
-        root = root / f"dataset-{self.contract_version}-{source_hash[:12]}"
+        feature_hash = self._feature_contract_hash()
+        root = root / f"dataset-{self.contract_version}-{source_hash[:12]}-{feature_hash[:12]}"
         root.mkdir(parents=True, exist_ok=True)
-        outputs: list[dict[str, object]] = []
+        horizon_frames = {horizon: self.features_for_horizon(features, horizon) for horizon in FeatureHorizon}
         for season in sorted(selected):
             for horizon in FeatureHorizon:
-                frame = self.features_for_horizon(features, horizon)
+                frame = horizon_frames[horizon]
                 frame = frame[frame["season"] == season].copy()
                 if frame.empty:
                     continue
                 frame = frame.sort_values(["round", "driver_identity_key"], kind="stable")
-                relative = Path(f"season={season}") / f"horizon={horizon.value}" / "features.parquet"
-                path = root / relative
+                frame_hash = self._frame_hash(frame)
+                relative, path, checkpoint_path = self._checkpoint_path(root, season, horizon)
                 path.parent.mkdir(parents=True, exist_ok=True)
-                checkpoint_path = path.with_suffix(".checkpoint.json")
                 if checkpoint_path.exists() and path.exists():
                     checkpoint = json.loads(checkpoint_path.read_text())
                     digest = sha256(path.read_bytes()).hexdigest()
                     if (
                         checkpoint.get("source_manifest_sha256") == source_hash
+                        and checkpoint.get("feature_contract_sha256") == feature_hash
+                        and checkpoint.get("feature_frame_sha256") == frame_hash
                         and checkpoint.get("parquet_sha256") == digest
                         and checkpoint.get("rows") == len(frame)
                         and checkpoint.get("status") == "complete"
                     ):
-                        outputs.append({"path": relative.as_posix(), **checkpoint})
                         continue
                     raise ValueError(f"checkpoint mismatch for {relative}; write a new dataset version instead")
                 frame.to_parquet(path, index=False, engine="pyarrow", compression="zstd")
@@ -597,16 +732,30 @@ class DatasetBackfill:
                     "season": int(season),
                     "session": horizon.value,
                     "source_manifest_sha256": source_hash,
+                    "feature_contract_sha256": feature_hash,
+                    "feature_frame_sha256": frame_hash,
                     "parquet_sha256": digest,
                     "rows": int(len(frame)),
                     "status": "complete",
                 }
                 checkpoint_path.write_bytes(_canonical_json(checkpoint))
-                outputs.append({"path": relative.as_posix(), **checkpoint})
+        outputs = self._read_checkpoints(root, source_hash, feature_hash)
+        expected = {(season, horizon.value) for season in available for horizon in FeatureHorizon}
+        observed = {self._checkpoint_key(output) for output in outputs}
+        if expected != observed:
+            return {
+                "root": str(root),
+                "manifest_sha256": None,
+                "complete": False,
+                "outputs": outputs,
+            }
+        if selected != available:
+            _, report = self._build_reconciled(results, qualifying, audit, None)
         manifest = {
             "contract_version": self.contract_version,
             "source_snapshots": source_manifest,
             "source_manifest_sha256": source_hash,
+            "feature_contract_sha256": feature_hash,
             "dataset_quality": AVAILABILITY_ARCHIVED_UNKNOWN_AS_OF,
             "asof_evaluation_eligible": False,
             "feature_dictionary": self.registry.dictionary(),
@@ -621,7 +770,7 @@ class DatasetBackfill:
         if not manifest_path.exists():
             manifest_path.write_bytes(manifest_bytes)
             (root / "manifest.sha256").write_text(f"{manifest_hash}  manifest.json\n")
-        return {"root": str(root), "manifest_sha256": manifest_hash, **manifest}
+        return {"root": str(root), "manifest_sha256": manifest_hash, "complete": True, **manifest}
 
 
 def reconstruct_dataset(archive: Path, root: Path, *, seasons: Iterable[int] | None = None) -> dict[str, object]:

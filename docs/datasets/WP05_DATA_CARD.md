@@ -2,11 +2,11 @@
 
 ## Identity
 
-Dataset contract: `2026.1-wp05`
-Versioned dataset: `dataset-2026.1-wp05-87d0a99ef821`
-Immutable manifest SHA-256: `3b73e717b0cf52f93df145f46f9dff32f91f72b1b68c57acfb2442402bd1be20`
+Dataset contract: `2026.2-wp05`
+Versioned dataset: `dataset-2026.2-wp05-87d0a99ef821-9f459a82d698`
+Immutable manifest SHA-256: `6ff6b63b470900cb1d55513d91e9362851948d04133b8cd2b216bb7dccf671d2`
 
-The committed [manifest](versions/dataset-2026.1-wp05-87d0a99ef821/manifest.json)
+The committed [manifest](versions/dataset-2026.2-wp05-87d0a99ef821-9f459a82d698/manifest.json)
 lists every input response digest, output Parquet digest and per-season/session
 checkpoint. The `manifest.sha256` sidecar is the verification value for that
 manifest.
@@ -47,8 +47,15 @@ uv run --extra pipeline --group dev python -m pipeline.dataset.backfill \
 ```
 
 Repeat `--season 2024` to build or resume only a season's `pre_weekend` and
-`post_qualifying` partitions. A checkpoint is tied to the complete raw-source
-manifest hash; changed source snapshots make a new versioned output root.
+`post_qualifying` partitions. Partial runs write verified checkpoints but defer
+the immutable manifest until every source season/session is present. A
+checkpoint is tied to the raw-source hash, feature-contract hash and freshly
+computed feature-frame hash; changed source, registry or implementation makes a
+new versioned output root.
+
+The backfill CLI is an offline operator task. The runtime image contains the
+shared domain package, but an archive must be supplied explicitly (for example,
+by a mounted operator volume); it does not ship historical evidence data.
 
 ## Limitations and exclusions
 
