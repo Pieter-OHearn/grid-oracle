@@ -1,0 +1,8 @@
+{
+  "archive": "docs/evidence/jolpica-2022-2025.tar.gz",
+  "real_record_count": 40,
+  "source_manifest_sha256": "87d0a99ef821403e3dbfec95af29fcefd21252f8080f0d0fcd589a99d8f15a1e",
+  "dataset_manifest_sha256": "3b73e717b0cf52f93df145f46f9dff32f91f72b1b68c57acfb2442402bd1be20",
+  "availability_quality": "archived_retrieval_known_asof_unknown",
+  "note": "This fixture covers the downloaded 2022–2025 Jolpica result and qualifying responses as a set. Individual response hashes are emitted in the immutable dataset manifest."
+}

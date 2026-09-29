@@ -208,19 +208,26 @@ def _driver_podium_rate_at_circuit(
 def _constructor_avg_position_last_n(
     conn: Connection, constructor_id: int, race_date: object, n: int = 3
 ) -> float | None:
+    """Mean of constructor *race* means across its previous ``n`` Grands Prix.
+
+    The legacy implementation limited individual car result rows, which could
+    select two cars from one weekend and only one from another.  Constructors
+    need one observation per race before a last-three-races aggregation.
+    """
     val = conn.execute(
         text(
             """
-            SELECT AVG(sub.finish_position)
+            SELECT AVG(sub.race_finish_position)
             FROM (
-                SELECT rr.finish_position
+                SELECT r.id, AVG(rr.finish_position) AS race_finish_position
                 FROM race_results rr
                 JOIN races r ON r.id = rr.race_id
                 WHERE rr.constructor_id = :cid
                   AND rr.finish_position IS NOT NULL
                   AND r.date < :race_date
                   AND r.is_completed = TRUE
-                ORDER BY r.date DESC
+                GROUP BY r.id, r.date
+                ORDER BY r.date DESC, r.id DESC
                 LIMIT :n
             ) sub
             """
