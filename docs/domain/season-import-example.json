@@ -1,0 +1,37 @@
+{
+  "schema_version": "1.0",
+  "season": 2027,
+  "ruleset_version": "fia-2027.1",
+  "events": [
+    {
+      "event_key": "event:2027:australia",
+      "round": 1,
+      "name": "Australian Grand Prix",
+      "circuit_identity_key": "circuit:albert-park",
+      "layout_identity_key": "layout:albert-park:gp",
+      "state": "scheduled",
+      "sessions": [
+        {
+          "kind": "qualifying",
+          "scheduled_at": "2027-03-13T05:00:00Z"
+        },
+        {
+          "kind": "race",
+          "scheduled_at": "2027-03-14T04:00:00Z"
+        }
+      ],
+      "entries": [
+        {
+          "driver_identity_key": "driver:example-one",
+          "team_identity_key": "team:example",
+          "role": "primary"
+        },
+        {
+          "driver_identity_key": "driver:example-reserve",
+          "team_identity_key": "team:example",
+          "role": "reserve"
+        }
+      ]
+    }
+  ]
+}

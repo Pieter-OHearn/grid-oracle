@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.database import Base, engine, settings
+from api.database import settings
 from api.routes.drivers import router as drivers_router
 from api.routes.models import router as models_router
 from api.routes.races import router as races_router
@@ -11,7 +11,8 @@ from api.routes.races import router as races_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    Base.metadata.create_all(bind=engine)
+    # Schema changes are deliberately explicit (`python -m scripts.db_migrate`)
+    # so a running API can never recreate, reset, or silently upgrade data.
     yield
 
 

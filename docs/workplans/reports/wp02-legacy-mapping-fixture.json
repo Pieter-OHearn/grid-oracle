@@ -1,0 +1,23 @@
+{
+  "assignments": [
+    {
+      "display_name": "Old Venue",
+      "entity_kind": "circuit",
+      "identity_key": "legacy:circuit:1",
+      "legacy_id": 1
+    },
+    {
+      "display_name": "Team Before Rename",
+      "entity_kind": "team",
+      "identity_key": "legacy:team:1",
+      "legacy_id": 1
+    }
+  ],
+  "unresolved": [
+    {
+      "entity_kind": "team",
+      "legacy_identifier": "ambiguous legacy provider id",
+      "reason": "example quarantine record; requires a curated successor/alias decision"
+    }
+  ]
+}
