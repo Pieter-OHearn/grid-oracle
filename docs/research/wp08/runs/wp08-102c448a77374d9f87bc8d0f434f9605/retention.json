@@ -1,0 +1,88 @@
+{
+  "checkpoint_archive": "checkpoints.tar.gz",
+  "development_only": false,
+  "files": {
+    "checkpoints.tar.gz": "8bb764db76ed4d23d966555ec136be395720bb51280ebeb1e4928dfac7e950bf",
+    "decisions/post_qualifying-nonlinear-2023.json": "2effd28d4c4779cce36271d888a8b636d6ad6a52b3154cfb0766980ae5112888",
+    "decisions/post_qualifying-nonlinear-2024.json": "e847e81837c5c4309e74555df584c52b8272e9dd1d8adb0a68402d70df678f64",
+    "decisions/post_qualifying-nonlinear-2025.json": "f8662e14c199a454f84951d4c10a22e3d88b2d14743257e0dff199c9b58d0398",
+    "decisions/post_qualifying-reference-2023.json": "c929c80ad97a583c97eada0ce75369ac32f67dec3e146b043b20e8f42cd18313",
+    "decisions/post_qualifying-reference-2024.json": "6dd3f17accbd10d903a008553a9cce00e5efa165903ca8b295e8db9e4afee02d",
+    "decisions/post_qualifying-reference-2025.json": "4d57da1123cfd12bcff6212817b88fb65c1d93114c335ccbe457c51b64f11c55",
+    "decisions/pre_weekend-nonlinear-2023.json": "862ce7f759796473684a4f0273c1627dca5866c3cd2e37450efa4cb96061c91b",
+    "decisions/pre_weekend-nonlinear-2024.json": "dba344a27ba6eea8c59482ef4f2a6d6ad154da45bde6a7d9ede4cf43f2d50224",
+    "decisions/pre_weekend-nonlinear-2025.json": "d36185a2852ed9dc79908f811819f5afbf9455c0527288713b3eef3499bc9877",
+    "decisions/pre_weekend-reference-2023.json": "c9587c860988bbef416a269323586d7f4c2c18214e5c476d2daa87432734c027",
+    "decisions/pre_weekend-reference-2024.json": "bec4110da4783f051fb148f23d3cc14137d424055eb003afc0666954203385e7",
+    "decisions/pre_weekend-reference-2025.json": "6d292f1c0d6bad68e00663328cf36541cd5cc64365a854531fb9ba0aa7cdd0bf",
+    "finished.json": "20c71f3a5ae00e7da95d542def5a9000279eb15e5a8d84cbd11dd6e37b3e5fd3",
+    "manifest.json": "e8e112383fa8f85db61fb7e70fe52651ad30ef8dbd279f54148a1a67c0d3c1b4",
+    "models/post_qualifying-nonlinear-2023.pt": "18875bc83c723fec4f6e9b2d4731773704addba06a4a8fb370d36eb5dc8120a9",
+    "models/post_qualifying-nonlinear-2024.pt": "879f4ba13a4f10557300c29b080f4497a93dac85f22a6415d80196e1fbafadc4",
+    "models/post_qualifying-nonlinear-2025.pt": "04ad5dba8128385530be12f2dad0bef6fbf8abc03ef33a284f2e3c8be9822695",
+    "models/post_qualifying-reference-2023.pt": "4842e50d96964cab32cace5d35127b230d245a39328a0efe84c02151e73586fa",
+    "models/post_qualifying-reference-2024.pt": "58801811643028174e26caf3b5445a66616860345e2757534f12fbb0c8462083",
+    "models/post_qualifying-reference-2025.pt": "82a346867979d79c3b0777ee934d6f7ef05ad551aaac005d33e848893fa2346f",
+    "models/pre_weekend-nonlinear-2023.pt": "1825d2bf05800c638d5e42faeb3ab169614a60972ec2d8c3bd70948833c33ed1",
+    "models/pre_weekend-nonlinear-2024.pt": "154ecb7093a480f779a562cd8c0e698b323b84bb162aac2f2e525a677e7f1e64",
+    "models/pre_weekend-nonlinear-2025.pt": "d3d0b8165bd663888e6e8b1a123f30a242115dffdec0de973ddf2fa0605ce01d",
+    "models/pre_weekend-reference-2023.pt": "b5c4e27a31fe34279e35ea3cf72944e6e1656ab3f89b873152ba6b26dc1e22e5",
+    "models/pre_weekend-reference-2024.pt": "360daef7ea9334c064a0599e662777f4b3fa797c4023ef2350067d28e67caa38",
+    "models/pre_weekend-reference-2025.pt": "27d2dd55971ca4af82e5136f2e2d856b8a9133b4ffdc18b59fb2c32e65b9aeb4",
+    "report.json.gz": "2fde576b88ab1ed0de36aa15f2347ccb9aab28a8b2586811265ae6a7884f759f",
+    "selection-frozen.json": "c6972ab2ddf71b933f3a01cbf8f46b2c872cb28021c551d56af2596f97a55f49",
+    "started.json": "41cdac9e6dc7679765d3c39e38ed55949a91a7a5ef1e506e901cadc74eef054f"
+  },
+  "model_aliases": {
+    "models/post_qualifying-nonlinear-2023.pt": {
+      "original_path": "checkpoints/post_qualifying/nonlinear/2023/refit/epoch-0160.pt",
+      "sha256": "18875bc83c723fec4f6e9b2d4731773704addba06a4a8fb370d36eb5dc8120a9"
+    },
+    "models/post_qualifying-nonlinear-2024.pt": {
+      "original_path": "checkpoints/post_qualifying/nonlinear/2024/refit/epoch-0160.pt",
+      "sha256": "879f4ba13a4f10557300c29b080f4497a93dac85f22a6415d80196e1fbafadc4"
+    },
+    "models/post_qualifying-nonlinear-2025.pt": {
+      "original_path": "checkpoints/post_qualifying/nonlinear/2025/refit/epoch-0160.pt",
+      "sha256": "04ad5dba8128385530be12f2dad0bef6fbf8abc03ef33a284f2e3c8be9822695"
+    },
+    "models/post_qualifying-reference-2023.pt": {
+      "original_path": "checkpoints/post_qualifying/reference/2023/refit/epoch-0160.pt",
+      "sha256": "4842e50d96964cab32cace5d35127b230d245a39328a0efe84c02151e73586fa"
+    },
+    "models/post_qualifying-reference-2024.pt": {
+      "original_path": "checkpoints/post_qualifying/reference/2024/refit/epoch-0160.pt",
+      "sha256": "58801811643028174e26caf3b5445a66616860345e2757534f12fbb0c8462083"
+    },
+    "models/post_qualifying-reference-2025.pt": {
+      "original_path": "checkpoints/post_qualifying/reference/2025/refit/epoch-0160.pt",
+      "sha256": "82a346867979d79c3b0777ee934d6f7ef05ad551aaac005d33e848893fa2346f"
+    },
+    "models/pre_weekend-nonlinear-2023.pt": {
+      "original_path": "checkpoints/pre_weekend/nonlinear/2023/refit/epoch-0160.pt",
+      "sha256": "1825d2bf05800c638d5e42faeb3ab169614a60972ec2d8c3bd70948833c33ed1"
+    },
+    "models/pre_weekend-nonlinear-2024.pt": {
+      "original_path": "checkpoints/pre_weekend/nonlinear/2024/refit/epoch-0160.pt",
+      "sha256": "154ecb7093a480f779a562cd8c0e698b323b84bb162aac2f2e525a677e7f1e64"
+    },
+    "models/pre_weekend-nonlinear-2025.pt": {
+      "original_path": "checkpoints/pre_weekend/nonlinear/2025/refit/epoch-0160.pt",
+      "sha256": "d3d0b8165bd663888e6e8b1a123f30a242115dffdec0de973ddf2fa0605ce01d"
+    },
+    "models/pre_weekend-reference-2023.pt": {
+      "original_path": "checkpoints/pre_weekend/reference/2023/refit/epoch-0160.pt",
+      "sha256": "b5c4e27a31fe34279e35ea3cf72944e6e1656ab3f89b873152ba6b26dc1e22e5"
+    },
+    "models/pre_weekend-reference-2024.pt": {
+      "original_path": "checkpoints/pre_weekend/reference/2024/refit/epoch-0160.pt",
+      "sha256": "360daef7ea9334c064a0599e662777f4b3fa797c4023ef2350067d28e67caa38"
+    },
+    "models/pre_weekend-reference-2025.pt": {
+      "original_path": "checkpoints/pre_weekend/reference/2025/refit/epoch-0160.pt",
+      "sha256": "27d2dd55971ca4af82e5136f2e2d856b8a9133b4ffdc18b59fb2c32e65b9aeb4"
+    }
+  },
+  "note": "Original run events preserved unchanged; original checkpoint hashes in finished.json resolve inside checkpoint archive.",
+  "scratch": "WP05 scratch partitions omitted; frozen committed inputs retain manifest/partition hashes"
+}

@@ -1,0 +1,21 @@
+{
+  "checkpoint_archive": "checkpoints.tar.gz",
+  "development_only": true,
+  "files": {
+    "checkpoints.tar.gz": "c00dd83532f702d15e11e1a66d7a56d974ded2319f228d3eb3ab3a5dc0f9c7f2",
+    "decisions/post_qualifying-reference-2023.json": "c929c80ad97a583c97eada0ce75369ac32f67dec3e146b043b20e8f42cd18313",
+    "decisions/post_qualifying-reference-2024.json": "6dd3f17accbd10d903a008553a9cce00e5efa165903ca8b295e8db9e4afee02d",
+    "decisions/post_qualifying-reference-2025.json": "4d57da1123cfd12bcff6212817b88fb65c1d93114c335ccbe457c51b64f11c55",
+    "decisions/pre_weekend-reference-2023.json": "c9587c860988bbef416a269323586d7f4c2c18214e5c476d2daa87432734c027",
+    "decisions/pre_weekend-reference-2024.json": "bec4110da4783f051fb148f23d3cc14137d424055eb003afc0666954203385e7",
+    "decisions/pre_weekend-reference-2025.json": "6d292f1c0d6bad68e00663328cf36541cd5cc64365a854531fb9ba0aa7cdd0bf",
+    "finished.json": "055062919c250c7fd2e271140152d158878557d81e9c0d7bafff5fa84296645d",
+    "manifest.json": "aa6c00b9e41fa34edf7dba6ae0189cc56b24daf0f00971e50c0a5c3ff125a3c2",
+    "report.json.gz": "53e0a9b6fbb9e9932f240fa44d0580a47c92e13a21b7ec22e1390dbe71e0bf56",
+    "selection-frozen.json": "a8f7530d9be057085f4f207139c0e112b6f542475c3a600e9c7ff4862e83df92",
+    "started.json": "8abe2006cd67314a0859e30001f9459868821f526057fb63d0ebe43565eebe3f"
+  },
+  "model_aliases": {},
+  "note": "Original run events preserved unchanged; original checkpoint hashes in finished.json resolve inside checkpoint archive.",
+  "scratch": "WP05 scratch partitions omitted; frozen committed inputs retain manifest/partition hashes"
+}

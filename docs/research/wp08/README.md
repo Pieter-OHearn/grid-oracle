@@ -109,3 +109,12 @@ CUDA uses its allocator peak counter; unavailable accelerators report null.
 
 Rollback: stop using these offline artifacts or revert the WP08-only changes.
 No schema migration, backfill, bootstrap, publication or service rollback exists.
+
+The retained comparison is in [REPORT.md](REPORT.md), with every trial's tuning
+scores, frozen selections, failed experiments and compute evidence. The two clean
+runs reproduce the same semantic result. Verify every original event/model/report
+hash with `python -m docs.research.wp08.verify_artifacts`. Checkpoint archives are
+ordinary tar.gz files; extract into a temporary directory to resume an original
+checkpoint. Twelve selected final models are also loose files in the first clean
+run's `models/` directory. [Loss curves](loss-curves.png) plot training+tuning
+refits and must not be interpreted as evaluation winner loss.
