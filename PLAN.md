@@ -1,6 +1,6 @@
 # GridOracle build plan
 
-Updated 2026-09-30. **Current state: WP01–06 integrated; WP07/WP08 ready for assignment under the frozen v2 benchmark.**
+Updated 2026-09-30. **Current state: WP01–08 integrated; WP09 assigned under the frozen v2 benchmark.**
 
 For assignment prompts, ownership rules and state transitions, read the [agent execution guide](docs/workplans/README.md). Fresh agents start at [HANDOFF](HANDOFF.md).
 
@@ -79,7 +79,7 @@ flowchart LR
 
 ## Execution ledger
 
-The coordinator updates this overview when assigning or integrating work. Detailed, authoritative progress lives in each linked state record; working-branch progress is not integrated completion. WP01–06 are complete. WP07, WP08 and WP10 are ready to assign; WP13 may begin its limited discovery/design scope after WP01. No dependent implementation is assigned by this status update.
+The coordinator updates this overview when assigning or integrating work. Detailed, authoritative progress lives in each linked state record; working-branch progress is not integrated completion. WP01–08 are complete. WP09 is active; WP10 is ready to assign; WP13 may begin its limited discovery/design scope after WP01. No dependent implementation is assigned by this status update.
 
 | Package / state record         | Status     | Start after            | Additional completion gate                           |
 | ------------------------------ | ---------- | ---------------------- | ---------------------------------------------------- |
@@ -89,9 +89,9 @@ The coordinator updates this overview when assigning or integrating work. Detail
 | [WP04](docs/workplans/WP04.md) | `complete` | WP02, WP03             | Integrated as `f2a722a` through PR #97               |
 | [WP05](docs/workplans/WP05.md) | `complete` | WP03, WP04             | Integrated as `927c9ec` through PR #98               |
 | [WP06](docs/workplans/WP06.md) | `complete` | WP05                   | Integrated as `b9439e7` through PR #99               |
-| [WP07](docs/workplans/WP07.md) | `ready`    | WP06                   | Acceptance, review and integration                   |
-| [WP08](docs/workplans/WP08.md) | `ready`    | WP06                   | Acceptance, review and integration                   |
-| [WP09](docs/workplans/WP09.md) | `waiting`  | WP03, WP07, WP08       | Acceptance, review and integration                   |
+| [WP07](docs/workplans/WP07.md) | `complete` | WP06                   | Integrated as `32b1f60` through PR #101                |
+| [WP08](docs/workplans/WP08.md) | `complete` | WP06                   | Integrated as `3ad2113` through PR #102                |
+| [WP09](docs/workplans/WP09.md) | `active`   | WP03, WP07, WP08       | Codex `/root`; owner-assigned selection/calibration    |
 | [WP10](docs/workplans/WP10.md) | `ready`    | WP02                   | Acceptance, PR review and integration                |
 | [WP11](docs/workplans/WP11.md) | `waiting`  | WP03, WP04, WP10       | Acceptance, review and integration                   |
 | [WP12](docs/workplans/WP12.md) | `waiting`  | WP06, WP09, WP11       | Acceptance, review and integration                   |
@@ -104,14 +104,15 @@ WP13/WP14 include separate start and finish gates. Every package, including thos
 
 ## Exact next action for the next implementation agent
 
-The owner may assign **WP07** next in the serial order; WP08 is independently
-eligible. Both remain unassigned. Start from current `main`, reserve the selected
-package, and create its isolated branch before editing. Consume WP06's approved
-[v2 protocol](docs/benchmark/v2/PROTOCOL.md), frozen dataset/split/config hashes
-and retained experiment registry. Explored 2022–2025 diagnostics are not pristine
-holdout or as-of promotion evidence; verified prospective enrollment remains
-outstanding. Do not change the locked metrics or tolerances after seeing results.
-WP10 design-system work is also independently assignable; coordinate shared files.
+The owner assigned **WP09** to Codex `/root` on 2026-09-30, and explicitly
+authorized correction of stale prerequisite tracking in one commit on its branch
+before continuing. GitHub confirms PR #96 at `9c57877aac5ac311944d8d5eea31f46eb39acbee`,
+PR #101 at `32b1f60c3116fe6d02e7c55c92b7461f5fb7eaf4`, and PR #102 at
+`3ad2113186a715215e484e11950541a61577c09f` are merged into main.
+Consume the frozen WP06 v2 protocol and retained WP07/WP08 artifacts. Keep the
+metrics, splits and tolerances locked; explored history is not prospective or
+as-of promotion evidence. WP09's exact implementation action is in its state.
+WP10 remains independently assignable.
 
 The model winner, deployment host and public route remain unresolved; their decision gates are specified, so they need not block unrelated ready work.
 
