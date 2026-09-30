@@ -1,6 +1,6 @@
 # Assigning work and recording agent state
 
-The work is ready to assign one package at a time. **WP01 is the only implementation package ready now.** Concept approval is complete; application implementation has not started.
+Assign one package at a time using the current [PLAN execution ledger](../../PLAN.md#execution-ledger) and package state records. Those records carry live readiness; this guide defines the assignment and state protocol.
 
 ## Sources of truth
 
