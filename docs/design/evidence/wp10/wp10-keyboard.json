@@ -1,0 +1,30 @@
+[
+  {
+    "focused": "H1",
+    "hash": "#race",
+    "test": "Enter navigation"
+  },
+  {
+    "outline": "solid",
+    "outlineWidth": "3px",
+    "pressed": "02 After qualifying",
+    "test": "Space horizon"
+  },
+  {
+    "focused": "BODY",
+    "notice": null,
+    "rows": 5,
+    "test": "Enter retry"
+  },
+  {
+    "focused": "MAIN",
+    "heading": "Seasons",
+    "test": "Skip preserves journey"
+  },
+  {
+    "focused": "H1",
+    "notice": null,
+    "rows": 5,
+    "test": "Retry focus after fix"
+  }
+]
