@@ -1,0 +1,15 @@
+{
+  "at": "2026-09-29T19:19:31.884893+00:00",
+  "error": null,
+  "id": "wp06-64cc925d647b4c0a86268dd3ec396715",
+  "promotion": "not_authorized; independent review required",
+  "result": {
+    "code_sha256": "1b1776a92f192ff5bf6c8d421397bf31dfd9e5608b7833305167ea9a9b9f65a0",
+    "config_sha256": "ae23f6654319f2457e52c89972bd4f693f62d005e25b8d72b8b4f701030865d6",
+    "dataset_sha256": "21153f3a012bede74987f713d37e8100b2d556f60ffbcced5ca3a578c0c577a2",
+    "protocol_sha256": "e93c19e079501313bd8839dd5b2202f0d6aa42ba0a104a4353fe5929b63cb345",
+    "report_sha256": "3fb827849bba7a649b920dab6a31cd7c40de79e2f761e82a075badb77ef23d6d",
+    "split_sha256": "0cce74e9da0a6e72e75c982c832fdf441b589641cb29872c762b543e061e89aa"
+  },
+  "status": "succeeded"
+}

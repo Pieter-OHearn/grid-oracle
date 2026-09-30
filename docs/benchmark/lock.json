@@ -1,0 +1,11 @@
+{
+  "files": {
+    "docs/benchmark/PROTOCOL.md": "e93c19e079501313bd8839dd5b2202f0d6aa42ba0a104a4353fe5929b63cb345",
+    "docs/benchmark/config.json": "ae23f6654319f2457e52c89972bd4f693f62d005e25b8d72b8b4f701030865d6",
+    "docs/benchmark/dataset.json": "21153f3a012bede74987f713d37e8100b2d556f60ffbcced5ca3a578c0c577a2",
+    "docs/benchmark/splits.json": "0cce74e9da0a6e72e75c982c832fdf441b589641cb29872c762b543e061e89aa",
+    "uv.lock": "3837160a2f8338aec547a9a3a01f868560f6edc118807b356dd71f379abffd3d"
+  },
+  "protocol_commit": "d4b75ed",
+  "version": "wp06-v1"
+}

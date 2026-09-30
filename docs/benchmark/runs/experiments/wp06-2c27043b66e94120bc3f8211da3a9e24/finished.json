@@ -1,0 +1,10 @@
+{
+  "at": "2026-09-29T19:15:30.819928+00:00",
+  "error": "TemporalViolation: unregistered feature columns for pre_weekend: ['finish_position']",
+  "id": "wp06-2c27043b66e94120bc3f8211da3a9e24",
+  "promotion": "not_authorized; independent review required",
+  "result": {
+    "acceptance": "passed: leaked target rejected"
+  },
+  "status": "failed"
+}

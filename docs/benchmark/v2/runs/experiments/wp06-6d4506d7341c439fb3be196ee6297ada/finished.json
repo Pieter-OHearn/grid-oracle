@@ -1,0 +1,10 @@
+{
+  "at": "2026-09-30T06:44:40.786869+00:00",
+  "error": "ValueError: split differs from registered lock",
+  "id": "wp06-6d4506d7341c439fb3be196ee6297ada",
+  "promotion": "not_authorized; independent review required",
+  "result": {
+    "acceptance": "passed: denominator change rejected"
+  },
+  "status": "failed"
+}
