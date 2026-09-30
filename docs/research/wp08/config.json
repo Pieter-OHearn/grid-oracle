@@ -1,0 +1,20 @@
+{
+  "version": "wp08-1",
+  "seed": 6062026,
+  "epochs": 160,
+  "learning_rate": 0.03,
+  "checkpoint_interval": 40,
+  "calibration_temperatures": [0.7, 1.0, 1.5, 2.0, 3.0],
+  "selection": "equal-race tune winner log loss, ties by registered order; freeze before evaluation",
+  "reference_candidates": [
+    {"id": "linear", "hidden": 0, "interactions": false, "regularization": 0.1, "features": "all", "history": "all"},
+    {"id": "strong_shrinkage", "hidden": 0, "interactions": false, "regularization": 1.0, "features": "all", "history": "all"},
+    {"id": "recent_history", "hidden": 0, "interactions": false, "regularization": 0.1, "features": "all", "history": "last24"},
+    {"id": "standings_only", "hidden": 0, "interactions": false, "regularization": 0.1, "features": "standings", "history": "all"},
+    {"id": "circuit", "hidden": 0, "interactions": true, "regularization": 0.1, "features": "all", "history": "all"}
+  ],
+  "challenger_candidates": [
+    {"id": "nonlinear8", "hidden": 8, "interactions": false, "regularization": 0.1, "features": "all", "history": "all"},
+    {"id": "nonlinear16", "hidden": 16, "interactions": false, "regularization": 0.1, "features": "all", "history": "all"}
+  ]
+}

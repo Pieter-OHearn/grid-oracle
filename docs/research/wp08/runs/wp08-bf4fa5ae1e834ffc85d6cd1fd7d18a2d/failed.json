@@ -1,0 +1,6 @@
+{
+  "error": "ValueError: unavailable backend: cuda",
+  "run_id": "wp08-bf4fa5ae1e834ffc85d6cd1fd7d18a2d",
+  "runtime_seconds": 0.1854002500185743,
+  "status": "failed"
+}

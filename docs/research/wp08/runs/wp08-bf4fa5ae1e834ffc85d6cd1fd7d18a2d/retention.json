@@ -1,0 +1,11 @@
+{
+  "checkpoint_archive": null,
+  "development_only": false,
+  "files": {
+    "failed.json": "e9858f9bff473790a5e538a028e0293c141b86d65de7d9c978d59799c308e2ff",
+    "started.json": "97a7e90796dea35284185b1187044109e063fcf75c275b238734ececbcc89ef0"
+  },
+  "model_aliases": {},
+  "note": "Original run events preserved unchanged; original checkpoint hashes in finished.json resolve inside checkpoint archive.",
+  "scratch": "WP05 scratch partitions omitted; frozen committed inputs retain manifest/partition hashes"
+}

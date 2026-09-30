@@ -1,0 +1,27 @@
+{
+  "checkpoint_archive": "checkpoints.tar.gz",
+  "development_only": false,
+  "files": {
+    "checkpoints.tar.gz": "8bb764db76ed4d23d966555ec136be395720bb51280ebeb1e4928dfac7e950bf",
+    "decisions/post_qualifying-nonlinear-2023.json": "2effd28d4c4779cce36271d888a8b636d6ad6a52b3154cfb0766980ae5112888",
+    "decisions/post_qualifying-nonlinear-2024.json": "e847e81837c5c4309e74555df584c52b8272e9dd1d8adb0a68402d70df678f64",
+    "decisions/post_qualifying-nonlinear-2025.json": "f8662e14c199a454f84951d4c10a22e3d88b2d14743257e0dff199c9b58d0398",
+    "decisions/post_qualifying-reference-2023.json": "c929c80ad97a583c97eada0ce75369ac32f67dec3e146b043b20e8f42cd18313",
+    "decisions/post_qualifying-reference-2024.json": "6dd3f17accbd10d903a008553a9cce00e5efa165903ca8b295e8db9e4afee02d",
+    "decisions/post_qualifying-reference-2025.json": "4d57da1123cfd12bcff6212817b88fb65c1d93114c335ccbe457c51b64f11c55",
+    "decisions/pre_weekend-nonlinear-2023.json": "862ce7f759796473684a4f0273c1627dca5866c3cd2e37450efa4cb96061c91b",
+    "decisions/pre_weekend-nonlinear-2024.json": "dba344a27ba6eea8c59482ef4f2a6d6ad154da45bde6a7d9ede4cf43f2d50224",
+    "decisions/pre_weekend-nonlinear-2025.json": "d36185a2852ed9dc79908f811819f5afbf9455c0527288713b3eef3499bc9877",
+    "decisions/pre_weekend-reference-2023.json": "c9587c860988bbef416a269323586d7f4c2c18214e5c476d2daa87432734c027",
+    "decisions/pre_weekend-reference-2024.json": "bec4110da4783f051fb148f23d3cc14137d424055eb003afc0666954203385e7",
+    "decisions/pre_weekend-reference-2025.json": "6d292f1c0d6bad68e00663328cf36541cd5cc64365a854531fb9ba0aa7cdd0bf",
+    "finished.json": "970486785426eb41baec9788bba4bd29911a881f54ed7d9944d7f01d110da119",
+    "manifest.json": "a88fd9e5446a3bd69825f9a099c0bde318300e41181494f1d80a699ccd9d55b7",
+    "report.json.gz": "2fde576b88ab1ed0de36aa15f2347ccb9aab28a8b2586811265ae6a7884f759f",
+    "selection-frozen.json": "c6972ab2ddf71b933f3a01cbf8f46b2c872cb28021c551d56af2596f97a55f49",
+    "started.json": "c9ce734ea1a0e3e76be46135d63374742334d03a799f8b4efe4227c9f83a8f5a"
+  },
+  "model_aliases": {},
+  "note": "Original run events preserved unchanged; original checkpoint hashes in finished.json resolve inside checkpoint archive.",
+  "scratch": "WP05 scratch partitions omitted; frozen committed inputs retain manifest/partition hashes"
+}

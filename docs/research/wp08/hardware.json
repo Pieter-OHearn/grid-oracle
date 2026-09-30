@@ -1,0 +1,156 @@
+{
+  "hardware": {
+    "backends": {
+      "cpu": {
+        "gradient": [
+          2.0,
+          2.0,
+          2.0
+        ],
+        "usable": true
+      },
+      "cuda": {
+        "reason": "runtime reports unavailable",
+        "usable": false
+      },
+      "mps": {
+        "gradient": [
+          2.0,
+          2.0,
+          2.0
+        ],
+        "usable": true
+      }
+    },
+    "cpu": "Apple M1",
+    "cuda_build": null,
+    "cuda_devices": [],
+    "machine": "arm64",
+    "memory_bytes": "17179869184",
+    "nvidia_inventory": null,
+    "pc_inventory": "not accessible; no remote hardware claim",
+    "platform": "macOS-26.5.2-arm64-arm-64bit",
+    "python": "3.12.14",
+    "torch": "2.7.0"
+  },
+  "owner_reported_pc": {
+    "cpu": "AMD Ryzen 7 5700X",
+    "driver": "unverified",
+    "gpu": "GeForce RTX 5060",
+    "os": "Windows 11 Pro",
+    "ram_gb": 32,
+    "remote_access": "not established",
+    "vram": "unverified"
+  },
+  "parity": {
+    "cpu": {
+      "curve": [
+        48.4711799621582,
+        46.726688385009766,
+        45.114078521728516,
+        43.61725997924805,
+        42.22692108154297,
+        40.93317413330078,
+        39.724754333496094,
+        38.59131622314453,
+        37.524436950683594,
+        36.51789855957031,
+        35.56727981567383,
+        34.66902542114258,
+        33.819427490234375,
+        33.014041900634766,
+        32.248260498046875,
+        31.518383026123047,
+        30.822021484375,
+        30.157732009887695,
+        29.52433204650879,
+        28.920394897460938,
+        28.34405517578125,
+        27.79316520690918,
+        27.26568031311035,
+        26.759897232055664,
+        26.27450942993164,
+        25.808427810668945,
+        25.360597610473633,
+        24.929964065551758,
+        24.51552391052246,
+        24.116487503051758
+      ],
+      "gradient_max_abs": 0.0,
+      "loss_abs": 0.0,
+      "memory": {
+        "mps_current_allocated_mib": null,
+        "mps_driver_allocated_mib": null,
+        "peak_cuda_allocated_mib": null,
+        "peak_rss_mib": 337.234375,
+        "sampled_peak_mps_allocated_mib": null,
+        "sampled_peak_mps_driver_mib": null
+      },
+      "probability_max_abs": 0.0,
+      "score_max_abs": 0.0,
+      "status": "passed",
+      "synthetic_inference_seconds_per_race": 3.111666689316432e-05,
+      "synthetic_training_seconds": 0.7669564590323716
+    },
+    "cuda": {
+      "reason": "runtime reports unavailable",
+      "status": "not run"
+    },
+    "mps": {
+      "curve": [
+        48.4711799621582,
+        46.72669219970703,
+        45.114078521728516,
+        43.61725616455078,
+        42.226924896240234,
+        40.93318176269531,
+        39.72475814819336,
+        38.59131622314453,
+        37.524436950683594,
+        36.51789855957031,
+        35.56727981567383,
+        34.669029235839844,
+        33.819427490234375,
+        33.014041900634766,
+        32.248260498046875,
+        31.518383026123047,
+        30.822021484375,
+        30.157732009887695,
+        29.52433204650879,
+        28.920394897460938,
+        28.34405517578125,
+        27.79316520690918,
+        27.26567840576172,
+        26.759897232055664,
+        26.274513244628906,
+        25.808427810668945,
+        25.360595703125,
+        24.929962158203125,
+        24.51552391052246,
+        24.116491317749023
+      ],
+      "gradient_max_abs": 4.76837158203125e-07,
+      "loss_abs": 0.0,
+      "memory": {
+        "mps_current_allocated_mib": 0.013427734375,
+        "mps_driver_allocated_mib": 26.765625,
+        "peak_cuda_allocated_mib": null,
+        "peak_rss_mib": 475.203125,
+        "sampled_peak_mps_allocated_mib": 0.028076171875,
+        "sampled_peak_mps_driver_mib": 26.765625
+      },
+      "probability_max_abs": 1.1175870895385742e-08,
+      "score_max_abs": 2.9802322387695312e-08,
+      "status": "passed",
+      "synthetic_inference_seconds_per_race": 0.0006136014009825886,
+      "synthetic_training_seconds": 0.5220663329819217
+    }
+  },
+  "scope": "synthetic correctness/resource probe; no benchmark labels",
+  "tolerances": {
+    "gradient_atol_rtol": 0.0002,
+    "loss_atol": 0.0002,
+    "loss_rtol": 2e-05,
+    "score_atol_rtol": 2e-05
+  }
+}
