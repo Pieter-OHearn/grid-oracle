@@ -1,0 +1,10 @@
+{
+  "at": "2026-09-30T06:44:40.788061+00:00",
+  "error": "ValueError: Out of range float values are not JSON compliant: nan",
+  "id": "wp06-558690fb4d154940b70a6144802c5932",
+  "promotion": "not_authorized; independent review required",
+  "result": {
+    "acceptance": "passed: failure recorded after serialization rejection"
+  },
+  "status": "failed"
+}
