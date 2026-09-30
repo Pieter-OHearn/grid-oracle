@@ -83,7 +83,8 @@ Every variant is independently tuned within the same permitted inner block and
 calibrated within the same permitted calibration block; no outer-based pruning.
 
 Whole-race slices retain original four-race block IDs: missing history/qualifying,
-new identity since refit, <=3 prior driver races, <=3 fitting appearances (rare-entry
+new identity absent from positive-weight refit rows, <=3 prior driver races,
+<=3 positive-weight fitting appearances (rare-entry
 proxy, **not verified reserve status**), team changes since the previous entry,
 last eight races per evaluation season, season/circuit/field/driver/team/era/weather.
 Actual reserve designation is absent; no reserve-specific measured score is invented.

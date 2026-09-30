@@ -20,7 +20,7 @@ from pipeline.benchmark.promotion import comparison_failures, review_gate
 from pipeline.benchmark.report import deterministic_summary, slice_report, slice_tags, summarize
 from pipeline.benchmark.uncertainty import uncertainty
 from pipeline.challengers.decoder import calibrate, choose_power, decode
-from pipeline.challengers.models import TEAM, ForecastModel
+from pipeline.challengers.models import TEAM, ForecastModel, race_weights
 from pipeline.dataset.historical import FeatureHorizon, FeatureRegistry
 
 
@@ -217,6 +217,7 @@ def prepare_candidates(
                             "trials": trial_results,
                             "artifact_sha256": artifact_hash,
                             "refit_frame": refit,
+                            "refit_weights": race_weights(refit, chosen["config"], variant),
                         }
                     )
                     print(f"Prepared {identifier}", flush=True)
@@ -229,10 +230,18 @@ def prepare_candidates(
     return prepared, costs, selection
 
 
-def failure_tags(frame: pd.DataFrame, refit: pd.DataFrame, dataset: dict, fold: dict, study: dict) -> dict:
-    """Entrant slices use entry metadata/history, never current outcome labels."""
-    seen = set(refit[KEY])
-    counts = refit.groupby(KEY).race_key.nunique()
+def failure_tags(
+    frame: pd.DataFrame, refit: pd.DataFrame, dataset: dict, fold: dict, study: dict, *, fit_weights: np.ndarray
+) -> dict:
+    """Exposure uses positive-weight fit rows; no current outcome labels."""
+    weights = np.asarray(fit_weights, dtype=float)
+    if weights.shape != (len(refit),) or not np.isfinite(weights).all() or (weights < 0).any():
+        raise ValueError("invalid fitting exposure weights")
+    effective = refit.loc[weights > 0]
+    if effective.empty:
+        raise ValueError("no positive-weight fitting exposure")
+    seen = set(effective[KEY])
+    counts = effective.groupby(KEY).race_key.nunique()
     previous_team, changes = {}, {}
     for race in dataset["races"]:
         rows = frame[frame.race_key == race["race"]]
@@ -290,7 +299,9 @@ def evaluate_candidates(
         raw = predictions(item["model"], evaluation, study)
         outputs = {key: calibrate(p, item["decoder"]["power"]) for key, p in raw.items()}
         costs[item["identifier"]]["inference_seconds_per_race"] = (time.perf_counter() - started) / len(raw)
-        tags = failure_tags(frames[horizon], item["refit_frame"], dataset, fold, study)
+        tags = failure_tags(
+            frames[horizon], item["refit_frame"], dataset, fold, study, fit_weights=item["refit_weights"]
+        )
         group["raw"].update(raw)
         group["calibrated"].update(outputs)
         group["fits"].append({k: item[k] for k in ("identifier", "artifact_sha256", "decoder", "trials")})

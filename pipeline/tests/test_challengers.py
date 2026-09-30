@@ -14,7 +14,7 @@ from pipeline.benchmark.data import DATASET, KEY
 from pipeline.challengers import __main__ as cli
 from pipeline.challengers.decoder import calibrate, choose_power, decode
 from pipeline.challengers.models import TEAM, Encoder, ForecastModel, pl_objective, race_weights, rank_groups
-from pipeline.challengers.study import feature_names, fit_model, label_frame, ordered_block, predictions
+from pipeline.challengers.study import failure_tags, feature_names, fit_model, label_frame, ordered_block, predictions
 
 STUDY = read_json(ROOT / "docs/models/wp07/config.json")
 
@@ -216,7 +216,7 @@ def test_retained_reports_and_artifacts_reproduce():
     successes = [d for d in directories if (d / "run-manifest.json").exists()]
     if not successes:
         pytest.skip("committed-source experiment not yet retained")
-    hashes = []
+    hashes = {}
     for directory in successes:
         manifest = read_json(directory / "run-manifest.json")
         report = json.loads(gzip.decompress((directory / "report.json.gz").read_bytes()))
@@ -228,8 +228,8 @@ def test_retained_reports_and_artifacts_reproduce():
                 assert candidate["calibrated"]["coverage"] == 1
                 assert candidate["failures"] == []
                 assert len(candidate["races"]) == 70
-        hashes.append(manifest["report_sha256"])
-    assert len(set(hashes)) == 1
+        hashes.setdefault(manifest["code_sha256"], set()).add(manifest["report_sha256"])
+    assert all(len(repeats) == 1 for repeats in hashes.values())
 
 
 def test_preregistered_study_hash():
@@ -262,3 +262,57 @@ def test_pl_optimizer_failure_is_not_an_artifact(monkeypatch):
             "full",
             STUDY,
         )
+
+
+@pytest.mark.parametrize(
+    "variant, expected_rare", [("full", False), ("no_recency", False), ("recent_season_pool", True)]
+)
+def test_rare_entry_exposure_uses_positive_weight_appearances(frozen, variant, expected_rare):
+    frames, _, dataset, splits, _ = frozen
+    fold = next(f for f in splits["folds"] if f["id"] == "2024")
+    frame = frames["pre_weekend"]
+    refit = ordered_block(frame, fold["train"] + fold["tune"])
+    weights = race_weights(refit, STUDY["tree_trials"][0], variant)
+    driver = "provider:jolpica:driver:ricciardo"
+    counts = refit.loc[weights > 0].groupby(KEY).race_key.nunique()
+    assert counts[driver] == (3 if expected_rare else 25)
+    tags = failure_tags(frame, refit, dataset, fold, STUDY, fit_weights=weights)
+    entered = [key for key in fold["evaluation"] if driver in set(frame.loc[frame.race_key == key, KEY])]
+    assert len(entered) == 18
+    for key in entered:
+        assert (driver in tags[key]["rare_entry_drivers"]) is expected_rare
+        assert driver not in tags[key]["cold_drivers"]
+
+
+def test_cold_start_ignores_zero_weight_identity_and_preserves_evaluation_history():
+    refit = pd.DataFrame(
+        {"race_key": ["2022:1", "2023:1"], "season": [2022, 2023], KEY: ["old", "current"], TEAM: ["team", "team"]}
+    )
+    evaluation = pd.DataFrame(
+        {
+            "race_key": ["2024:1", "2024:1"],
+            "season": [2024, 2024],
+            KEY: ["old", "current"],
+            TEAM: ["new-team", "team"],
+            "driver_recency_races": [10, 10],
+        }
+    )
+    frame = pd.concat([refit.assign(driver_recency_races=5), evaluation], ignore_index=True)
+    dataset = {"races": [{"race": r} for r in ("2022:1", "2023:1", "2024:1")]}
+    fold = {"evaluation": ["2024:1"]}
+    weights = race_weights(refit, {"half_life": None}, "recent_season_pool")
+    tags = failure_tags(frame, refit, dataset, fold, STUDY, fit_weights=weights)["2024:1"]
+    assert tags["cold_drivers"] == ["old"]
+    assert tags["rare_entry_drivers"] == ["current", "old"]
+    # Zero-weight training exclusion must not erase known earlier entry/team history.
+    assert tags["team_changed_drivers"] == ["old"]
+    assert tags["low_experience_drivers"] == []
+    full = failure_tags(frame, refit, dataset, fold, STUDY, fit_weights=np.ones(len(refit)))["2024:1"]
+    assert full["cold_drivers"] == []
+
+
+@pytest.mark.parametrize("weights", [[1], [0, 0], [1, np.nan], [1, -1]])
+def test_exposure_rejects_invalid_weights(weights):
+    refit = pd.DataFrame({KEY: ["a", "b"], "race_key": ["r", "r"]})
+    with pytest.raises(ValueError, match="fitting exposure"):
+        failure_tags(pd.DataFrame(), refit, {}, {}, STUDY, fit_weights=np.asarray(weights))
