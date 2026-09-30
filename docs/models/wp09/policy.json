@@ -1,0 +1,18 @@
+{
+  "ensemble": "none; no registered complementary-error justification",
+  "fallbacks": {
+    "post_qualifying": "qualifying",
+    "pre_weekend": "standings"
+  },
+  "seed": 6062026,
+  "selection": "WP06 v2 review gate; no reselection by explored outer scores",
+  "suffix_samples": 512,
+  "upstream_failures": [
+    "WP07 full pre-weekend models fail diagnostic baseline guardrails",
+    "WP07 post-qualifying tune nominee fails podium-overlap guardrail",
+    "WP08 linear reference underperforms fixed baselines",
+    "WP08 unavailable CUDA attempt retained; no CUDA qualification",
+    "No as-of/prospective/shadow evidence or deployed incumbent artifact"
+  ],
+  "version": "wp09-v1"
+}
