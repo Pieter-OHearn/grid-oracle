@@ -1,0 +1,28 @@
+{
+  "candidate": "post_qualifying__xgb_ranking__recent_season_pool__2024",
+  "config": {
+    "half_life": 24,
+    "learning_rate": 0.05,
+    "max_depth": 2,
+    "min_child_weight": 8,
+    "n_estimators": 120,
+    "reg_alpha": 0.5,
+    "reg_lambda": 8.0
+  },
+  "fit_rows_sha256": "053868a5be05c855abccbc00114c6472b7760af4dea6ff69ba7a1accb7f1d1e8",
+  "optimization": {
+    "classified_rows": 631,
+    "status": "fixed_tree_count"
+  },
+  "predictions_sha256": "90964b23e6456b5213de561b4911865950205b998d8424395621541b891b6c37",
+  "seconds": 0.06283079204149544,
+  "status": "succeeded",
+  "trial_index": 2,
+  "tune_races": [
+    "2023:15",
+    "2023:16",
+    "2023:17",
+    "2023:18"
+  ],
+  "winner_log_loss": 1.5644307999965434
+}

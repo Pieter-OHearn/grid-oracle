@@ -1,0 +1,28 @@
+{
+  "candidate": "post_qualifying__xgb_regression__no_qualifying__2025",
+  "config": {
+    "half_life": null,
+    "learning_rate": 0.04,
+    "max_depth": 3,
+    "min_child_weight": 5,
+    "n_estimators": 180,
+    "reg_alpha": 1.0,
+    "reg_lambda": 12.0
+  },
+  "fit_rows_sha256": "bd32b02fe4e6c23466716bdd73e2315cfcf6686a889866610d94d75da4f99f74",
+  "optimization": {
+    "classified_rows": 1056,
+    "status": "fixed_tree_count"
+  },
+  "predictions_sha256": "fa33b93c7bc6de5460c021627945d66cb392c01c2a8deee0e5df2c061e772951",
+  "seconds": 0.0627808750141412,
+  "status": "succeeded",
+  "trial_index": 1,
+  "tune_races": [
+    "2024:17",
+    "2024:18",
+    "2024:19",
+    "2024:20"
+  ],
+  "winner_log_loss": 2.1894307999965434
+}

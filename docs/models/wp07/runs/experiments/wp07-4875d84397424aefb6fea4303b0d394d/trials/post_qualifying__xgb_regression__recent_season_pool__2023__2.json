@@ -1,0 +1,28 @@
+{
+  "candidate": "post_qualifying__xgb_regression__recent_season_pool__2023",
+  "config": {
+    "half_life": 24,
+    "learning_rate": 0.05,
+    "max_depth": 2,
+    "min_child_weight": 8,
+    "n_estimators": 120,
+    "reg_alpha": 0.5,
+    "reg_lambda": 8.0
+  },
+  "fit_rows_sha256": "5571395dbb50d755db87602218b48e4df7e208e8ea6ba6df055eb67720a8f452",
+  "optimization": {
+    "classified_rows": 238,
+    "status": "fixed_tree_count"
+  },
+  "predictions_sha256": "29cfa1f88b0204ee5a25ba06ae5915441cd63d29a866af30a439e0608d6dd035",
+  "seconds": 0.036536000086925924,
+  "status": "succeeded",
+  "trial_index": 2,
+  "tune_races": [
+    "2022:15",
+    "2022:16",
+    "2022:17",
+    "2022:18"
+  ],
+  "winner_log_loss": 1.5644307999965434
+}

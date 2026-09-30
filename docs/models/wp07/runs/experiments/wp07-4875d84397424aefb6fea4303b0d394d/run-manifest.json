@@ -1,0 +1,1147 @@
+{
+  "code_files": {
+    "docs/evidence/baseline_audit.py": "2f84f1ad12922f9b18fef1ad4b7fe0f61ee2e5acdc048d94f841e51f18c39dfd",
+    "gridoracle/domain/results.py": "a4b37198fc4cb8e2f43a1943e282fb2262aec2b3944053a696ffbd3be7ff41e5",
+    "gridoracle/domain/targets.py": "c6260e172e15fc8ef5c9c3cf96701c4913603379f0348851ecef5f5c42860dfd",
+    "pipeline/benchmark/__init__.py": "004cbe6ab5b7876f5c6f7297d5f3681ec8d44f7e0298618d2e17c93705971ff0",
+    "pipeline/benchmark/__main__.py": "ec57576498a9171cc1efda76737dd648d1937e54bd6fa17e41e54c692940ed9d",
+    "pipeline/benchmark/artifacts.py": "2a77da3b91482c9c320fb109071a31b86da4ff2f112aae8aadda3cef59a286fb",
+    "pipeline/benchmark/audit.py": "3e870bf7efd49265ba17055da7c31d0907877423a60d2210a744a22775821860",
+    "pipeline/benchmark/baselines.py": "060b453972e16850f84aed8d03f7fb0dd504a6471f35ea7ab89d247df2e2ba92",
+    "pipeline/benchmark/contracts.py": "1a9322ef8c8cebef479266f0f627263dc8064664f517dfc17f070184811dffae",
+    "pipeline/benchmark/data.py": "8f981beddc71e4ad7947ffc3e0b14eb3b89b56f29b717177277572e084db2f7d",
+    "pipeline/benchmark/evaluation.py": "71993d867bec541ca5168283c42f281285b939aa23ade6c0976fb1ae2c1cb88a",
+    "pipeline/benchmark/fitting.py": "82f7a60b64e3e7d84a857dbb561a660623a3237f7a8d0437938e5f82a627151a",
+    "pipeline/benchmark/metrics.py": "22c536e97074be63874897b74649ebb1a1572fc9d3b6c04469a8307d6431f906",
+    "pipeline/benchmark/promotion.py": "88e7424e6517ffcb9d1c4fb6284bea59d1bfd17a78b1d3dbb4281bb1143496df",
+    "pipeline/benchmark/registry.py": "de1d686c6001e1e3e412c15122587e557b04cdded73de15a19520ff5503c63f5",
+    "pipeline/benchmark/report.py": "e32092e4cb5ff41fef86892920a3d2ee2cd8ac0ae15748550e896ac7e07f9069",
+    "pipeline/benchmark/runtime.py": "a93dfb8d42bca0314316682ea34c355942f51c05001a4d9caeaf79d367b82011",
+    "pipeline/benchmark/splits.py": "48f47c9d5cfbe1540fa94dee96319f0ce517eadc07e27e641119612995c5f4ad",
+    "pipeline/benchmark/temporal.py": "47b4bb321134613c1cb4f633fe6b290dbe656780d52ef8c81a870882fb1ed394",
+    "pipeline/benchmark/uncertainty.py": "15c147549ff59b4d923349e2796f396ce0669bdcdc5e61d5d2ad3e84e8ef76f3",
+    "pipeline/challengers/__init__.py": "a6e25fe60f07ca0c91306e93706e2daeee5071f24f4e54e9b65734fea83742a2",
+    "pipeline/challengers/__main__.py": "86eefd1e2199407addf4b550efb1336f0e58a1ed9e232d234a5223fad4ac0ad3",
+    "pipeline/challengers/decoder.py": "d74f3a13a48c6f025e6a08ed50e7256051daa8e70428cbb299fb5bf17f361457",
+    "pipeline/challengers/models.py": "15120c163f090efb2f0d9c4fa9586298259904d833029182ba31269223a7a276",
+    "pipeline/challengers/study.py": "9adc53ebc09ff893f40a037d8f097918a8389880eabe82dc1cf16fb823a128e5",
+    "pipeline/dataset/historical.py": "189de0d63b8b7d76cfda07d64bb832ce52c63643eb26385c4a7f1fb1cca47dfd",
+    "pipeline/tests/test_benchmark.py": "ce59702f0c2d1d5d6e9b1d44718e2765941ff5312f7f631c479791a5216d6804",
+    "pipeline/tests/test_benchmark_review.py": "d379137ac97806e51dc586ca6d5f5a1a74bbd1577593e6187302ee2a08d84d91",
+    "pipeline/tests/test_challengers.py": "68c86b93d4045431580860fda6432dc818cd26d2cb5e118db0b8132bd9558ab1"
+  },
+  "code_sha256": "c24fcf2f6f6d0c3f3093129282a49b645c0db12a71f8986f7439f014573f906d",
+  "compute": {
+    "accelerator": "none; CPU only",
+    "cpu_count": 8,
+    "machine": "arm64",
+    "platform": "macOS-26.5.2-arm64-arm-64bit",
+    "processor": "arm",
+    "threads": {
+      "MKL_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1",
+      "OPENBLAS_NUM_THREADS": "1"
+    }
+  },
+  "config_sha256": "6e903cc9fed35497d3359074bd2361ac5d28c6995e1824efc6c9baa86e51b524",
+  "costs": {
+    "post_qualifying__hierarchical_pl__full__2023": {
+      "inference_seconds_per_race": 0.000492677997416732,
+      "refit_and_calibration_seconds": 0.35400270798709244
+    },
+    "post_qualifying__hierarchical_pl__full__2023__trial0": {
+      "seconds": 0.2573570000240579,
+      "status": "succeeded"
+    },
+    "post_qualifying__hierarchical_pl__full__2023__trial1": {
+      "seconds": 0.1693430410232395,
+      "status": "succeeded"
+    },
+    "post_qualifying__hierarchical_pl__full__2023__trial2": {
+      "seconds": 0.2683119170833379,
+      "status": "succeeded"
+    },
+    "post_qualifying__hierarchical_pl__full__2024": {
+      "inference_seconds_per_race": 0.0004896076231185967,
+      "refit_and_calibration_seconds": 0.8595771660329774
+    },
+    "post_qualifying__hierarchical_pl__full__2024__trial0": {
+      "seconds": 0.7455604579299688,
+      "status": "succeeded"
+    },
+    "post_qualifying__hierarchical_pl__full__2024__trial1": {
+      "seconds": 0.48245737503748387,
+      "status": "succeeded"
+    },
+    "post_qualifying__hierarchical_pl__full__2024__trial2": {
+      "seconds": 0.7944818749092519,
+      "status": "succeeded"
+    },
+    "post_qualifying__hierarchical_pl__full__2025": {
+      "inference_seconds_per_race": 0.0005318298305307204,
+      "refit_and_calibration_seconds": 1.3293304999824613
+    },
+    "post_qualifying__hierarchical_pl__full__2025__trial0": {
+      "seconds": 1.216074708965607,
+      "status": "succeeded"
+    },
+    "post_qualifying__hierarchical_pl__full__2025__trial1": {
+      "seconds": 0.7533568749204278,
+      "status": "succeeded"
+    },
+    "post_qualifying__hierarchical_pl__full__2025__trial2": {
+      "seconds": 1.2686419159872457,
+      "status": "succeeded"
+    },
+    "post_qualifying__hierarchical_pl__no_qualifying__2023": {
+      "inference_seconds_per_race": 0.0004685302741232921,
+      "refit_and_calibration_seconds": 0.3044891660101712
+    },
+    "post_qualifying__hierarchical_pl__no_qualifying__2023__trial0": {
+      "seconds": 0.23416654102038592,
+      "status": "succeeded"
+    },
+    "post_qualifying__hierarchical_pl__no_qualifying__2023__trial1": {
+      "seconds": 0.1537719169864431,
+      "status": "succeeded"
+    },
+    "post_qualifying__hierarchical_pl__no_qualifying__2023__trial2": {
+      "seconds": 0.24336070800200105,
+      "status": "succeeded"
+    },
+    "post_qualifying__hierarchical_pl__no_qualifying__2024": {
+      "inference_seconds_per_race": 0.00046665970876347274,
+      "refit_and_calibration_seconds": 0.8020192499971017
+    },
+    "post_qualifying__hierarchical_pl__no_qualifying__2024__trial0": {
+      "seconds": 0.7392016249941662,
+      "status": "succeeded"
+    },
+    "post_qualifying__hierarchical_pl__no_qualifying__2024__trial1": {
+      "seconds": 0.407315667020157,
+      "status": "succeeded"
+    },
+    "post_qualifying__hierarchical_pl__no_qualifying__2024__trial2": {
+      "seconds": 0.6931600419338793,
+      "status": "succeeded"
+    },
+    "post_qualifying__hierarchical_pl__no_qualifying__2025": {
+      "inference_seconds_per_race": 0.0004707013722509146,
+      "refit_and_calibration_seconds": 1.3234721249900758
+    },
+    "post_qualifying__hierarchical_pl__no_qualifying__2025__trial0": {
+      "seconds": 1.1379747909959406,
+      "status": "succeeded"
+    },
+    "post_qualifying__hierarchical_pl__no_qualifying__2025__trial1": {
+      "seconds": 0.7137589579215273,
+      "status": "succeeded"
+    },
+    "post_qualifying__hierarchical_pl__no_qualifying__2025__trial2": {
+      "seconds": 1.1831811250885949,
+      "status": "succeeded"
+    },
+    "post_qualifying__hierarchical_pl__no_recency__2023": {
+      "inference_seconds_per_race": 0.00043107008836655456,
+      "refit_and_calibration_seconds": 0.294961417093873
+    },
+    "post_qualifying__hierarchical_pl__no_recency__2023__trial0": {
+      "seconds": 0.21500349999405444,
+      "status": "succeeded"
+    },
+    "post_qualifying__hierarchical_pl__no_recency__2023__trial1": {
+      "seconds": 0.15398012497462332,
+      "status": "succeeded"
+    },
+    "post_qualifying__hierarchical_pl__no_recency__2023__trial2": {
+      "seconds": 0.21543137507978827,
+      "status": "succeeded"
+    },
+    "post_qualifying__hierarchical_pl__no_recency__2024": {
+      "inference_seconds_per_race": 0.00043268920853734016,
+      "refit_and_calibration_seconds": 0.6465043339412659
+    },
+    "post_qualifying__hierarchical_pl__no_recency__2024__trial0": {
+      "seconds": 0.5982559160329401,
+      "status": "succeeded"
+    },
+    "post_qualifying__hierarchical_pl__no_recency__2024__trial1": {
+      "seconds": 0.34112758305855095,
+      "status": "succeeded"
+    },
+    "post_qualifying__hierarchical_pl__no_recency__2024__trial2": {
+      "seconds": 0.5970629591029137,
+      "status": "succeeded"
+    },
+    "post_qualifying__hierarchical_pl__no_recency__2025": {
+      "inference_seconds_per_race": 0.0004389774161002909,
+      "refit_and_calibration_seconds": 0.6673665409907699
+    },
+    "post_qualifying__hierarchical_pl__no_recency__2025__trial0": {
+      "seconds": 0.9490774169098586,
+      "status": "succeeded"
+    },
+    "post_qualifying__hierarchical_pl__no_recency__2025__trial1": {
+      "seconds": 0.5571688329800963,
+      "status": "succeeded"
+    },
+    "post_qualifying__hierarchical_pl__no_recency__2025__trial2": {
+      "seconds": 0.9410599999828264,
+      "status": "succeeded"
+    },
+    "post_qualifying__hierarchical_pl__recent_season_pool__2023": {
+      "inference_seconds_per_race": 0.00047259850279343397,
+      "refit_and_calibration_seconds": 0.3543692920356989
+    },
+    "post_qualifying__hierarchical_pl__recent_season_pool__2023__trial0": {
+      "seconds": 0.25029933301266283,
+      "status": "succeeded"
+    },
+    "post_qualifying__hierarchical_pl__recent_season_pool__2023__trial1": {
+      "seconds": 0.17087429203093052,
+      "status": "succeeded"
+    },
+    "post_qualifying__hierarchical_pl__recent_season_pool__2023__trial2": {
+      "seconds": 0.2707795000169426,
+      "status": "succeeded"
+    },
+    "post_qualifying__hierarchical_pl__recent_season_pool__2024": {
+      "inference_seconds_per_race": 0.00047056424955371767,
+      "refit_and_calibration_seconds": 0.30310354102402925
+    },
+    "post_qualifying__hierarchical_pl__recent_season_pool__2024__trial0": {
+      "seconds": 0.39849312498699874,
+      "status": "succeeded"
+    },
+    "post_qualifying__hierarchical_pl__recent_season_pool__2024__trial1": {
+      "seconds": 0.236262375023216,
+      "status": "succeeded"
+    },
+    "post_qualifying__hierarchical_pl__recent_season_pool__2024__trial2": {
+      "seconds": 0.3707704159896821,
+      "status": "succeeded"
+    },
+    "post_qualifying__hierarchical_pl__recent_season_pool__2025": {
+      "inference_seconds_per_race": 0.0004771857541830589,
+      "refit_and_calibration_seconds": 0.3706080000847578
+    },
+    "post_qualifying__hierarchical_pl__recent_season_pool__2025__trial0": {
+      "seconds": 0.4238981669768691,
+      "status": "succeeded"
+    },
+    "post_qualifying__hierarchical_pl__recent_season_pool__2025__trial1": {
+      "seconds": 0.2800391248892993,
+      "status": "succeeded"
+    },
+    "post_qualifying__hierarchical_pl__recent_season_pool__2025__trial2": {
+      "seconds": 0.4207562499213964,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_ranking__full__2023": {
+      "inference_seconds_per_race": 0.0006233370936983688,
+      "refit_and_calibration_seconds": 0.08294720796402544
+    },
+    "post_qualifying__xgb_ranking__full__2023__trial0": {
+      "seconds": 0.0635583329712972,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_ranking__full__2023__trial1": {
+      "seconds": 0.051525042043067515,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_ranking__full__2023__trial2": {
+      "seconds": 0.042115707998164,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_ranking__full__2024": {
+      "inference_seconds_per_race": 0.0006187361238213877,
+      "refit_and_calibration_seconds": 0.10271666699554771
+    },
+    "post_qualifying__xgb_ranking__full__2024__trial0": {
+      "seconds": 0.06394083402119577,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_ranking__full__2024__trial1": {
+      "seconds": 0.08061183302197605,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_ranking__full__2024__trial2": {
+      "seconds": 0.06357650004792958,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_ranking__full__2025": {
+      "inference_seconds_per_race": 0.0006164687511045486,
+      "refit_and_calibration_seconds": 0.1277311670128256
+    },
+    "post_qualifying__xgb_ranking__full__2025__trial0": {
+      "seconds": 0.0864744579885155,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_ranking__full__2025__trial1": {
+      "seconds": 0.11230883304961026,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_ranking__full__2025__trial2": {
+      "seconds": 0.08671237505041063,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_ranking__no_qualifying__2023": {
+      "inference_seconds_per_race": 0.0006021571832455018,
+      "refit_and_calibration_seconds": 0.08321483293548226
+    },
+    "post_qualifying__xgb_ranking__no_qualifying__2023__trial0": {
+      "seconds": 0.04207166703417897,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_ranking__no_qualifying__2023__trial1": {
+      "seconds": 0.04989699996076524,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_ranking__no_qualifying__2023__trial2": {
+      "seconds": 0.04184320895001292,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_ranking__no_qualifying__2024": {
+      "inference_seconds_per_race": 0.0006087899188666294,
+      "refit_and_calibration_seconds": 0.10408183303661644
+    },
+    "post_qualifying__xgb_ranking__no_qualifying__2024__trial0": {
+      "seconds": 0.06307849998120219,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_ranking__no_qualifying__2024__trial1": {
+      "seconds": 0.07874016603454947,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_ranking__no_qualifying__2024__trial2": {
+      "seconds": 0.062854666961357,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_ranking__no_qualifying__2025": {
+      "inference_seconds_per_race": 0.0006089861271902919,
+      "refit_and_calibration_seconds": 0.12401029095053673
+    },
+    "post_qualifying__xgb_ranking__no_qualifying__2025__trial0": {
+      "seconds": 0.10663583304267377,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_ranking__no_qualifying__2025__trial1": {
+      "seconds": 0.10893108404707164,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_ranking__no_qualifying__2025__trial2": {
+      "seconds": 0.08532887499313802,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_ranking__no_recency__2023": {
+      "inference_seconds_per_race": 0.0005883503631180661,
+      "refit_and_calibration_seconds": 0.08150387508794665
+    },
+    "post_qualifying__xgb_ranking__no_recency__2023__trial0": {
+      "seconds": 0.04131074994802475,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_ranking__no_recency__2023__trial1": {
+      "seconds": 0.04866937501356006,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_ranking__no_recency__2023__trial2": {
+      "seconds": 0.04227604204788804,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_ranking__no_recency__2024": {
+      "inference_seconds_per_race": 0.001583833329884025,
+      "refit_and_calibration_seconds": 0.10204320796765387
+    },
+    "post_qualifying__xgb_ranking__no_recency__2024__trial0": {
+      "seconds": 0.06129491701722145,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_ranking__no_recency__2024__trial1": {
+      "seconds": 0.07482666708528996,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_ranking__no_recency__2024__trial2": {
+      "seconds": 0.06133720895741135,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_ranking__no_recency__2025": {
+      "inference_seconds_per_race": 0.0005752135427125419,
+      "refit_and_calibration_seconds": 0.18195087497588247
+    },
+    "post_qualifying__xgb_ranking__no_recency__2025__trial0": {
+      "seconds": 0.08262558293063194,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_ranking__no_recency__2025__trial1": {
+      "seconds": 0.1060548749519512,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_ranking__no_recency__2025__trial2": {
+      "seconds": 0.08347420895006508,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_ranking__recent_season_pool__2023": {
+      "inference_seconds_per_race": 0.0005932462253523144,
+      "refit_and_calibration_seconds": 0.08371083298698068
+    },
+    "post_qualifying__xgb_ranking__recent_season_pool__2023__trial0": {
+      "seconds": 0.042835458065383136,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_ranking__recent_season_pool__2023__trial1": {
+      "seconds": 0.05242395796813071,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_ranking__recent_season_pool__2023__trial2": {
+      "seconds": 0.043261124985292554,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_ranking__recent_season_pool__2024": {
+      "inference_seconds_per_race": 0.0006247499986784533,
+      "refit_and_calibration_seconds": 0.15653312508948147
+    },
+    "post_qualifying__xgb_ranking__recent_season_pool__2024__trial0": {
+      "seconds": 0.0628623339580372,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_ranking__recent_season_pool__2024__trial1": {
+      "seconds": 0.08055620896629989,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_ranking__recent_season_pool__2024__trial2": {
+      "seconds": 0.06283079204149544,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_ranking__recent_season_pool__2025": {
+      "inference_seconds_per_race": 0.000602161458421809,
+      "refit_and_calibration_seconds": 0.12557225010823458
+    },
+    "post_qualifying__xgb_ranking__recent_season_pool__2025__trial0": {
+      "seconds": 0.08452616701833904,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_ranking__recent_season_pool__2025__trial1": {
+      "seconds": 0.10868449998088181,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_ranking__recent_season_pool__2025__trial2": {
+      "seconds": 0.08467383298557252,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_regression__full__2023": {
+      "inference_seconds_per_race": 0.0006353522714396769,
+      "refit_and_calibration_seconds": 0.10647270805202425
+    },
+    "post_qualifying__xgb_regression__full__2023__trial0": {
+      "seconds": 0.03633395803626627,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_regression__full__2023__trial1": {
+      "seconds": 0.04182758298702538,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_regression__full__2023__trial2": {
+      "seconds": 0.03699466597754508,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_regression__full__2024": {
+      "inference_seconds_per_race": 0.0006134635429286087,
+      "refit_and_calibration_seconds": 0.08399662503506988
+    },
+    "post_qualifying__xgb_regression__full__2024__trial0": {
+      "seconds": 0.06787270901259035,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_regression__full__2024__trial1": {
+      "seconds": 0.05316295789089054,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_regression__full__2024__trial2": {
+      "seconds": 0.04654983407817781,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_regression__full__2025": {
+      "inference_seconds_per_race": 0.0006244756659725681,
+      "refit_and_calibration_seconds": 0.13579750002827495
+    },
+    "post_qualifying__xgb_regression__full__2025__trial0": {
+      "seconds": 0.056680875015445054,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_regression__full__2025__trial1": {
+      "seconds": 0.06615483295172453,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_regression__full__2025__trial2": {
+      "seconds": 0.056354249943979084,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_regression__no_qualifying__2023": {
+      "inference_seconds_per_race": 0.0005893352314491164,
+      "refit_and_calibration_seconds": 0.0734983750153333
+    },
+    "post_qualifying__xgb_regression__no_qualifying__2023__trial0": {
+      "seconds": 0.03592591593042016,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_regression__no_qualifying__2023__trial1": {
+      "seconds": 0.04126924998126924,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_regression__no_qualifying__2023__trial2": {
+      "seconds": 0.03585058299358934,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_regression__no_qualifying__2024": {
+      "inference_seconds_per_race": 0.0005938211640265459,
+      "refit_and_calibration_seconds": 0.08256624999921769
+    },
+    "post_qualifying__xgb_regression__no_qualifying__2024__trial0": {
+      "seconds": 0.04497595794964582,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_regression__no_qualifying__2024__trial1": {
+      "seconds": 0.05132970807608217,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_regression__no_qualifying__2024__trial2": {
+      "seconds": 0.04466083296574652,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_regression__no_qualifying__2025": {
+      "inference_seconds_per_race": 0.0006050451241511231,
+      "refit_and_calibration_seconds": 0.09236216696444899
+    },
+    "post_qualifying__xgb_regression__no_qualifying__2025__trial0": {
+      "seconds": 0.055046333000063896,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_regression__no_qualifying__2025__trial1": {
+      "seconds": 0.0634977089939639,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_regression__no_qualifying__2025__trial2": {
+      "seconds": 0.05532474990468472,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_regression__no_recency__2023": {
+      "inference_seconds_per_race": 0.0005486098604954102,
+      "refit_and_calibration_seconds": 0.07218500005546957
+    },
+    "post_qualifying__xgb_regression__no_recency__2023__trial0": {
+      "seconds": 0.035113834077492356,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_regression__no_recency__2023__trial1": {
+      "seconds": 0.03958520898595452,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_regression__no_recency__2023__trial2": {
+      "seconds": 0.035247207968495786,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_regression__no_recency__2024": {
+      "inference_seconds_per_race": 0.0005810017513188844,
+      "refit_and_calibration_seconds": 0.11427308304701
+    },
+    "post_qualifying__xgb_regression__no_recency__2024__trial0": {
+      "seconds": 0.04343833297025412,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_regression__no_recency__2024__trial1": {
+      "seconds": 0.0482423750218004,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_regression__no_recency__2024__trial2": {
+      "seconds": 0.04338979197200388,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_regression__no_recency__2025": {
+      "inference_seconds_per_race": 0.0005894010440291216,
+      "refit_and_calibration_seconds": 0.09012641699519008
+    },
+    "post_qualifying__xgb_regression__no_recency__2025__trial0": {
+      "seconds": 0.054262915975414217,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_regression__no_recency__2025__trial1": {
+      "seconds": 0.059841834008693695,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_regression__no_recency__2025__trial2": {
+      "seconds": 0.05297770805191249,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_regression__recent_season_pool__2023": {
+      "inference_seconds_per_race": 0.000616418589329855,
+      "refit_and_calibration_seconds": 0.10626170900650322
+    },
+    "post_qualifying__xgb_regression__recent_season_pool__2023__trial0": {
+      "seconds": 0.03651545895263553,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_regression__recent_season_pool__2023__trial1": {
+      "seconds": 0.04174558294471353,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_regression__recent_season_pool__2023__trial2": {
+      "seconds": 0.036536000086925924,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_regression__recent_season_pool__2024": {
+      "inference_seconds_per_race": 0.0006154600851004943,
+      "refit_and_calibration_seconds": 0.08324212511070073
+    },
+    "post_qualifying__xgb_regression__recent_season_pool__2024__trial0": {
+      "seconds": 0.04486770904622972,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_regression__recent_season_pool__2024__trial1": {
+      "seconds": 0.05205658299382776,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_regression__recent_season_pool__2024__trial2": {
+      "seconds": 0.04561658401507884,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_regression__recent_season_pool__2025": {
+      "inference_seconds_per_race": 0.0006106822935786719,
+      "refit_and_calibration_seconds": 0.09282479097601026
+    },
+    "post_qualifying__xgb_regression__recent_season_pool__2025__trial0": {
+      "seconds": 0.058437875006347895,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_regression__recent_season_pool__2025__trial1": {
+      "seconds": 0.06411970895715058,
+      "status": "succeeded"
+    },
+    "post_qualifying__xgb_regression__recent_season_pool__2025__trial2": {
+      "seconds": 0.05451820802409202,
+      "status": "succeeded"
+    },
+    "pre_weekend__hierarchical_pl__full__2023": {
+      "inference_seconds_per_race": 0.00046836931406604975,
+      "refit_and_calibration_seconds": 0.3186951669631526
+    },
+    "pre_weekend__hierarchical_pl__full__2023__trial0": {
+      "seconds": 0.2403125410201028,
+      "status": "succeeded"
+    },
+    "pre_weekend__hierarchical_pl__full__2023__trial1": {
+      "seconds": 0.15677854197565466,
+      "status": "succeeded"
+    },
+    "pre_weekend__hierarchical_pl__full__2023__trial2": {
+      "seconds": 0.24837174999993294,
+      "status": "succeeded"
+    },
+    "pre_weekend__hierarchical_pl__full__2024": {
+      "inference_seconds_per_race": 0.00046414062671829015,
+      "refit_and_calibration_seconds": 0.8294035420985892
+    },
+    "pre_weekend__hierarchical_pl__full__2024__trial0": {
+      "seconds": 0.7587711659725755,
+      "status": "succeeded"
+    },
+    "pre_weekend__hierarchical_pl__full__2024__trial1": {
+      "seconds": 0.4198689589975402,
+      "status": "succeeded"
+    },
+    "pre_weekend__hierarchical_pl__full__2024__trial2": {
+      "seconds": 0.7043163749622181,
+      "status": "succeeded"
+    },
+    "pre_weekend__hierarchical_pl__full__2025": {
+      "inference_seconds_per_race": 0.0004801371687790379,
+      "refit_and_calibration_seconds": 1.5425264580408111
+    },
+    "pre_weekend__hierarchical_pl__full__2025__trial0": {
+      "seconds": 1.1655607500579208,
+      "status": "succeeded"
+    },
+    "pre_weekend__hierarchical_pl__full__2025__trial1": {
+      "seconds": 0.7248513750964776,
+      "status": "succeeded"
+    },
+    "pre_weekend__hierarchical_pl__full__2025__trial2": {
+      "seconds": 1.2767227080184966,
+      "status": "succeeded"
+    },
+    "pre_weekend__hierarchical_pl__no_recency__2023": {
+      "inference_seconds_per_race": 0.00040014018304646015,
+      "refit_and_calibration_seconds": 0.2892447910271585
+    },
+    "pre_weekend__hierarchical_pl__no_recency__2023__trial0": {
+      "seconds": 0.370452250004746,
+      "status": "succeeded"
+    },
+    "pre_weekend__hierarchical_pl__no_recency__2023__trial1": {
+      "seconds": 0.13689912506379187,
+      "status": "succeeded"
+    },
+    "pre_weekend__hierarchical_pl__no_recency__2023__trial2": {
+      "seconds": 0.2117611669236794,
+      "status": "succeeded"
+    },
+    "pre_weekend__hierarchical_pl__no_recency__2024": {
+      "inference_seconds_per_race": 0.0004139374990093832,
+      "refit_and_calibration_seconds": 0.5431139579741284
+    },
+    "pre_weekend__hierarchical_pl__no_recency__2024__trial0": {
+      "seconds": 0.5660882910015061,
+      "status": "succeeded"
+    },
+    "pre_weekend__hierarchical_pl__no_recency__2024__trial1": {
+      "seconds": 0.32838058308698237,
+      "status": "succeeded"
+    },
+    "pre_weekend__hierarchical_pl__no_recency__2024__trial2": {
+      "seconds": 0.5262423329986632,
+      "status": "succeeded"
+    },
+    "pre_weekend__hierarchical_pl__no_recency__2025": {
+      "inference_seconds_per_race": 0.0004257725425607835,
+      "refit_and_calibration_seconds": 0.8941567500587553
+    },
+    "pre_weekend__hierarchical_pl__no_recency__2025__trial0": {
+      "seconds": 0.8245500000193715,
+      "status": "succeeded"
+    },
+    "pre_weekend__hierarchical_pl__no_recency__2025__trial1": {
+      "seconds": 0.5075397919863462,
+      "status": "succeeded"
+    },
+    "pre_weekend__hierarchical_pl__no_recency__2025__trial2": {
+      "seconds": 0.8274067079182714,
+      "status": "succeeded"
+    },
+    "pre_weekend__hierarchical_pl__recent_season_pool__2023": {
+      "inference_seconds_per_race": 0.00048431440849195826,
+      "refit_and_calibration_seconds": 0.30254312499891967
+    },
+    "pre_weekend__hierarchical_pl__recent_season_pool__2023__trial0": {
+      "seconds": 0.2290600830456242,
+      "status": "succeeded"
+    },
+    "pre_weekend__hierarchical_pl__recent_season_pool__2023__trial1": {
+      "seconds": 0.15171533299144357,
+      "status": "succeeded"
+    },
+    "pre_weekend__hierarchical_pl__recent_season_pool__2023__trial2": {
+      "seconds": 0.23921650007832795,
+      "status": "succeeded"
+    },
+    "pre_weekend__hierarchical_pl__recent_season_pool__2024": {
+      "inference_seconds_per_race": 0.0004603871687625845,
+      "refit_and_calibration_seconds": 0.2792460419004783
+    },
+    "pre_weekend__hierarchical_pl__recent_season_pool__2024__trial0": {
+      "seconds": 0.38632908288855106,
+      "status": "succeeded"
+    },
+    "pre_weekend__hierarchical_pl__recent_season_pool__2024__trial1": {
+      "seconds": 0.21498591697309166,
+      "status": "succeeded"
+    },
+    "pre_weekend__hierarchical_pl__recent_season_pool__2024__trial2": {
+      "seconds": 0.3668582499958575,
+      "status": "succeeded"
+    },
+    "pre_weekend__hierarchical_pl__recent_season_pool__2025": {
+      "inference_seconds_per_race": 0.00046219270734582096,
+      "refit_and_calibration_seconds": 0.3462633329909295
+    },
+    "pre_weekend__hierarchical_pl__recent_season_pool__2025__trial0": {
+      "seconds": 0.40242154197767377,
+      "status": "succeeded"
+    },
+    "pre_weekend__hierarchical_pl__recent_season_pool__2025__trial1": {
+      "seconds": 0.2733012499520555,
+      "status": "succeeded"
+    },
+    "pre_weekend__hierarchical_pl__recent_season_pool__2025__trial2": {
+      "seconds": 0.4441837080521509,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_ranking__full__2023": {
+      "inference_seconds_per_race": 0.0006058409079824659,
+      "refit_and_calibration_seconds": 0.08552737510763109
+    },
+    "pre_weekend__xgb_ranking__full__2023__trial0": {
+      "seconds": 0.04513933300040662,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_ranking__full__2023__trial1": {
+      "seconds": 0.052139375009573996,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_ranking__full__2023__trial2": {
+      "seconds": 0.04355337505694479,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_ranking__full__2024": {
+      "inference_seconds_per_race": 0.0005866232531843707,
+      "refit_and_calibration_seconds": 0.10547408391721547
+    },
+    "pre_weekend__xgb_ranking__full__2024__trial0": {
+      "seconds": 0.06412083306349814,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_ranking__full__2024__trial1": {
+      "seconds": 0.0800928749376908,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_ranking__full__2024__trial2": {
+      "seconds": 0.06395158299710602,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_ranking__full__2025": {
+      "inference_seconds_per_race": 0.0006077864575975885,
+      "refit_and_calibration_seconds": 0.14815320901107043
+    },
+    "pre_weekend__xgb_ranking__full__2025__trial0": {
+      "seconds": 0.08679787500295788,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_ranking__full__2025__trial1": {
+      "seconds": 0.11065412499010563,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_ranking__full__2025__trial2": {
+      "seconds": 0.08623145800083876,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_ranking__no_recency__2023": {
+      "inference_seconds_per_race": 0.0005432480935599993,
+      "refit_and_calibration_seconds": 0.08566804206930101
+    },
+    "pre_weekend__xgb_ranking__no_recency__2023__trial0": {
+      "seconds": 0.04135916708037257,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_ranking__no_recency__2023__trial1": {
+      "seconds": 0.05011562502477318,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_ranking__no_recency__2023__trial2": {
+      "seconds": 0.04233466705773026,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_ranking__no_recency__2024": {
+      "inference_seconds_per_race": 0.0005446979193948209,
+      "refit_and_calibration_seconds": 0.10355404089204967
+    },
+    "pre_weekend__xgb_ranking__no_recency__2024__trial0": {
+      "seconds": 0.06204679096117616,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_ranking__no_recency__2024__trial1": {
+      "seconds": 0.07487491704523563,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_ranking__no_recency__2024__trial2": {
+      "seconds": 0.06236108299344778,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_ranking__no_recency__2025": {
+      "inference_seconds_per_race": 0.000569338541633139,
+      "refit_and_calibration_seconds": 0.18483262497466058
+    },
+    "pre_weekend__xgb_ranking__no_recency__2025__trial0": {
+      "seconds": 0.0832632080418989,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_ranking__no_recency__2025__trial1": {
+      "seconds": 0.10742379201110452,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_ranking__no_recency__2025__trial2": {
+      "seconds": 0.08345029107294977,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_ranking__recent_season_pool__2023": {
+      "inference_seconds_per_race": 0.0005985359999943863,
+      "refit_and_calibration_seconds": 0.08503483305685222
+    },
+    "pre_weekend__xgb_ranking__recent_season_pool__2023__trial0": {
+      "seconds": 0.04328637500293553,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_ranking__recent_season_pool__2023__trial1": {
+      "seconds": 0.05197737505659461,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_ranking__recent_season_pool__2023__trial2": {
+      "seconds": 0.04614208301063627,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_ranking__recent_season_pool__2024": {
+      "inference_seconds_per_race": 0.0006020000000717118,
+      "refit_and_calibration_seconds": 0.10379658301826566
+    },
+    "pre_weekend__xgb_ranking__recent_season_pool__2024__trial0": {
+      "seconds": 0.06364662502892315,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_ranking__recent_season_pool__2024__trial1": {
+      "seconds": 0.07998775003943592,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_ranking__recent_season_pool__2024__trial2": {
+      "seconds": 0.06374545907601714,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_ranking__recent_season_pool__2025": {
+      "inference_seconds_per_race": 0.0005983472510706633,
+      "refit_and_calibration_seconds": 0.18906074995175004
+    },
+    "pre_weekend__xgb_ranking__recent_season_pool__2025__trial0": {
+      "seconds": 0.08438829204533249,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_ranking__recent_season_pool__2025__trial1": {
+      "seconds": 0.11020624998491257,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_ranking__recent_season_pool__2025__trial2": {
+      "seconds": 0.08728891599457711,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_regression__full__2023": {
+      "inference_seconds_per_race": 0.0006017670437524265,
+      "refit_and_calibration_seconds": 0.0847683340543881
+    },
+    "pre_weekend__xgb_regression__full__2023__trial0": {
+      "seconds": 0.25356683402787894,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_regression__full__2023__trial1": {
+      "seconds": 0.047831582953222096,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_regression__full__2023__trial2": {
+      "seconds": 0.04437162505928427,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_regression__full__2024": {
+      "inference_seconds_per_race": 0.0006012412874648968,
+      "refit_and_calibration_seconds": 0.10483166691847146
+    },
+    "pre_weekend__xgb_regression__full__2024__trial0": {
+      "seconds": 0.049329458037391305,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_regression__full__2024__trial1": {
+      "seconds": 0.053474790998734534,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_regression__full__2024__trial2": {
+      "seconds": 0.04593741591088474,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_regression__full__2025": {
+      "inference_seconds_per_race": 0.0006151232907238106,
+      "refit_and_calibration_seconds": 0.09470187500119209
+    },
+    "pre_weekend__xgb_regression__full__2025__trial0": {
+      "seconds": 0.05616891698446125,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_regression__full__2025__trial1": {
+      "seconds": 0.06622283300384879,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_regression__full__2025__trial2": {
+      "seconds": 0.05692237499170005,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_regression__no_recency__2023": {
+      "inference_seconds_per_race": 0.0005557821820151399,
+      "refit_and_calibration_seconds": 0.10051670798566192
+    },
+    "pre_weekend__xgb_regression__no_recency__2023__trial0": {
+      "seconds": 0.03421733295544982,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_regression__no_recency__2023__trial1": {
+      "seconds": 0.03836762497667223,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_regression__no_recency__2023__trial2": {
+      "seconds": 0.034921874990686774,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_regression__no_recency__2024": {
+      "inference_seconds_per_race": 0.0005352690835328152,
+      "refit_and_calibration_seconds": 0.08020045806188136
+    },
+    "pre_weekend__xgb_regression__no_recency__2024__trial0": {
+      "seconds": 0.042420708923600614,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_regression__no_recency__2024__trial1": {
+      "seconds": 0.047242083004675806,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_regression__no_recency__2024__trial2": {
+      "seconds": 0.04249200003687292,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_regression__no_recency__2025": {
+      "inference_seconds_per_race": 0.0005513611249625683,
+      "refit_and_calibration_seconds": 0.12196229200344533
+    },
+    "pre_weekend__xgb_regression__no_recency__2025__trial0": {
+      "seconds": 0.05234316596761346,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_regression__no_recency__2025__trial1": {
+      "seconds": 0.05824437504634261,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_regression__no_recency__2025__trial2": {
+      "seconds": 0.05307220795657486,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_regression__recent_season_pool__2023": {
+      "inference_seconds_per_race": 0.0005823541379703039,
+      "refit_and_calibration_seconds": 0.07845150004141033
+    },
+    "pre_weekend__xgb_regression__recent_season_pool__2023__trial0": {
+      "seconds": 0.05863220803439617,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_regression__recent_season_pool__2023__trial1": {
+      "seconds": 0.04119516699574888,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_regression__recent_season_pool__2023__trial2": {
+      "seconds": 0.037069167010486126,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_regression__recent_season_pool__2024": {
+      "inference_seconds_per_race": 0.0006086111243348569,
+      "refit_and_calibration_seconds": 0.12110604101326317
+    },
+    "pre_weekend__xgb_regression__recent_season_pool__2024__trial0": {
+      "seconds": 0.044799083028919995,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_regression__recent_season_pool__2024__trial1": {
+      "seconds": 0.05183554103132337,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_regression__recent_season_pool__2024__trial2": {
+      "seconds": 0.04571962496265769,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_regression__recent_season_pool__2025": {
+      "inference_seconds_per_race": 0.0006106076228509968,
+      "refit_and_calibration_seconds": 0.1293587499530986
+    },
+    "pre_weekend__xgb_regression__recent_season_pool__2025__trial0": {
+      "seconds": 0.05368587502744049,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_regression__recent_season_pool__2025__trial1": {
+      "seconds": 0.06153412500862032,
+      "status": "succeeded"
+    },
+    "pre_weekend__xgb_regression__recent_season_pool__2025__trial2": {
+      "seconds": 0.0541411250596866,
+      "status": "succeeded"
+    }
+  },
+  "dataset_sha256": "21153f3a012bede74987f713d37e8100b2d556f60ffbcced5ca3a578c0c577a2",
+  "dependency_lock_sha256": "3837160a2f8338aec547a9a3a01f868560f6edc118807b356dd71f379abffd3d",
+  "elapsed_seconds": 72.63602183398325,
+  "experiment_id": "wp07-4875d84397424aefb6fea4303b0d394d",
+  "git_dirty": false,
+  "git_revision": "e3484a3a19c4706c8f182520cb78c36f628c3c74",
+  "lock_sha256": "fa55bee0b5abe02f3f48bc8f9971a558f69f62dd2e49f5647ca8710c9b9dc8bb",
+  "model_bundle_sha256": "8a18f927411999a1d534d45e218e4b13f5a17a56325d55a78e0ae2a061bb1c39",
+  "model_files": {
+    "models/post_qualifying__hierarchical_pl__full__2023.json.gz": "9a7eff7d806b517302fc956f1cbefc89a80ca8f8c6c358a6073f61d42b868c52",
+    "models/post_qualifying__hierarchical_pl__full__2024.json.gz": "b5eb349b87a15dac75b22b911a60e542dfabf3e6aa3f6ba5645ab07e3cf411af",
+    "models/post_qualifying__hierarchical_pl__full__2025.json.gz": "7a84375dc4f9aba45a759c8288c53fbd2df82ae3836c9bcc15dd151f97108d90",
+    "models/post_qualifying__hierarchical_pl__no_qualifying__2023.json.gz": "3ce53182e1617ee9a6594f4170bf37d31919b0b1d41dfce64b4efc101eb41af7",
+    "models/post_qualifying__hierarchical_pl__no_qualifying__2024.json.gz": "0b5d5be6d08a06f1a8c08bed672fcf280748ec46469bbbf5aac7f344b01b5303",
+    "models/post_qualifying__hierarchical_pl__no_qualifying__2025.json.gz": "244ed917bf044301d534021bf62caca00cdd4d03447395672c0c390f98b12a22",
+    "models/post_qualifying__hierarchical_pl__no_recency__2023.json.gz": "c44ee57a1d9fb9a9f4acfa4037eaf96ea2529275fa45c2d92b2036929e560e2e",
+    "models/post_qualifying__hierarchical_pl__no_recency__2024.json.gz": "016b039c50b465df57b153554bcf4bf5a9b079fc3766bd48c3228b6b0b922ff0",
+    "models/post_qualifying__hierarchical_pl__no_recency__2025.json.gz": "b46149062b9227fb26a482e82a25b38fd9c561b8f827a5603d9cb54297618e5f",
+    "models/post_qualifying__hierarchical_pl__recent_season_pool__2023.json.gz": "45c09e8526f58f71855d021cf906df0f0579ecda1f67279b2bd2e051975093eb",
+    "models/post_qualifying__hierarchical_pl__recent_season_pool__2024.json.gz": "a2bc0f17a372905f0c44119db2e702f215da516cbff876b4c915699d1cf38b9a",
+    "models/post_qualifying__hierarchical_pl__recent_season_pool__2025.json.gz": "60537721feae6e59e7a4a20cbde37184d339817fbd7736a5f48e0154c600935e",
+    "models/post_qualifying__xgb_ranking__full__2023.json.gz": "24619ec346a53d2166e0fb5b5686cf417a17159a6841825b3d9015ab8045fb30",
+    "models/post_qualifying__xgb_ranking__full__2024.json.gz": "aff22251b42a889efc742fed54994270008edce71358f352660ceb63855709fe",
+    "models/post_qualifying__xgb_ranking__full__2025.json.gz": "119b923183b6a94438b8b19b07ec8bdbe246fbf187b5564899dc270105b6468d",
+    "models/post_qualifying__xgb_ranking__no_qualifying__2023.json.gz": "f70732fde04bb6a252fc160a17ed325571376be9ae3addbf11c62f07534a3a27",
+    "models/post_qualifying__xgb_ranking__no_qualifying__2024.json.gz": "c7e748f21fdc370c998c44bf7032d60958b85a01983e106d7160c48544415908",
+    "models/post_qualifying__xgb_ranking__no_qualifying__2025.json.gz": "c52b8936c16a7b9567908cac2d6d570a19ad6b5125d90232c517a1bdb001f556",
+    "models/post_qualifying__xgb_ranking__no_recency__2023.json.gz": "2a03d67d43ea656a82fdf15791813d88b37961cb20b28882c8b40d1624d170bc",
+    "models/post_qualifying__xgb_ranking__no_recency__2024.json.gz": "9cc792235824443d5a8e87f770d8acc1e5013d2e77f088018b692bea268d6e50",
+    "models/post_qualifying__xgb_ranking__no_recency__2025.json.gz": "7a1aa33a9c92a274396154260c82cf56f3046c8b85179604aabb51cac2f3d179",
+    "models/post_qualifying__xgb_ranking__recent_season_pool__2023.json.gz": "5512906af97493ff6290fc34f9e3b9201aa6783b48b02d5e7703c7ed9df7ba3d",
+    "models/post_qualifying__xgb_ranking__recent_season_pool__2024.json.gz": "dab612b691ac9206017e2e9534d219a285d48cf9713cb364fe23e14780ed4761",
+    "models/post_qualifying__xgb_ranking__recent_season_pool__2025.json.gz": "ef842931430251a21ea86070e3680239ea8514539857a02f0cb3ae3d7369afbd",
+    "models/post_qualifying__xgb_regression__full__2023.json.gz": "c307660ea82c2b2fb2d3f7faf8b7a57af54e68dfde7efcdddfea31ff5d1ca0df",
+    "models/post_qualifying__xgb_regression__full__2024.json.gz": "2cc5cb895f86614060d98d659ff79f6a86de653773330806b752d544f49af70c",
+    "models/post_qualifying__xgb_regression__full__2025.json.gz": "37d327e6031503e230a31456907aaebcc62f8d46d855dca01888ce2c5690ccd0",
+    "models/post_qualifying__xgb_regression__no_qualifying__2023.json.gz": "e95b61748013813d4f137a67e6f2a720482ebefa451faa2d7757c792b4060544",
+    "models/post_qualifying__xgb_regression__no_qualifying__2024.json.gz": "bb3e4aa068a14b8882639882cd47bff71adf205cbdef2241fc80d65ffb8ee524",
+    "models/post_qualifying__xgb_regression__no_qualifying__2025.json.gz": "c4c8300cbf9709a8d40bf959b97e53b36363afef92da35fc4fee5e7a90f32b28",
+    "models/post_qualifying__xgb_regression__no_recency__2023.json.gz": "76f07969c9c0b49f2e48f871fffd630c5a7b628839275aaba7b3ffbca0548a49",
+    "models/post_qualifying__xgb_regression__no_recency__2024.json.gz": "eac53d28828e71f5b5c954caab4fc6c85ef493fa75079521ae6ee6f184867f51",
+    "models/post_qualifying__xgb_regression__no_recency__2025.json.gz": "ce1462a0972bf561fe196c4862672bf0027afb029292f769692e50df5ef62efa",
+    "models/post_qualifying__xgb_regression__recent_season_pool__2023.json.gz": "c1705b1da2b7232109e13bf109a37ed662470c6dd9695778e9971f97e5132ece",
+    "models/post_qualifying__xgb_regression__recent_season_pool__2024.json.gz": "d3ace0d4c19dfad7c53017be34124510146d9ad35cdc9afa836caa9898e67487",
+    "models/post_qualifying__xgb_regression__recent_season_pool__2025.json.gz": "e896035dba75e8040e44715586a621d10490b052510cb4b348b4c494f50d81a6",
+    "models/pre_weekend__hierarchical_pl__full__2023.json.gz": "cc28ed3fd1d76d4948f17ad64716d45f91fc3d42e4a3f0161b051c2cc6dc83db",
+    "models/pre_weekend__hierarchical_pl__full__2024.json.gz": "d0f51ca380208f3a5b46da71b8dda9978d0c4e5559fcbf94ce4154ef555f3785",
+    "models/pre_weekend__hierarchical_pl__full__2025.json.gz": "60f77dcf479306c0832e3be599b7a9547c560d216eb6c7ec307a85cb5b388293",
+    "models/pre_weekend__hierarchical_pl__no_recency__2023.json.gz": "5b61f9746f1fc7317de757ceb3aeac3cf7bec88e80f8d47eb2a7e6e1692bc0a6",
+    "models/pre_weekend__hierarchical_pl__no_recency__2024.json.gz": "3b46abe164ef15c89593e6ec486e77c12ed87dde10c434b5ec7b9e220a83c7bd",
+    "models/pre_weekend__hierarchical_pl__no_recency__2025.json.gz": "f5cfa91ee3061311544d958c6183b37a44063024b2b353a039fb0566e8f3d2c0",
+    "models/pre_weekend__hierarchical_pl__recent_season_pool__2023.json.gz": "c271ca74ec56f80ed9d2078249714c32747b9fcd142856bb6a2085adcc9afcf6",
+    "models/pre_weekend__hierarchical_pl__recent_season_pool__2024.json.gz": "925fec982ed31dd8090169a31e9fbbbe683102055129bf2260d299a3ec686c06",
+    "models/pre_weekend__hierarchical_pl__recent_season_pool__2025.json.gz": "95203da11acc188c6cfea310d90628ed04545ef75df8c62f1bd520b8dde08e9f",
+    "models/pre_weekend__xgb_ranking__full__2023.json.gz": "4158daae39c4f3fc860369246c73f4ea1c9f40d848e6ba9b081c3cf8247b8427",
+    "models/pre_weekend__xgb_ranking__full__2024.json.gz": "73cf30f3c42aac5b2a01c20c421e0dd9fc1acd0db7b8e1384a90cb0f1d12e887",
+    "models/pre_weekend__xgb_ranking__full__2025.json.gz": "bbfac21249b0cb5b6c6bb6c444f899bac5388dbc4a6e4367865c751b0a87afbd",
+    "models/pre_weekend__xgb_ranking__no_recency__2023.json.gz": "4a5028e9e4a2277a10bc309f853c750bf978d24f797b0f0440dc95e6bb943a0b",
+    "models/pre_weekend__xgb_ranking__no_recency__2024.json.gz": "e5dcd4c95f71f105913f5640b202477ad8a77fe447afd61d9bf90ef7881f812e",
+    "models/pre_weekend__xgb_ranking__no_recency__2025.json.gz": "5e1e56b9e8faa22224737df9368ffc7225560a9f829980e0a3c3e744c987d672",
+    "models/pre_weekend__xgb_ranking__recent_season_pool__2023.json.gz": "d2e3fd76b7f34ff8fba4bd970f55176b2a32b88126b9352f83bbc21a233a639e",
+    "models/pre_weekend__xgb_ranking__recent_season_pool__2024.json.gz": "b547559ffcbda56d6fc98d887361d5980f7edecc3ec3527af2ab4507fecf07f1",
+    "models/pre_weekend__xgb_ranking__recent_season_pool__2025.json.gz": "9c30836530c718074875b477c6393cd7e0bfaf822ec2765d9be6ebb5d03d2f1b",
+    "models/pre_weekend__xgb_regression__full__2023.json.gz": "4c5cd99b8690d3fb638d30e5113989ab41286aaae60306964ccd1696623a0025",
+    "models/pre_weekend__xgb_regression__full__2024.json.gz": "28a903177e02fcac91a3b44240fe16ac5daacc74f808a2d6ce79282b5890bd4f",
+    "models/pre_weekend__xgb_regression__full__2025.json.gz": "5f250ae2d4d28753d8e6ea8b39bb19feef477073f773bc82a5b1bcb8d5af0e44",
+    "models/pre_weekend__xgb_regression__no_recency__2023.json.gz": "8da6f1e2c5ca4b25ca48fc56583a5af34ea7f674be6afa6cd0c645e28ba2a576",
+    "models/pre_weekend__xgb_regression__no_recency__2024.json.gz": "f123f6ac36b8b2308667bfdea5f7996af62e51d68387104a44b0d996396d115a",
+    "models/pre_weekend__xgb_regression__no_recency__2025.json.gz": "8cf286e958d6eaff623c218921b462c45924d2cc155073ce498c15d3c7061b88",
+    "models/pre_weekend__xgb_regression__recent_season_pool__2023.json.gz": "776961af531c8f305b2e34fe88f15941ac59e4c241477c2e54b4790daf5ca902",
+    "models/pre_weekend__xgb_regression__recent_season_pool__2024.json.gz": "589a01a0ceea16ea32faa2c79cbfcc50b153a1cb9a1f4785c42c795d9a7fe63c",
+    "models/pre_weekend__xgb_regression__recent_season_pool__2025.json.gz": "2dc9170d3d73dc6f4592b88b121a2867d08c65bb2cd8a3a87de51764d82e608a"
+  },
+  "peak_rss_mib": 369.015625,
+  "protocol_sha256": "e02b9a516d0469b90a1563e4485fd14153e907ddb09c6b8f725426124680327b",
+  "python": "3.12.14 (main, Aug 12 2026, 13:57:54) [Clang 21.0.0 (clang-2100.1.1.101)]",
+  "report_sha256": "e379e4c5300e49d8c6efe54d1df259d650ddd43ab1057f5379fc2056d2b0fa20",
+  "seed": 6062026,
+  "split_sha256": "0cce74e9da0a6e72e75c982c832fdf441b589641cb29872c762b543e061e89aa",
+  "study_config_sha256": "d8f553ffdde0b1b667e93246bd11ddd9ea8ddab59338a5e3adf7d01d235d61c4",
+  "study_semantic_sha256": "0d99a0bd5455faafd8184872b4f277dee2a8ec688616becb8b9ce6426e249955",
+  "versions": {
+    "numpy": "2.2.0",
+    "pandas": "2.2.3",
+    "pyarrow": "23.0.1",
+    "pytest": "8.3.5",
+    "scikit-learn": "1.8.0",
+    "scipy": "1.18.1",
+    "xgboost": "3.2.0"
+  }
+}

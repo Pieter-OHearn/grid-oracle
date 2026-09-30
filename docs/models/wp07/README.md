@@ -54,3 +54,18 @@ Independent WP09 review and prospective WP15 collection remain outstanding.
 No deployed incumbent artifact was supplied; comparisons against it remain N/A.
 Attribution/licensing follow the [WP05 data card](../../datasets/WP05_DATA_CARD.md)
 and [Jolpica evidence archive](../../evidence/README.md#attribution-and-license).
+
+## Review correction: effective fitting exposure
+
+Current per-horizon reports use corrected source `e3484a3`. Cold-start and
+rare-entry diagnostics count only positive-weight fitting rows, matching each
+model's identity encoder. Earlier seasons with zero weight in
+`recent_season_pool` contribute no exposure. Model weights, predictions, tuning,
+calibration, cohort/split/config and promotion tolerances are unchanged.
+
+Original runs from `8dda408` remain under `runs/experiments/` for audit; their
+pooled exposure diagnostics are superseded. Corrected runs have a new code/report
+hash but the same model bundle hash. Repeat semantic hashes are compared within
+a measured source revision, allowing historical evidence to remain intact. See
+[the correction record](DIAGNOSTIC_CORRECTION.md) and current
+[pre-weekend](PRE_WEEKEND_REPORT.md) / [post-qualifying](POST_QUALIFYING_REPORT.md) reports.

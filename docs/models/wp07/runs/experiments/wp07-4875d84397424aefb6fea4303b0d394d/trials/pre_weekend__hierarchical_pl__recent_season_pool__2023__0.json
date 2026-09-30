@@ -1,0 +1,26 @@
+{
+  "candidate": "pre_weekend__hierarchical_pl__recent_season_pool__2023",
+  "config": {
+    "half_life": null,
+    "penalty": 0.5
+  },
+  "fit_rows_sha256": "5571395dbb50d755db87602218b48e4df7e208e8ea6ba6df055eb67720a8f452",
+  "optimization": {
+    "classified_rows": 238,
+    "gradient_max": 5.0450054885323344e-05,
+    "iterations": 21,
+    "objective": 27.7276047229595,
+    "status": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH"
+  },
+  "predictions_sha256": "8d9e872fe180e57172c38481f1765f0a3d1fbf851f08b0f3a8b6678525b69164",
+  "seconds": 0.2290600830456242,
+  "status": "succeeded",
+  "trial_index": 0,
+  "tune_races": [
+    "2022:15",
+    "2022:16",
+    "2022:17",
+    "2022:18"
+  ],
+  "winner_log_loss": 1.5644307999965434
+}

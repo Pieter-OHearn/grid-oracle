@@ -37,6 +37,22 @@ Missing-history performance covers ten races; regression's LL is 1.500885 there,
 above its overall 1.321001. Actual reserve outcomes cannot be identified from
 this dataset. No prospective, serving or future-superiority claim follows.
 
+## Effective fitting-exposure correction
+
+These reports use corrected source `e3484a3`, resolving the delegated review's
+P2 finding. Rare-entry/cold-start exposure excludes zero-weight fitting seasons.
+For every `recent_season_pool` model, 14 additional 2024 races now enter the
+rare-entry slice: **56 → 70** races across the full diagnostic cohort. Ricciardo
+has 3 positive-weight fitting appearances rather than 25. Full-model slice tables
+below retain their original counts because full models use all fitting seasons.
+
+Predictions, trained model artifacts, overall metrics and tune-only nominations
+are identical to the initial runs. Only exposure annotations, derived slices,
+related guardrail reasons and report/source fingerprints change. The removed
+`rare_entry:False` guardrail failures are explained in the
+[correction record](DIAGNOSTIC_CORRECTION.md). Original experiment directories are
+retained; their pooled-exposure diagnostics are superseded by the corrected runs.
+
 ## Served orders and calibrated winner probabilities
 
 | Model | LL | Brier | ECE | Rank MAE | Rho | Winner hit | Top3 | Top10 | Coverage | Loss block 95% CI |
@@ -119,7 +135,7 @@ The shared decoder starts at mean tied rank/temperature 4, then fits one of five
 | recent_drift:False | xgb_ranking__full | 46 | 1.322173 | 0.391615 | [0.183088, 0.561194] |
 | recent_drift:False | xgb_regression__full | 46 | 1.308035 | 0.405753 | [0.188401, 0.642050] |
 
-These are whole-field losses on races containing the flagged entrant; they are not driver-specific outcome losses. One rookie can flag every race of a season. Cold-start means identity absent from refit; unseen driver/team effects are zero with known history retained. Rare-entry means ≤3 refit appearances; low-experience means ≤3 prior races. **Actual reserve status is unavailable**; the proxy cannot distinguish a reserve from a rookie or returning driver. Team-change flags use provider entry identities and can include constructor renames, not just physical seat moves. Driver/team tags and low-experience slices overlap.
+These are whole-field losses on races containing the flagged entrant; they are not driver-specific outcome losses. One rookie can flag every race of a season. Cold-start means identity absent from positive-weight refit rows; unseen driver/team effects are zero with known history retained. Rare-entry means ≤3 positive-weight refit appearances; low-experience means ≤3 prior races. **Actual reserve status is unavailable**; the proxy cannot distinguish a reserve from a rookie or returning driver. Team-change flags use provider entry identities and can include constructor renames, not just physical seat moves. Driver/team tags and low-experience slices overlap.
 
 Missing numeric values use training-only medians and explicit indicators; null qualifying does not remove an entrant/race. The one post-qualifying missingness race and eight team-change races are too small for firm conclusions. Original block IDs survive slicing; one block yields N/A CI. Circuit/season/field-size/driver/team/missingness/weather slices and per-race failure contexts remain in the compressed report. No fit/inference trial failed in the measured runs.
 
@@ -127,15 +143,15 @@ Missing numeric values use training-only medians and explicit indicators; null q
 
 | Full model | Trial + refit/calibration time | Largest fold mean inference/race |
 | --- | ---: | ---: |
-| hierarchical_pl__full | 8.440 s | 0.000477 s |
-| xgb_ranking__full | 0.914 s | 0.000620 s |
-| xgb_regression__full | 0.755 s | 0.000659 s |
+| hierarchical_pl__full | 8.498 s | 0.000532 s |
+| xgb_ranking__full | 0.964 s | 0.000623 s |
+| xgb_regression__full | 0.788 s | 0.000635 s |
 
-Entire first run: 71.170 s; peak RSS 360.672 MiB (includes all models and reporting). Single-thread CPU on macOS arm64, Python 3.12.14, XGBoost 3.2.0, NumPy 2.2.0, SciPy 1.18.1. Per-fold mean inference includes feature transforms and decoder, excludes loading. No worst-race tail latency, isolated model RSS, serving host or accelerator qualification is claimed.
+Entire first run: 72.636 s; peak RSS 369.016 MiB (includes all models and reporting). Single-thread CPU on macOS arm64, Python 3.12.14, XGBoost 3.2.0, NumPy 2.2.0, SciPy 1.18.1. Per-fold mean inference includes feature transforms and decoder, excludes loading. No worst-race tail latency, isolated model RSS, serving host or accelerator qualification is claimed.
 
 Two clean committed-source repeats are retained under [runs](runs/experiments/), with matching semantic report/model bundle hashes. All 189 trials and 63 model artifacts per run are retained. [Reproduction command and artifact formats](README.md); [model cards](MODEL_CARDS.md).
 
-Source commit: `8dda4087398f0d7cca56c4c28a3f04e045f6c2e9`; preregistration: `08f502d`. No future-superiority claim follows from these development diagnostics. Offline artifacts do not change serving.
+Source commit: `e3484a3a19c4706c8f182520cb78c36f628c3c74`; preregistration: `08f502d`. No future-superiority claim follows from these development diagnostics. Offline artifacts do not change serving.
 
 ## Fingerprints
 
@@ -144,7 +160,7 @@ Source commit: `8dda4087398f0d7cca56c4c28a3f04e045f6c2e9`; preregistration: `08f
 - protocol_sha256: `e02b9a516d0469b90a1563e4485fd14153e907ddb09c6b8f725426124680327b`
 - config_sha256: `6e903cc9fed35497d3359074bd2361ac5d28c6995e1824efc6c9baa86e51b524`
 - study_config_sha256: `d8f553ffdde0b1b667e93246bd11ddd9ea8ddab59338a5e3adf7d01d235d61c4`
-- code_sha256: `ff8182ea639c311903dba89c2aa57d59b0cd60b09666fd62f026330d0d13b91d`
+- code_sha256: `c24fcf2f6f6d0c3f3093129282a49b645c0db12a71f8986f7439f014573f906d`
 - dependency_lock_sha256: `3837160a2f8338aec547a9a3a01f868560f6edc118807b356dd71f379abffd3d`
-- report_sha256: `fd1a81cc5bfa2a4b465ed627c1e387bf14e1f2114f10452d5548d104dac02749`
+- report_sha256: `e379e4c5300e49d8c6efe54d1df259d650ddd43ab1057f5379fc2056d2b0fa20`
 - model_bundle_sha256: `8a18f927411999a1d534d45e218e4b13f5a17a56325d55a78e0ae2a061bb1c39`
