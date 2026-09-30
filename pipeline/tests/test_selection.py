@@ -348,3 +348,22 @@ def test_wp03_research_storage_is_reproducible_immutable_and_cannot_publish(prov
 def test_locks_and_retained_source_integrity():
     assert verify_sources()["version"] == "wp09-retained-inputs-v1"
     assert read_json(CONTRACT / "config.json")["promotion"]["min_races"] == 40
+
+
+@pytest.mark.parametrize(
+    "key,value", [("target", "official_classification"), ("publication_eligible", True), ("schema", "unrecognized")]
+)
+def test_rejects_false_publication_and_target_claims(key, value):
+    field, prediction = example()
+    output = coherent_output(field, prediction, {})
+    output[key] = value
+    with pytest.raises(ValueError, match="unapproved"):
+        validate_output(output, field)
+
+
+def test_review_cannot_invent_a_missing_incumbent(tmp_path):
+    ledger = Ledger(tmp_path)
+    head = ledger.append("register", descriptor("new"), actor="owner", reason="candidate", expected_head=None)
+    head = ledger.append("challenge", {"identity": "new"}, actor="owner", reason="request review", expected_head=head)
+    with pytest.raises(ValueError, match="current incumbent"):
+        ledger.append("approve", {"identity": "new"}, actor="reviewer", reason="no incumbent", expected_head=head)

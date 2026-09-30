@@ -149,6 +149,12 @@ def coherent_output(field: Field, prediction: dict, lineage: dict, *, seed=60620
 
 
 def validate_output(output: dict, expected_field: Field):
+    if (
+        output.get("schema") != "wp09-forecast-v1"
+        or output.get("target") != "fixed_field_completion_conditional_pl"
+        or output.get("publication_eligible") is not False
+    ):
+        raise ValueError("unsupported target/schema or unapproved publication claim")
     if output["field_sha256"] != expected_field.sha256 or digest(output["field"]) != expected_field.sha256:
         raise ValueError("entry/cutoff revision changed; create a new run, never rewrite history")
     expected_field.check(output)

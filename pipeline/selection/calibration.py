@@ -12,7 +12,7 @@ def fit_winner_calibration(predictions, labels, *, fit_races, fold, dataset, spl
     calibration = set(fold["calibration"])
     if set(predictions) != calibration or set(fit_races) & calibration:
         raise ValueError("calibration requires every held-out calibration race and no training overlap")
-    if not set(fit_races) <= set(fold["train"] + fold["tune"]):
+    if not fit_races or not set(fit_races) <= set(fold["train"] + fold["tune"]):
         raise ValueError("weights fitted outside the allowed pre-calibration block")
     sizes = [len(p) for p in predictions.values()]
     fitted = fit_calibrator(

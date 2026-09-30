@@ -106,6 +106,8 @@ class Ledger:
         elif action == "approve":
             if model["state"] != "challenger" or actor == model["author"]:
                 raise ValueError("independent review of a challenger required")
+            if state["active"].get(horizon) is None:
+                raise ValueError("current incumbent pointer required before challenger approval")
             evidence = p["evidence"]
             binding = {"identity": identity, "horizon": horizon, "lineage": model["lineage"]}
             if p.get("binding_sha256") != digest(binding) or p.get("incumbent") != state["active"].get(horizon):
