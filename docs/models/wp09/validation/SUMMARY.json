@@ -104,11 +104,75 @@
   ],
   "coherent_fields": 2240,
   "conditional_calibration_races_per_horizon": 11,
-  "final_runs": [
-    "wp09-ae81f27829c14b9f84a40aeaa0deaa5c",
-    "wp09-bdbbaeadb4ba42698cefe8de28e77a6d"
+  "final_boundary_checks": [
+    {
+      "command": [
+        "/tmp/gridoracle-wp08-venv/bin/python",
+        "-m",
+        "pipeline.selection",
+        "--output",
+        "/tmp/wp09-final-boundary"
+      ],
+      "exit_code": 0,
+      "log": "/tmp/wp09-boundary-final-first.log",
+      "name": "boundary-final-first",
+      "seconds": 57.293218415929005
+    },
+    {
+      "command": [
+        "/tmp/gridoracle-wp08-venv/bin/python",
+        "-m",
+        "pipeline.selection",
+        "--output",
+        "/tmp/wp09-final-boundary"
+      ],
+      "exit_code": 0,
+      "log": "/tmp/wp09-boundary-final-second.log",
+      "name": "boundary-final-second",
+      "seconds": 61.85969945800025
+    },
+    {
+      "command": [
+        "make",
+        "check"
+      ],
+      "exit_code": 0,
+      "log": "/tmp/wp09-boundary-check.log",
+      "name": "boundary-check",
+      "seconds": 4.106069084024057
+    },
+    {
+      "command": [
+        "make",
+        "test"
+      ],
+      "exit_code": 0,
+      "log": "/tmp/wp09-boundary-test.log",
+      "name": "boundary-test",
+      "seconds": 33.997228916035965
+    },
+    {
+      "command": [
+        "/tmp/gridoracle-wp08-venv/bin/python",
+        "-m",
+        "pytest",
+        "pipeline/tests/test_selection.py",
+        "-q",
+        "--junitxml=/tmp/wp09-boundary-acceptance.xml"
+      ],
+      "exit_code": 0,
+      "log": "/tmp/wp09-boundary-acceptance.log",
+      "name": "boundary-acceptance",
+      "seconds": 5.7813782499870285
+    }
   ],
+  "final_runs": [
+    "wp09-0762031a4c934b9e900160435be657ca",
+    "wp09-db775b5e89324234a4c4e6438908dd24"
+  ],
+  "final_source_revision": "93f3fe0b4e3c47d5cb166e4f4a7c72bd823bf4a9",
   "max_winner_probability_replay_error": 3.731348877100693e-08,
+  "note": "Final direct-library frozen-feature check added; both new runs match the existing semantic report exactly.",
   "report_sha256": "e1c5d0fd6b002e48a10a428b27f64348b72be217cd86e97720d4a9cc4d9c99c7",
   "simulation_validation": {
     "coherence": "permutation, nested marginal and slot-sum assertions run for every decoded field",

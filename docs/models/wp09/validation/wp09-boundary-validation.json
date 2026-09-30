@@ -1,0 +1,62 @@
+[
+  {
+    "name": "boundary-final-first",
+    "command": [
+      "/tmp/gridoracle-wp08-venv/bin/python",
+      "-m",
+      "pipeline.selection",
+      "--output",
+      "/tmp/wp09-final-boundary"
+    ],
+    "exit_code": 0,
+    "seconds": 57.293218415929005,
+    "log": "/tmp/wp09-boundary-final-first.log"
+  },
+  {
+    "name": "boundary-final-second",
+    "command": [
+      "/tmp/gridoracle-wp08-venv/bin/python",
+      "-m",
+      "pipeline.selection",
+      "--output",
+      "/tmp/wp09-final-boundary"
+    ],
+    "exit_code": 0,
+    "seconds": 61.85969945800025,
+    "log": "/tmp/wp09-boundary-final-second.log"
+  },
+  {
+    "name": "boundary-check",
+    "command": [
+      "make",
+      "check"
+    ],
+    "exit_code": 0,
+    "seconds": 4.106069084024057,
+    "log": "/tmp/wp09-boundary-check.log"
+  },
+  {
+    "name": "boundary-test",
+    "command": [
+      "make",
+      "test"
+    ],
+    "exit_code": 0,
+    "seconds": 33.997228916035965,
+    "log": "/tmp/wp09-boundary-test.log"
+  },
+  {
+    "name": "boundary-acceptance",
+    "command": [
+      "/tmp/gridoracle-wp08-venv/bin/python",
+      "-m",
+      "pytest",
+      "pipeline/tests/test_selection.py",
+      "-q",
+      "--junitxml=/tmp/wp09-boundary-acceptance.xml"
+    ],
+    "exit_code": 0,
+    "seconds": 5.7813782499870285,
+    "log": "/tmp/wp09-boundary-acceptance.log"
+  }
+]

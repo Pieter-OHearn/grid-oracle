@@ -3,6 +3,14 @@
     "wp09-f47631f4cad445f695cc816341b3764d"
   ],
   "files": {
+    "runs/wp09-0762031a4c934b9e900160435be657ca/REPORT.md": "914b02d73f0f1c53defc94eee36215c9ee5b13bd8913477ec1a5eb17522fa63e",
+    "runs/wp09-0762031a4c934b9e900160435be657ca/finished.json": "38599c375866ac95f813296482e4dd474fa13d9c149ec1868b43fe200b83acd3",
+    "runs/wp09-0762031a4c934b9e900160435be657ca/manifest.json": "a5388f79375652845ca3e1a29511322573d60cecbb875cae76e26ce1c1c6400b",
+    "runs/wp09-0762031a4c934b9e900160435be657ca/promotion-record.json": "f47f85f18ef655076ec6b8e75295b7c922c2e98494db0b960f45ac208979acda",
+    "runs/wp09-0762031a4c934b9e900160435be657ca/reliability-post_qualifying.png": "ef2d555abc50f218ec194fd1ea2af7e17563b102aff4834814d82dd88bceb587",
+    "runs/wp09-0762031a4c934b9e900160435be657ca/reliability-pre_weekend.png": "ef8efacd40db4a93904af16eb4d4a318113032a69a35e6127153e28f795732a8",
+    "runs/wp09-0762031a4c934b9e900160435be657ca/report.json.gz": "015ae69c986e79c57f2d29bdcb8d200189d2eb881909f7f2a658e5334ea2031a",
+    "runs/wp09-0762031a4c934b9e900160435be657ca/started.json": "703c8dbd11abe84af064563676ae4af56e7427f0e0d4f089af9cc4937f582dd0",
     "runs/wp09-207988ef73fc4e53aa8db2fb4d5306e2/REPORT.md": "914b02d73f0f1c53defc94eee36215c9ee5b13bd8913477ec1a5eb17522fa63e",
     "runs/wp09-207988ef73fc4e53aa8db2fb4d5306e2/finished.json": "e11f661a1faee996eedb8b81b2188d0c527655d62dd0980e0e4552312818bf12",
     "runs/wp09-207988ef73fc4e53aa8db2fb4d5306e2/manifest.json": "6fe067f97154d81136b53f2922f8e069c315452ef835aa840905688504aa242c",
@@ -35,6 +43,14 @@
     "runs/wp09-bdbbaeadb4ba42698cefe8de28e77a6d/reliability-pre_weekend.png": "ef8efacd40db4a93904af16eb4d4a318113032a69a35e6127153e28f795732a8",
     "runs/wp09-bdbbaeadb4ba42698cefe8de28e77a6d/report.json.gz": "015ae69c986e79c57f2d29bdcb8d200189d2eb881909f7f2a658e5334ea2031a",
     "runs/wp09-bdbbaeadb4ba42698cefe8de28e77a6d/started.json": "d484ca89d63e70a0f25f4864299009bdc5e477bdc77f9bebee16a9b0730aaaf8",
+    "runs/wp09-db775b5e89324234a4c4e6438908dd24/REPORT.md": "914b02d73f0f1c53defc94eee36215c9ee5b13bd8913477ec1a5eb17522fa63e",
+    "runs/wp09-db775b5e89324234a4c4e6438908dd24/finished.json": "57f423b958be5a71e72437567be5e0cfd4b172f9de40571fb6cd1dc9e9ca980c",
+    "runs/wp09-db775b5e89324234a4c4e6438908dd24/manifest.json": "a5388f79375652845ca3e1a29511322573d60cecbb875cae76e26ce1c1c6400b",
+    "runs/wp09-db775b5e89324234a4c4e6438908dd24/promotion-record.json": "f47f85f18ef655076ec6b8e75295b7c922c2e98494db0b960f45ac208979acda",
+    "runs/wp09-db775b5e89324234a4c4e6438908dd24/reliability-post_qualifying.png": "ef2d555abc50f218ec194fd1ea2af7e17563b102aff4834814d82dd88bceb587",
+    "runs/wp09-db775b5e89324234a4c4e6438908dd24/reliability-pre_weekend.png": "ef8efacd40db4a93904af16eb4d4a318113032a69a35e6127153e28f795732a8",
+    "runs/wp09-db775b5e89324234a4c4e6438908dd24/report.json.gz": "015ae69c986e79c57f2d29bdcb8d200189d2eb881909f7f2a658e5334ea2031a",
+    "runs/wp09-db775b5e89324234a4c4e6438908dd24/started.json": "557ba6b7c6ca0449e67a56291d23bcc4b770e9f8ad729f356f74fe73e5775521",
     "runs/wp09-f47631f4cad445f695cc816341b3764d/REPORT.md": "9168429ef0271e096a06a97845d7f2b7028e1f74368057fd033b8286bd61bedd",
     "runs/wp09-f47631f4cad445f695cc816341b3764d/finished.json": "cc2e0a8dc667574e7b43ee1f01c64062c1661b96b07cc1f8618151d274ecd50c",
     "runs/wp09-f47631f4cad445f695cc816341b3764d/manifest.json": "af489230b8ec0a381274d3f22dd8fe092ed65ca52667e83a80db11888cf9a314",
@@ -43,7 +59,7 @@
     "runs/wp09-f47631f4cad445f695cc816341b3764d/reliability-pre_weekend.png": "ef8efacd40db4a93904af16eb4d4a318113032a69a35e6127153e28f795732a8",
     "runs/wp09-f47631f4cad445f695cc816341b3764d/report.json.gz": "9d566f89eea75eec5f9308beb595f86404fa81217db8d9d165d72cfb8a45859b",
     "runs/wp09-f47631f4cad445f695cc816341b3764d/started.json": "5910815cb773a5d2387c1392745dac06070cefaca5ba5d05e4227366f49a22fa",
-    "validation/SUMMARY.json": "2f556514dc6bce0dbfc4f22e363617934e630fd460712c94b33852e974e87b67",
+    "validation/SUMMARY.json": "14af5d53c3fdf1dd4ba99ed2c8a1cadacc148d137ed19b01d865d61114975b9f",
     "validation/training-reproduction.json": "df67eb9c2922a864b7c49ae46b75dbf799617101a7922828270d1a771265c88c",
     "validation/wp07/finished.json": "7b793029ec5356dad5788edd055e8d246e6e07648850042009ce586084b6d0a1",
     "validation/wp07/report.json.gz": "1a051759c2f381d55acafa8344de9ef9224cb11b96cf0ddd015a7a90083cdb86",
@@ -57,6 +73,14 @@
     "validation/wp08/selection-frozen.json": "c6972ab2ddf71b933f3a01cbf8f46b2c872cb28021c551d56af2596f97a55f49",
     "validation/wp08/started.json": "6443c6ece53c592fc617de4680f14a53da868e407b90bb9cedf08e7c39447be1",
     "validation/wp09-acceptance.xml": "c54c6fd5fd733d76d08ba243d55b97c4ba0da8c70608f5e4f405cda30cb3f2b3",
+    "validation/wp09-boundary-acceptance.log": "736f5fa775d5b16c50b2babff0a3d3f018f2844190047886365d42793e15b9d6",
+    "validation/wp09-boundary-acceptance.xml": "f0a6d06c6a9ed681327a0da4fd8ebb67c4b37c716594d35ce91a40569063ea55",
+    "validation/wp09-boundary-check.log": "c9f6804a4108081b4cc8aa883fd640dabcbbe9d01b3be477a0548e2a3cb7296f",
+    "validation/wp09-boundary-final-first.log": "e98c758888d198ec57a1a72004038b2067f6d98232a1d948be4fee4d22c6f657",
+    "validation/wp09-boundary-final-second.log": "dd36d332e54fad67e97afd01d36c6229cd5ae956aa4c7b6a417b642654911766",
+    "validation/wp09-boundary-test.log": "565dba77250388d5ee32106030652f07b898890bdf5d7858f4661a14d4d51973",
+    "validation/wp09-boundary-tests.log": "362c8edba1398a70fded6276e3c1e37ed47ade3f83846fcf718fbe8864d2930a",
+    "validation/wp09-boundary-validation.json": "691308f2b33555b8901cd59a5aaa2c6784c3c887ca9b5fb029c2c678f1f0404b",
     "validation/wp09-clean-repeat.log": "9f485989635a1350cc22f9a159b0d5c85082f9296f1dc87220e1d6cb1d87bdf5",
     "validation/wp09-clean.log": "32d70424155b9b4649c62cb921c84f150d6d8fbe7ff2dc4890e0482efdd0c7e6",
     "validation/wp09-dashboard-build.log": "46dc4d2b113adc11f5c4c33142aed2f4333c72c442d14e8fd80442eb8114e685",
@@ -73,12 +97,14 @@
     "validation/wp09-wp09-acceptance.log": "636d9d23c4438d7b5d1c31cd0559ad3eea0e73b71a9b18f55a4481e2913ddfcf"
   },
   "final_runs": [
-    "wp09-ae81f27829c14b9f84a40aeaa0deaa5c",
-    "wp09-bdbbaeadb4ba42698cefe8de28e77a6d"
+    "wp09-0762031a4c934b9e900160435be657ca",
+    "wp09-db775b5e89324234a4c4e6438908dd24"
   ],
-  "note": "All five WP09 runs retained. The dirty development run contains pre-fix floating summation overshoots and cannot authorize publication. Two earlier clean runs predate validator hardening; final pair supersedes them. No failed fitting trial was dropped.",
+  "note": "All seven WP09 runs retained. Dirty development output is superseded. Four earlier clean reports are preserved. The final pair includes direct-library frozen-feature verification; semantic results match the prior pair. No failed fitting trial was dropped.",
   "superseded_clean_runs": [
     "wp09-207988ef73fc4e53aa8db2fb4d5306e2",
-    "wp09-6ed91abf8b0a4ad7bb925cfa277f43f0"
+    "wp09-6ed91abf8b0a4ad7bb925cfa277f43f0",
+    "wp09-ae81f27829c14b9f84a40aeaa0deaa5c",
+    "wp09-bdbbaeadb4ba42698cefe8de28e77a6d"
   ]
 }

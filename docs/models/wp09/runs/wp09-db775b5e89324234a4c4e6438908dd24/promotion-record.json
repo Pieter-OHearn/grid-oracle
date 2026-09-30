@@ -1,0 +1,23 @@
+{
+  "decisions": {
+    "post_qualifying": {
+      "action": "retain_baseline",
+      "promoted": false,
+      "public_publication_authorized": false,
+      "reason": "no prospective/as-of evidence, incumbent comparison or operational shadowing; every gate fails closed",
+      "selected": "baseline:qualifying",
+      "wp07_tune_nominee": "xgb_regression"
+    },
+    "pre_weekend": {
+      "action": "retain_baseline",
+      "promoted": false,
+      "public_publication_authorized": false,
+      "reason": "no prospective/as-of evidence, incumbent comparison or operational shadowing; every gate fails closed",
+      "selected": "baseline:standings",
+      "wp07_tune_nominee": "xgb_ranking"
+    }
+  },
+  "publication_changed": false,
+  "report_sha256": "e1c5d0fd6b002e48a10a428b27f64348b72be217cd86e97720d4a9cc4d9c99c7",
+  "rollback": "no pointer changed; retain incumbent/fixed baseline"
+}
