@@ -1,0 +1,28 @@
+{
+  "candidate": "pre_weekend__xgb_regression__recent_season_pool__2024",
+  "config": {
+    "half_life": null,
+    "learning_rate": 0.04,
+    "max_depth": 3,
+    "min_child_weight": 5,
+    "n_estimators": 180,
+    "reg_alpha": 1.0,
+    "reg_lambda": 12.0
+  },
+  "fit_rows_sha256": "053868a5be05c855abccbc00114c6472b7760af4dea6ff69ba7a1accb7f1d1e8",
+  "optimization": {
+    "classified_rows": 631,
+    "status": "fixed_tree_count"
+  },
+  "predictions_sha256": "4b66607b6140e7cc986cb7a3e4415c81e9c0dc9165f6bffb58b38924ac4a3444",
+  "seconds": 0.05183554103132337,
+  "status": "succeeded",
+  "trial_index": 1,
+  "tune_races": [
+    "2023:15",
+    "2023:16",
+    "2023:17",
+    "2023:18"
+  ],
+  "winner_log_loss": 1.6894307999965434
+}

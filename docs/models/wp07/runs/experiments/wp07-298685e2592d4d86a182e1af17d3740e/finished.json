@@ -1,0 +1,18 @@
+{
+  "at": "2026-09-30T12:01:45.694452+00:00",
+  "id": "wp07-298685e2592d4d86a182e1af17d3740e",
+  "model_bundle_sha256": "8a18f927411999a1d534d45e218e4b13f5a17a56325d55a78e0ae2a061bb1c39",
+  "result": {
+    "code_sha256": "ff8182ea639c311903dba89c2aa57d59b0cd60b09666fd62f026330d0d13b91d",
+    "config_sha256": "6e903cc9fed35497d3359074bd2361ac5d28c6995e1824efc6c9baa86e51b524",
+    "dataset_sha256": "21153f3a012bede74987f713d37e8100b2d556f60ffbcced5ca3a578c0c577a2",
+    "dependency_lock_sha256": "3837160a2f8338aec547a9a3a01f868560f6edc118807b356dd71f379abffd3d",
+    "lock_sha256": "fa55bee0b5abe02f3f48bc8f9971a558f69f62dd2e49f5647ca8710c9b9dc8bb",
+    "protocol_sha256": "e02b9a516d0469b90a1563e4485fd14153e907ddb09c6b8f725426124680327b",
+    "report_sha256": "fd1a81cc5bfa2a4b465ed627c1e387bf14e1f2114f10452d5548d104dac02749",
+    "split_sha256": "0cce74e9da0a6e72e75c982c832fdf441b589641cb29872c762b543e061e89aa",
+    "study_config_sha256": "d8f553ffdde0b1b667e93246bd11ddd9ea8ddab59338a5e3adf7d01d235d61c4",
+    "study_semantic_sha256": "0d99a0bd5455faafd8184872b4f277dee2a8ec688616becb8b9ce6426e249955"
+  },
+  "status": "succeeded"
+}

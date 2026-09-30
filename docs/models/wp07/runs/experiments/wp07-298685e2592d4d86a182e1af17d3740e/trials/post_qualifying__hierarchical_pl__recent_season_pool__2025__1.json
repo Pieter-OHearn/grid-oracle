@@ -1,0 +1,26 @@
+{
+  "candidate": "post_qualifying__hierarchical_pl__recent_season_pool__2025",
+  "config": {
+    "half_life": null,
+    "penalty": 2.0
+  },
+  "fit_rows_sha256": "bd32b02fe4e6c23466716bdd73e2315cfcf6686a889866610d94d75da4f99f74",
+  "optimization": {
+    "classified_rows": 1056,
+    "gradient_max": 3.3806900350430436e-05,
+    "iterations": 19,
+    "objective": 28.674935929508965,
+    "status": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH"
+  },
+  "predictions_sha256": "9b3a06ec8ce76ba2a11c0436f9c92ef77c608127b802d0046bbfb8effac1c260",
+  "seconds": 0.27709270804189146,
+  "status": "succeeded",
+  "trial_index": 1,
+  "tune_races": [
+    "2024:17",
+    "2024:18",
+    "2024:19",
+    "2024:20"
+  ],
+  "winner_log_loss": 1.8144307999965434
+}

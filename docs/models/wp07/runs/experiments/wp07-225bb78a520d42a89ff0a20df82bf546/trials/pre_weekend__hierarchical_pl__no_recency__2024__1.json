@@ -1,0 +1,26 @@
+{
+  "candidate": "pre_weekend__hierarchical_pl__no_recency__2024",
+  "config": {
+    "half_life": null,
+    "penalty": 2.0
+  },
+  "fit_rows_sha256": "053868a5be05c855abccbc00114c6472b7760af4dea6ff69ba7a1accb7f1d1e8",
+  "optimization": {
+    "classified_rows": 631,
+    "gradient_max": 2.2963173218898403e-05,
+    "iterations": 11,
+    "objective": 30.432603883789252,
+    "status": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH"
+  },
+  "predictions_sha256": "4cd0b5df7cdfc06b2ddd0dbc0065dcc02c022104d8d147be395295c1b88c6a8f",
+  "seconds": 0.3191734170541167,
+  "status": "succeeded",
+  "trial_index": 1,
+  "tune_races": [
+    "2023:15",
+    "2023:16",
+    "2023:17",
+    "2023:18"
+  ],
+  "winner_log_loss": 1.8144307999965434
+}

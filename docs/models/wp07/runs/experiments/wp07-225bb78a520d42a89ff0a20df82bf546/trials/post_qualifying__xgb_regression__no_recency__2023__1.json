@@ -1,0 +1,28 @@
+{
+  "candidate": "post_qualifying__xgb_regression__no_recency__2023",
+  "config": {
+    "half_life": null,
+    "learning_rate": 0.04,
+    "max_depth": 3,
+    "min_child_weight": 5,
+    "n_estimators": 180,
+    "reg_alpha": 1.0,
+    "reg_lambda": 12.0
+  },
+  "fit_rows_sha256": "5571395dbb50d755db87602218b48e4df7e208e8ea6ba6df055eb67720a8f452",
+  "optimization": {
+    "classified_rows": 238,
+    "status": "fixed_tree_count"
+  },
+  "predictions_sha256": "44ed5c13df289767484fc2da060c10188fb56fe67ba9835c898eda1b01774b17",
+  "seconds": 0.03800687496550381,
+  "status": "succeeded",
+  "trial_index": 1,
+  "tune_races": [
+    "2022:15",
+    "2022:16",
+    "2022:17",
+    "2022:18"
+  ],
+  "winner_log_loss": 1.8142971838050193
+}

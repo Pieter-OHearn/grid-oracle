@@ -1,0 +1,26 @@
+{
+  "candidate": "post_qualifying__hierarchical_pl__no_recency__2023",
+  "config": {
+    "half_life": null,
+    "penalty": 2.0
+  },
+  "fit_rows_sha256": "5571395dbb50d755db87602218b48e4df7e208e8ea6ba6df055eb67720a8f452",
+  "optimization": {
+    "classified_rows": 238,
+    "gradient_max": 4.858767048143697e-06,
+    "iterations": 13,
+    "objective": 27.96292029925337,
+    "status": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH"
+  },
+  "predictions_sha256": "454989f90195832bd125d61789b6a8f4ae362e79f64c6f5dd570abd9529cf4d5",
+  "seconds": 0.14973112498410046,
+  "status": "succeeded",
+  "trial_index": 1,
+  "tune_races": [
+    "2022:15",
+    "2022:16",
+    "2022:17",
+    "2022:18"
+  ],
+  "winner_log_loss": 1.5644307999965434
+}

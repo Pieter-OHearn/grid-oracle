@@ -1,0 +1,25 @@
+{
+  "study": "wp07-classical-v1",
+  "benchmark": "wp06-v2",
+  "seed": 6062026,
+  "threads": 1,
+  "families": ["xgb_regression", "xgb_ranking", "hierarchical_pl"],
+  "variants": ["full", "no_recency", "recent_season_pool", "no_qualifying"],
+  "tree_trials": [
+    {"max_depth": 2, "n_estimators": 120, "learning_rate": 0.05, "min_child_weight": 8, "reg_alpha": 0.5, "reg_lambda": 8.0, "half_life": null},
+    {"max_depth": 3, "n_estimators": 180, "learning_rate": 0.04, "min_child_weight": 5, "reg_alpha": 1.0, "reg_lambda": 12.0, "half_life": null},
+    {"max_depth": 2, "n_estimators": 120, "learning_rate": 0.05, "min_child_weight": 8, "reg_alpha": 0.5, "reg_lambda": 8.0, "half_life": 24}
+  ],
+  "pl_trials": [
+    {"penalty": 0.5, "half_life": null},
+    {"penalty": 2.0, "half_life": null},
+    {"penalty": 0.5, "half_life": 24}
+  ],
+  "decoder": {"policy": "mean_rank_pl_temperature", "initial_temperature": 4.0, "calibration_powers": [0.25, 0.5, 1.0, 2.0, 4.0]},
+  "pl_optimizer": {"maxiter": 300, "ftol": 1e-10, "gtol": 1e-6},
+  "comparators": {"pre_weekend": "standings", "post_qualifying": "qualifying"},
+  "recency_removed": ["driver_finish_mean_last_3", "constructor_finish_mean_last_3", "driver_recency_races", "constructor_recency_races", "driver_reliability_rate_last_3"],
+  "slices": {"low_experience_max_prior_races": 3, "rare_entry_max_train_races": 3, "recent_drift_last_races": 8},
+  "unavailable_ablations": {"grid": "No final-grid feature in frozen contract; qualifying ablation reported separately", "weather": "No registered weather field", "practice": "No registered practice field", "tyre": "No registered compound/degradation proxy"},
+  "selection": "Per-fold tune-only equal-race winner log loss; ties by trial index. Family champion by mean inner-tune loss before outer evaluation. No promotion."
+}

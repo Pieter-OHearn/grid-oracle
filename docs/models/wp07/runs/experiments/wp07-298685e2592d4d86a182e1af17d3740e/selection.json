@@ -1,0 +1,118 @@
+{
+  "champions": {
+    "post_qualifying": "xgb_regression",
+    "pre_weekend": "xgb_ranking"
+  },
+  "inner_losses": {
+    "post_qualifying": {
+      "hierarchical_pl__full": [
+        1.5019307999965434,
+        1.5019307999965434,
+        1.8769307999965434
+      ],
+      "hierarchical_pl__no_qualifying": [
+        1.5644307999965434,
+        1.6269307999965434,
+        2.1269307999965434
+      ],
+      "hierarchical_pl__no_recency": [
+        1.5019307999965434,
+        1.5019307999965434,
+        1.8144307999965434
+      ],
+      "hierarchical_pl__recent_season_pool": [
+        1.5019307999965434,
+        1.5019307999965434,
+        1.8144307999965434
+      ],
+      "xgb_ranking__full": [
+        1.5019307999965434,
+        1.5644307999965434,
+        1.7519307999965434
+      ],
+      "xgb_ranking__no_qualifying": [
+        1.5644307999965434,
+        1.6269307999965434,
+        2.0644307999965434
+      ],
+      "xgb_ranking__no_recency": [
+        1.5019307999965434,
+        1.5644307999965434,
+        1.8144307999965434
+      ],
+      "xgb_ranking__recent_season_pool": [
+        1.5019307999965434,
+        1.5644307999965434,
+        1.5644307999965434
+      ],
+      "xgb_regression__full": [
+        1.5644307999965434,
+        1.5644307999965434,
+        1.6894307999965434
+      ],
+      "xgb_regression__no_qualifying": [
+        1.6878505936182184,
+        1.6561813847264197,
+        2.1269307999965434
+      ],
+      "xgb_regression__no_recency": [
+        1.71795182170064,
+        1.5644307999965434,
+        1.8769307999965434
+      ],
+      "xgb_regression__recent_season_pool": [
+        1.5644307999965434,
+        1.5019307999965434,
+        1.6268880802359444
+      ]
+    },
+    "pre_weekend": {
+      "hierarchical_pl__full": [
+        1.5644307999965434,
+        1.6269307999965434,
+        2.1269307999965434
+      ],
+      "hierarchical_pl__no_recency": [
+        1.5644307999965434,
+        1.6269307999965434,
+        2.1269307999965434
+      ],
+      "hierarchical_pl__recent_season_pool": [
+        1.5644307999965434,
+        1.6269307999965434,
+        1.9394307999965434
+      ],
+      "xgb_ranking__full": [
+        1.5644307999965434,
+        1.6269307999965434,
+        2.0644307999965434
+      ],
+      "xgb_ranking__no_recency": [
+        1.5644307999965434,
+        1.8769307999965434,
+        2.1269307999965434
+      ],
+      "xgb_ranking__recent_season_pool": [
+        1.5644307999965434,
+        1.6269307999965434,
+        1.8144307999965434
+      ],
+      "xgb_regression__full": [
+        1.6878505936182184,
+        1.6561813847264197,
+        2.1269307999965434
+      ],
+      "xgb_regression__no_recency": [
+        1.6894307999965434,
+        1.6265847431127551,
+        2.3769307999965434
+      ],
+      "xgb_regression__recent_season_pool": [
+        1.6878505936182184,
+        1.6894307999965434,
+        2.00189664135271
+      ]
+    }
+  },
+  "rule": "Per-fold tune-only equal-race winner log loss; ties by trial index. Family champion by mean inner-tune loss before outer evaluation. No promotion."
+}
