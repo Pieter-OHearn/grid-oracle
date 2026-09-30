@@ -1,0 +1,12 @@
+[
+  {
+    "focused": "H1",
+    "rows": 5,
+    "test": "Retry focus"
+  },
+  {
+    "focused": "MAIN",
+    "heading": "Seasons",
+    "test": "Skip retains journey"
+  }
+]

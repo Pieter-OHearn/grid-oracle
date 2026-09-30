@@ -1,0 +1,20 @@
+[
+  {
+    "file": "dashboard/src/design-system/fonts/BarlowCondensed-Medium.ttf",
+    "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/barlowcondensed/BarlowCondensed-Medium.ttf",
+    "sha256": "262bd143292ce479ee0cd09a42b47ab173fca8e9c6eb5ed0b5c8a845bc371d17",
+    "license": "BarlowCondensed-OFL.txt"
+  },
+  {
+    "file": "dashboard/src/design-system/fonts/Inter.ttf",
+    "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/inter/Inter%5Bopsz,wght%5D.ttf",
+    "sha256": "29160a80ff49ddcab2c97711247e08b1fab27a484a329ce8b813d820dc559031",
+    "license": "Inter-OFL.txt"
+  },
+  {
+    "file": "dashboard/src/design-system/fonts/IBMPlexMono-Regular.ttf",
+    "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/ibmplexmono/IBMPlexMono-Regular.ttf",
+    "sha256": "6a3412f058c7d8dfd9170c41e85ade48e5156ecb89356110ca57a0a27734af46",
+    "license": "IBMPlexMono-OFL.txt"
+  }
+]

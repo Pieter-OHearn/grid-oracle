@@ -1,0 +1,66 @@
+[
+  {
+    "bodyWidth": 390,
+    "journey": "#race",
+    "regionWidth": 364,
+    "rows": 5,
+    "tableWidth": 470,
+    "width": 390
+  },
+  {
+    "bodyWidth": 390,
+    "journey": "#comparison",
+    "regionWidth": 364,
+    "rows": 22,
+    "tableWidth": 470,
+    "width": 390
+  },
+  {
+    "bodyWidth": 390,
+    "journey": "#scorecard",
+    "regionWidth": null,
+    "rows": 0,
+    "tableWidth": null,
+    "width": 390
+  },
+  {
+    "bodyWidth": 390,
+    "journey": "#archive",
+    "regionWidth": null,
+    "rows": 0,
+    "tableWidth": null,
+    "width": 390
+  },
+  {
+    "bodyWidth": 320,
+    "journey": "#race",
+    "regionWidth": 294,
+    "rows": 5,
+    "tableWidth": 470,
+    "width": 320
+  },
+  {
+    "bodyWidth": 320,
+    "journey": "#comparison",
+    "regionWidth": 294,
+    "rows": 22,
+    "tableWidth": 470,
+    "width": 320
+  },
+  {
+    "bodyWidth": 320,
+    "journey": "#scorecard",
+    "regionWidth": null,
+    "rows": 0,
+    "tableWidth": null,
+    "width": 320
+  },
+  {
+    "bodyWidth": 320,
+    "journey": "#archive",
+    "regionWidth": null,
+    "rows": 0,
+    "tableWidth": null,
+    "width": 320
+  }
+]

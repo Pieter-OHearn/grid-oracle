@@ -1,0 +1,50 @@
+[
+  {
+    "bodyWidth": 1440,
+    "focused": "H1",
+    "hash": "#comparison",
+    "heading": "Full field",
+    "rows": 22,
+    "viewport": 1440
+  },
+  {
+    "bodyWidth": 1440,
+    "focused": "H1",
+    "hash": "#scorecard",
+    "heading": "Track record",
+    "rows": 0,
+    "viewport": 1440
+  },
+  {
+    "bodyWidth": 1440,
+    "focused": "H1",
+    "hash": "#archive",
+    "heading": "Seasons",
+    "rows": 0,
+    "viewport": 1440
+  },
+  {
+    "bodyWidth": 1440,
+    "focused": "H1",
+    "hash": "#methodology",
+    "heading": "Methodology",
+    "rows": 0,
+    "viewport": 1440
+  },
+  {
+    "bodyWidth": 1440,
+    "focused": "H1",
+    "hash": "#sources",
+    "heading": "Data sources",
+    "rows": 0,
+    "viewport": 1440
+  },
+  {
+    "bodyWidth": 1440,
+    "focused": "H1",
+    "hash": "#race",
+    "heading": "British Grand Prix",
+    "rows": 5,
+    "viewport": 1440
+  }
+]
