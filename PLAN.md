@@ -1,6 +1,6 @@
 # GridOracle build plan
 
-Updated 2026-09-30. **Current state: WP01–06 integrated; WP07/WP08 ready for assignment under the frozen v2 benchmark.**
+Updated 2026-09-30. **Current state: WP01–08 and WP10 integrated; WP09 is ready for review on PR #104.**
 
 For assignment prompts, ownership rules and state transitions, read the [agent execution guide](docs/workplans/README.md). Fresh agents start at [HANDOFF](HANDOFF.md).
 
@@ -79,7 +79,7 @@ flowchart LR
 
 ## Execution ledger
 
-The coordinator updates this overview when assigning or integrating work. Detailed, authoritative progress lives in each linked state record; working-branch progress is not integrated completion. WP01–06 are complete. WP07, WP08 and WP10 are ready to assign; WP13 may begin its limited discovery/design scope after WP01. No dependent implementation is assigned by this status update.
+The coordinator updates this overview when assigning or integrating work. Detailed progress lives in each linked state record; WP09's current record is on its unmerged PR branch. WP01–08 and WP10 are complete. WP09 awaits review and integration; WP11 is eligible for assignment. WP13 may begin its limited discovery/design scope after WP01. This status update does not assign dependent implementation.
 
 | Package / state record         | Status     | Start after            | Additional completion gate                           |
 | ------------------------------ | ---------- | ---------------------- | ---------------------------------------------------- |
@@ -89,11 +89,11 @@ The coordinator updates this overview when assigning or integrating work. Detail
 | [WP04](docs/workplans/WP04.md) | `complete` | WP02, WP03             | Integrated as `f2a722a` through PR #97               |
 | [WP05](docs/workplans/WP05.md) | `complete` | WP03, WP04             | Integrated as `927c9ec` through PR #98               |
 | [WP06](docs/workplans/WP06.md) | `complete` | WP05                   | Integrated as `b9439e7` through PR #99               |
-| [WP07](docs/workplans/WP07.md) | `ready`    | WP06                   | Acceptance, review and integration                   |
-| [WP08](docs/workplans/WP08.md) | `ready`    | WP06                   | Acceptance, review and integration                   |
-| [WP09](docs/workplans/WP09.md) | `waiting`  | WP03, WP07, WP08       | Acceptance, review and integration                   |
-| [WP10](docs/workplans/WP10.md) | `ready`    | WP02                   | Acceptance, PR review and integration                |
-| [WP11](docs/workplans/WP11.md) | `waiting`  | WP03, WP04, WP10       | Acceptance, review and integration                   |
+| [WP07](docs/workplans/WP07.md) | `complete` | WP06                   | Integrated as `32b1f60` through PR #101             |
+| [WP08](docs/workplans/WP08.md) | `complete` | WP06                   | Integrated as `3ad2113` through PR #102             |
+| [WP09](docs/workplans/WP09.md) | `review_ready` | WP03, WP07, WP08  | [PR #104](https://github.com/Pieter-OHearn/grid-oracle/pull/104); review and integration outstanding |
+| [WP10](docs/workplans/WP10.md) | `complete` | WP02                   | Integrated as `867bdad` through PR #103             |
+| [WP11](docs/workplans/WP11.md) | `ready`    | WP03, WP04, WP10       | Acceptance, review and integration                   |
 | [WP12](docs/workplans/WP12.md) | `waiting`  | WP06, WP09, WP11       | Acceptance, review and integration                   |
 | [WP13](docs/workplans/WP13.md) | `waiting`  | WP01                   | WP03, WP04, WP11                                     |
 | [WP14](docs/workplans/WP14.md) | `waiting`  | WP04, WP06, WP11       | WP09, WP12, WP13                                     |
@@ -104,14 +104,7 @@ WP13/WP14 include separate start and finish gates. Every package, including thos
 
 ## Exact next action for the next implementation agent
 
-The owner may assign **WP07** next in the serial order; WP08 is independently
-eligible. Both remain unassigned. Start from current `main`, reserve the selected
-package, and create its isolated branch before editing. Consume WP06's approved
-[v2 protocol](docs/benchmark/v2/PROTOCOL.md), frozen dataset/split/config hashes
-and retained experiment registry. Explored 2022–2025 diagnostics are not pristine
-holdout or as-of promotion evidence; verified prospective enrollment remains
-outstanding. Do not change the locked metrics or tolerances after seeing results.
-WP10 design-system work is also independently assignable; coordinate shared files.
+Review the WP09 candidate on [PR #104](https://github.com/Pieter-OHearn/grid-oracle/pull/104) against its branch state and acceptance evidence; integrate it only after review. WP11 is now eligible for assignment because WP03, WP04 and WP10 are integrated. Reserve WP11 and create its isolated branch before implementation. WP12 remains gated on WP09 and WP11 integration. The frozen [v2 protocol](docs/benchmark/v2/PROTOCOL.md) and its metrics and tolerances remain unchanged.
 
 The model winner, deployment host and public route remain unresolved; their decision gates are specified, so they need not block unrelated ready work.
 
