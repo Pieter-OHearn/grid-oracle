@@ -30,7 +30,14 @@ function RaceJourney({
   const ready = state === 'ready';
   return (
     <>
-      <Panel title="Who could win?" note="Leading contenders · 22 synthetic entries">
+      <Panel
+        title="Who could win?"
+        note={
+          ready
+            ? 'Leading contenders · 22 synthetic entries'
+            : 'Partial field · Known chances and unranked unknown entries'
+        }
+      >
         <TimingTable entries={entries} horizon={horizon} limit={5} />
         <div className="go-panel-body">
           <a href="#comparison" onClick={() => navigate('comparison')}>

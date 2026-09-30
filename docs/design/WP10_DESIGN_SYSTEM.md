@@ -77,7 +77,7 @@ Native links/buttons/selects/details provide keyboard behavior: Tab and Shift+Ta
 
 Normal text must meet **4.5:1** in both themes, including 12px notes; never invoke large-text exemptions for display labels. Ink, muted and accent are tested against surface/sidebar/subtle/highlight. Interactive boundaries and focus must meet **3:1**. [Contrast measurements](evidence/wp10/contrast.json) enumerate actual token pairs; `contrast.test.js` reads the real CSS rather than a copied palette. Thin decorative separators and team strips are not required to identify controls or convey meaning by themselves.
 
-Tables use native `<table>`, visible captions, `scope=col` and `scope=row`. Missing data is text, not a dash with hidden meaning. Loading sets `aria-busy`; state text uses status/alert roles. Horizon controls expose selected state; navigation exposes current page. Contrast and keyboard checks are evidence, not a claim of full assistive-technology certification.
+Tables use native `<table>`, visible captions, `scope=col` and `scope=row`. Missing data is text, not a dash with hidden meaning. When the selected horizon has unknown probabilities, known values and unknown entries are separate row groups, field ranks are suppressed, and the leading subset retains every unknown entry outside the known-value limit. A complete other horizon can still use its own valid ordering. Loading sets `aria-busy`; state text uses status/alert roles. Horizon controls expose selected state; navigation exposes current page. Contrast and keyboard checks are evidence, not a claim of full assistive-technology certification.
 
 ## Validation and remaining decisions
 

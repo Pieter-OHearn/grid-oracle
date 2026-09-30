@@ -166,6 +166,40 @@ export function DataNotice({
     </div>
   );
 }
+function TimingRow({
+  entry,
+  horizon,
+  comparison,
+  rank,
+}: {
+  entry: Entry;
+  horizon: Horizon;
+  comparison: boolean;
+  rank: string;
+}) {
+  return (
+    <tr>
+      <td className="go-number">{rank}</td>
+      <th scope="row">
+        <div className="go-driver" style={{ '--go-team': entry.color } as CSSProperties}>
+          <span>{entry.name}</span>
+          <small>{entry.team}</small>
+        </div>
+      </th>
+      {comparison ? (
+        <>
+          <td className="go-number">{percentage(entry.pre)}</td>
+          <td className="go-number">{percentage(entry.post)}</td>
+        </>
+      ) : (
+        <td className="go-number">{percentage(entry[horizon])}</td>
+      )}
+      <td className="go-number">
+        {comparison || horizon === 'post' ? change(entry) : 'Not applicable'}
+      </td>
+    </tr>
+  );
+}
 export function TimingTable({
   entries,
   horizon,
@@ -177,8 +211,14 @@ export function TimingTable({
   comparison?: boolean;
   limit?: number;
 }) {
-  const sorted = [...entries].sort((a, b) => (b[horizon] ?? -1) - (a[horizon] ?? -1));
-  const shown = limit ? sorted.slice(0, limit) : sorted;
+  const unknown = entries.filter((entry) => entry[horizon] === null);
+  const known = entries
+    .filter((entry) => entry[horizon] !== null)
+    .sort((a, b) => b[horizon]! - a[horizon]!);
+  const shownKnown = limit ? known.slice(0, limit) : known;
+  // Missing entries stay visible outside the known subset and never receive a field rank.
+  const shown = [...shownKnown, ...unknown];
+  const incomplete = unknown.length > 0;
   const fieldTotal = total(entries, horizon);
   const rest =
     fieldTotal === null
@@ -199,8 +239,10 @@ export function TimingTable({
           <caption>
             Synthetic{' '}
             {comparison ? 'horizon comparison' : `${horizonLabels[horizon]} win probabilities`} ·{' '}
-            {entries.length} entries · Not a forecast · Ordered by win chance, not finishing
-            position
+            {entries.length} entries · Not a forecast ·{' '}
+            {incomplete
+              ? 'Incomplete field · Known probabilities only; unknown entries are unranked'
+              : 'Ordered by win chance, not finishing position'}
           </caption>
           <thead>
             <tr>
@@ -218,29 +260,41 @@ export function TimingTable({
             </tr>
           </thead>
           <tbody>
-            {shown.map((entry, index) => (
-              <tr key={entry.id}>
-                <td className="go-number">{String(index + 1).padStart(2, '0')}</td>
-                <th scope="row">
-                  <div className="go-driver" style={{ '--go-team': entry.color } as CSSProperties}>
-                    <span>{entry.name}</span>
-                    <small>{entry.team}</small>
-                  </div>
+            {incomplete && (
+              <tr>
+                <th scope="rowgroup" colSpan={comparison ? 5 : 4}>
+                  Known probabilities · partial field, no field ranking
                 </th>
-                {comparison ? (
-                  <>
-                    <td className="go-number">{percentage(entry.pre)}</td>
-                    <td className="go-number">{percentage(entry.post)}</td>
-                  </>
-                ) : (
-                  <td className="go-number">{percentage(entry[horizon])}</td>
-                )}
-                <td className="go-number">
-                  {comparison || horizon === 'post' ? change(entry) : 'Not applicable'}
-                </td>
               </tr>
+            )}
+            {shownKnown.map((entry, index) => (
+              <TimingRow
+                key={entry.id}
+                entry={entry}
+                horizon={horizon}
+                comparison={comparison}
+                rank={incomplete ? 'Unranked' : String(index + 1).padStart(2, '0')}
+              />
             ))}
           </tbody>
+          {incomplete && (
+            <tbody>
+              <tr>
+                <th scope="rowgroup" colSpan={comparison ? 5 : 4}>
+                  Unknown probabilities · not ranked
+                </th>
+              </tr>
+              {unknown.map((entry) => (
+                <TimingRow
+                  key={entry.id}
+                  entry={entry}
+                  horizon={horizon}
+                  comparison={comparison}
+                  rank="Unranked"
+                />
+              ))}
+            </tbody>
+          )}
         </table>
       </div>
       <div className="go-field-note">

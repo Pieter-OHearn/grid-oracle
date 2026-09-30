@@ -1,0 +1,74 @@
+[
+  {
+    "caption": "Synthetic Pre-weekend win probabilities · 22 entries · Not a forecast · Incomplete field · Known probabilities only; unknown entries are unranked",
+    "documentWidth": 1440,
+    "entryRows": 6,
+    "journey": "#race",
+    "norrisRow": "UnrankedNorrisMcLarenUnknownNot applicable",
+    "numberedRows": 0,
+    "viewport": 1440
+  },
+  {
+    "caption": "Synthetic After qualifying win probabilities · 22 entries · Not a forecast · Incomplete field · Known probabilities only; unknown entries are unranked",
+    "documentWidth": 1440,
+    "entryRows": 6,
+    "journey": "#race",
+    "norrisRow": "UnrankedNorrisMcLarenUnknownUnknown",
+    "numberedRows": 0,
+    "viewport": 1440
+  },
+  {
+    "caption": "Synthetic horizon comparison · 22 entries · Not a forecast · Ordered by win chance, not finishing position",
+    "documentWidth": 1440,
+    "entryRows": 22,
+    "journey": "#comparison",
+    "norrisRow": "02NorrisMcLaren22%UnknownUnknown",
+    "numberedRows": 22,
+    "viewport": 1440
+  },
+  {
+    "caption": "Synthetic horizon comparison · 22 entries · Not a forecast · Incomplete field · Known probabilities only; unknown entries are unranked",
+    "documentWidth": 1440,
+    "entryRows": 22,
+    "journey": "#comparison",
+    "norrisRow": "UnrankedNorrisMcLaren22%UnknownUnknown",
+    "numberedRows": 0,
+    "viewport": 1440
+  },
+  {
+    "caption": "Synthetic Pre-weekend win probabilities · 22 entries · Not a forecast · Incomplete field · Known probabilities only; unknown entries are unranked",
+    "documentWidth": 320,
+    "entryRows": 6,
+    "journey": "#race",
+    "norrisRow": "UnrankedNorrisMcLarenUnknownNot applicable",
+    "numberedRows": 0,
+    "viewport": 320
+  },
+  {
+    "caption": "Synthetic After qualifying win probabilities · 22 entries · Not a forecast · Incomplete field · Known probabilities only; unknown entries are unranked",
+    "documentWidth": 320,
+    "entryRows": 6,
+    "journey": "#race",
+    "norrisRow": "UnrankedNorrisMcLarenUnknownUnknown",
+    "numberedRows": 0,
+    "viewport": 320
+  },
+  {
+    "caption": "Synthetic horizon comparison · 22 entries · Not a forecast · Ordered by win chance, not finishing position",
+    "documentWidth": 320,
+    "entryRows": 22,
+    "journey": "#comparison",
+    "norrisRow": "02NorrisMcLaren22%UnknownUnknown",
+    "numberedRows": 22,
+    "viewport": 320
+  },
+  {
+    "caption": "Synthetic horizon comparison · 22 entries · Not a forecast · Incomplete field · Known probabilities only; unknown entries are unranked",
+    "documentWidth": 320,
+    "entryRows": 22,
+    "journey": "#comparison",
+    "norrisRow": "UnrankedNorrisMcLaren22%UnknownUnknown",
+    "numberedRows": 0,
+    "viewport": 320
+  }
+]

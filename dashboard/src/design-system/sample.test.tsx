@@ -20,6 +20,42 @@ describe('WP10 honest probability presentation', () => {
     expect(table).toContain('Unknown total');
     expect(table).not.toContain('NaN');
   });
+  it('keeps missing probabilities visible and unranked in full and limited fields', () => {
+    for (const horizon of ['pre', 'post'] as const) {
+      const missingField = sampleEntries.map((entry, i) =>
+        i === 0 ? { ...entry, [horizon]: null } : entry,
+      );
+      for (const comparison of [false, true]) {
+        const table = renderToStaticMarkup(
+          <TimingTable
+            entries={missingField}
+            horizon={horizon}
+            comparison={comparison}
+            limit={comparison ? undefined : 5}
+          />,
+        );
+        expect(table).toContain('Incomplete field');
+        expect(table).toContain('Unknown probabilities · not ranked');
+        const norrisRow = table
+          .match(/<tr>.*?<\/tr>/g)
+          ?.find((row) => row.includes('<span>Norris</span>'));
+        expect(norrisRow).toContain('Unranked');
+        expect(norrisRow).toContain('Unknown');
+        expect(table).not.toContain('>22</td>');
+        expect(table).not.toContain('>01</td>');
+        expect(table).toContain('Unknown total');
+      }
+      // Zero remains a known value, even when a different entry is missing.
+      const zero = { ...sampleEntries[1], [horizon]: 0 };
+      const mixed = renderToStaticMarkup(
+        <TimingTable entries={[missingField[0], zero]} horizon={horizon} />,
+      );
+      expect(mixed).toContain('0%');
+      expect(mixed.indexOf('<span>Piastri</span>')).toBeLessThan(
+        mixed.indexOf('Unknown probabilities · not ranked'),
+      );
+    }
+  });
   it('states changes in percentage points and marks every table as synthetic', () => {
     expect(change(sampleEntries[0])).toBe('+6 pp');
     const table = renderToStaticMarkup(
