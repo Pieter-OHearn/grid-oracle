@@ -1,6 +1,6 @@
 # GridOracle build plan
 
-Updated 2026-09-28. **Current state: review/planning and UI concept approval complete; implementation not started.**
+Updated 2026-09-30. **Current state: WP01–06 integrated; WP07/WP08 ready for assignment under the frozen v2 benchmark.**
 
 For assignment prompts, ownership rules and state transitions, read the [agent execution guide](docs/workplans/README.md). Fresh agents start at [HANDOFF](HANDOFF.md).
 
@@ -79,7 +79,7 @@ flowchart LR
 
 ## Execution ledger
 
-The coordinator updates this overview when assigning or integrating work. Detailed, authoritative progress lives in each linked state record; working-branch progress is not integrated completion. WP01 and WP02 are complete. WP03 and WP10 are ready to assign; WP13 may begin its limited discovery/design scope after WP01.
+The coordinator updates this overview when assigning or integrating work. Detailed, authoritative progress lives in each linked state record; working-branch progress is not integrated completion. WP01–06 are complete. WP07, WP08 and WP10 are ready to assign; WP13 may begin its limited discovery/design scope after WP01. No dependent implementation is assigned by this status update.
 
 | Package / state record         | Status     | Start after            | Additional completion gate                           |
 | ------------------------------ | ---------- | ---------------------- | ---------------------------------------------------- |
@@ -87,10 +87,10 @@ The coordinator updates this overview when assigning or integrating work. Detail
 | [WP02](docs/workplans/WP02.md) | `complete` | WP01                   | Integrated as `ce9690e` through PR #95               |
 | [WP03](docs/workplans/WP03.md) | `complete` | WP02                   | Integrated as `9c57877` through PR #96               |
 | [WP04](docs/workplans/WP04.md) | `complete` | WP02, WP03             | Integrated as `f2a722a` through PR #97               |
-| [WP05](docs/workplans/WP05.md) | `ready`    | WP03, WP04             | Acceptance, review and integration                   |
-| [WP06](docs/workplans/WP06.md) | `waiting`  | WP05                   | Acceptance, review and integration                   |
-| [WP07](docs/workplans/WP07.md) | `waiting`  | WP06                   | Acceptance, review and integration                   |
-| [WP08](docs/workplans/WP08.md) | `waiting`  | WP06                   | Acceptance, review and integration                   |
+| [WP05](docs/workplans/WP05.md) | `complete` | WP03, WP04             | Integrated as `927c9ec` through PR #98               |
+| [WP06](docs/workplans/WP06.md) | `complete` | WP05                   | Integrated as `b9439e7` through PR #99               |
+| [WP07](docs/workplans/WP07.md) | `ready`    | WP06                   | Acceptance, review and integration                   |
+| [WP08](docs/workplans/WP08.md) | `ready`    | WP06                   | Acceptance, review and integration                   |
 | [WP09](docs/workplans/WP09.md) | `waiting`  | WP03, WP07, WP08       | Acceptance, review and integration                   |
 | [WP10](docs/workplans/WP10.md) | `ready`    | WP02                   | Acceptance, PR review and integration                |
 | [WP11](docs/workplans/WP11.md) | `waiting`  | WP03, WP04, WP10       | Acceptance, review and integration                   |
@@ -104,10 +104,14 @@ WP13/WP14 include separate start and finish gates. Every package, including thos
 
 ## Exact next action for the next implementation agent
 
-Assign **WP05** next to build audited historical datasets and feature contracts.
-Its agent starts from current `main`, creates an isolated WP05 branch, and
-follows the branch/commit/PR protocol. WP10 design-system work is also
-independently assignable; coordinate any shared component or contract changes.
+The owner may assign **WP07** next in the serial order; WP08 is independently
+eligible. Both remain unassigned. Start from current `main`, reserve the selected
+package, and create its isolated branch before editing. Consume WP06's approved
+[v2 protocol](docs/benchmark/v2/PROTOCOL.md), frozen dataset/split/config hashes
+and retained experiment registry. Explored 2022–2025 diagnostics are not pristine
+holdout or as-of promotion evidence; verified prospective enrollment remains
+outstanding. Do not change the locked metrics or tolerances after seeing results.
+WP10 design-system work is also independently assignable; coordinate shared files.
 
 The model winner, deployment host and public route remain unresolved; their decision gates are specified, so they need not block unrelated ready work.
 
