@@ -1,10 +1,17 @@
 # Offline benchmark (WP06)
 
-Read the [locked protocol](PROTOCOL.md) and [config](config.json) before any
-challenger experiment. Both were preregistered in `d4b75ed` before baseline
-execution. The [lock](lock.json) pins their exact bytes, the [dataset](dataset.json),
-[splits](splits.json) and `uv.lock`. The dataset manifest pins the WP05 feature
-contract, raw archive, target implementation, race fields and target hashes.
+The active protocol is [v2](v2/PROTOCOL.md), preregistered with owner approval
+in `6ae63cd` before corrected baseline execution. [V2 config](v2/config.json)
+and [lock](v2/lock.json) retain all v1 metrics and promotion tolerances while
+correcting tied scores to equal mean-rank probability strengths. Deterministic
+orders still break ties by driver ID. See [review fixes](v2/REVIEW_FIXES.md).
+
+V2 reuses the exact frozen [dataset](dataset.json) and [splits](splits.json).
+The original v1 protocol/config/lock, [v1 baseline report](BASELINE_REPORT.md)
+and all experiments remain preserved. They are historical evidence of the
+superseded behavior, not eligible comparators for new work. Use the
+[v2 baseline report](v2/BASELINE_REPORT.md) for current diagnostics. To reproduce
+v1 for audit, check out its recorded source revision; the current CLI uses v2.
 
 From the repository root, after the WP01 environment setup:
 
@@ -15,8 +22,8 @@ UV_CACHE_DIR=/tmp/gridoracle-uv-cache uv run --offline --frozen --extra pipeline
 
 This reconstructs and verifies all WP05 partitions, reproduces the earlier audit,
 scores the fixed baselines and writes a report path. It never contacts providers,
-fits challengers, accesses a database or changes the active model. Every attempt
-has a unique `experiments/wp06-*/` directory with started/finished events, exact
+fits challengers, accesses a database or changes the active model. Every attempt is registered before config parsing, checksums or dependency discovery. It
+has a unique `experiments/wp06-*/` directory with started/prepared/finished events, exact
 code/config/dependency hashes, seed, Python/package versions and compute metadata.
 Errors become failed events; interrupted runs remain visibly unfinished. Keep the
 output root on durable storage for research; `/tmp` is a reproduction example.
@@ -47,14 +54,26 @@ useful predictor. Brier/log loss and discrimination guardrails must also pass.
 - `uncertainty.uncertainty`: pairs only identical ordered race, entry and target
   cohorts. It will not silently intersect missing forecasts. Original block
   identifiers survive slices; gaps never collapse into fictitious adjacent races.
-- `fitting.fit_in_block`: validates actual rows before invoking a future model's
-  fit callback. Train/tune/refit/calibration have separate allowed scopes. Only
-  registered feature columns reach the estimator. Labels are supplied separately.
+- All public evaluation and fitting adapters verify dataset, splits and optional
+  config against the registered lock. Caller-defined re-freezes, changed labels
+  or smaller evaluation denominators are rejected. Evaluation outputs include
+  input fingerprints. Omitting a fitting config selects the registered one.
+- `fitting.fit_in_block`: permits only train or explicit train+tune refit. Tuning
+  is scoring-only; feature models cannot use calibration rows. Duplicate columns
+  are rejected and feature values must match checksum-verified WP05 partitions.
+  Labels are supplied separately and checked against immutable source targets.
+  `target_kind="winner"` is the default; `"rank"` means contiguous classified
+  ranks with missing labels for unclassified entrants.
 - `fitting.fit_calibrator`: accepts base-model winner probabilities and binary
   winner labels only from a calibration block, with whole-field and coherence
-  checks. Baselines use identity calibration and do not invoke it.
-- `temporal.validate_features(..., evidence=...)`: validates as-of provenance,
-  including entry-list and feature event/publication/retrieval times. The
+  checks and verified winner labels. Any supplied `available_at` must precede
+  the pinned first evaluation race, even when no caller cutoff is supplied.
+  Optional caller cutoffs must equal that deadline. Baselines use identity
+  calibration and do not invoke it.
+- `temporal.validate_features(..., evidence=..., dataset=...)`: validates as-of provenance,
+  including entry-list and feature event/publication/retrieval times. Proof race
+  and first-session times must match the pinned race record. The current archive
+  has no verified first-session timestamps and cannot pass this as-of gate. The
   exploratory path without evidence cannot confer as-of eligibility. Consumers
   must supply verified source evidence; self-asserted timestamps are not proof.
 - `promotion.review_gate`: returns reasons or eligibility for **independent
@@ -70,10 +89,13 @@ before their evaluation, retaining v1 and all earlier experiments.
 
 ## Artifact retention and checks
 
-Run `python -m pytest pipeline/tests/test_benchmark.py -q` inside the pinned
+Run `python -m pytest pipeline/tests/test_benchmark*.py -q` inside the pinned
 pipeline environment. `make check`, `make test`, and `cd dashboard && bun run build`
 are the repository gates. Frozen manifests can be regenerated only into a new
-version; the `freeze` registration command refuses to overwrite existing files.
+version; the `freeze` registration command refuses to overwrite existing files. Named
+artifacts serialize first and use fsync plus atomic no-overwrite publication.
+If failure recording itself fails, the original exception survives with a note
+and the started event remains unfinished.
 No database migration or production rollback is required. Stop selecting this
 benchmark version to roll back; retain every experiment, including failures.
 

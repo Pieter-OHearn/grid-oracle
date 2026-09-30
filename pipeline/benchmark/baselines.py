@@ -25,7 +25,8 @@ def predict(frame: pd.DataFrame, name: str, horizon: str, temperature: float) ->
         score = pd.Series(1.0, index=frame.index)
     else:
         raise ValueError(f"baseline {name} not allowed for {horizon}")
-    ordered = frame.assign(score=score).sort_values(["score", KEY])[KEY].tolist()
-    ranks = np.arange(len(ordered), dtype=float)
+    ranked = frame.assign(score=score).sort_values(["score", KEY])
+    ordered = ranked[KEY].tolist()
+    ranks = ranked["score"].rank(method="average").to_numpy() - 1
     strength = np.ones(len(ordered)) if name == "uniform" else np.exp(-ranks / temperature)
     return {"order": ordered, "winner": dict(zip(ordered, (strength / strength.sum()).tolist(), strict=True))}

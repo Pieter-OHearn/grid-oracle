@@ -8,7 +8,7 @@ import math
 import pandas as pd
 import pytest
 
-from pipeline.benchmark.artifacts import BENCHMARK, digest, read_json, verify_lock
+from pipeline.benchmark.artifacts import BENCHMARK, CONTRACT, digest, read_json, verify_lock
 from pipeline.benchmark.baselines import predict
 from pipeline.benchmark.data import KEY, load_dataset
 from pipeline.benchmark.fitting import fit_in_block
@@ -22,7 +22,7 @@ from pipeline.benchmark.uncertainty import assert_paired, uncertainty
 
 @pytest.fixture(scope="module")
 def config():
-    return read_json(BENCHMARK / "config.json")
+    return read_json(CONTRACT / "config.json")
 
 
 @pytest.fixture(scope="module")
@@ -98,6 +98,8 @@ def test_pre_weekend_qualifying_missingness_cannot_leak(data):
 
 def asof_sample(data):
     frame = data[0]["pre_weekend"].iloc[:1].copy()
+    frame["race_key"] = "2027:1"
+    frame["season"] = 2027
     frame["asof_eligible"] = True
     frame["entry_provenance"] = "verified_entry_list"
     frame["cutoff"] = "2027-03-01T00:00:00+00:00"
@@ -119,27 +121,37 @@ def asof_sample(data):
         },
     }
     key = f"{frame.iloc[0].race_key}/{frame.iloc[0][KEY]}"
-    return frame, {key: proof}, proof
+    pinned = {
+        "races": [
+            {
+                "race": "2027:1",
+                "drivers": frame[KEY].tolist(),
+                "event_at": proof["race_start_at"],
+                "first_competitive_session_at": proof["first_competitive_session_at"],
+            }
+        ]
+    }
+    return frame, {key: proof}, proof, pinned
 
 
 @pytest.mark.parametrize("clock", ["available_at", "retrieved_at", "event_at"])
 def test_disguised_future_target_fails_temporal_lineage(data, clock):
-    frame, evidence, proof = asof_sample(data)
-    validate_features(frame, "pre_weekend", evidence=evidence)
+    frame, evidence, proof, pinned = asof_sample(data)
+    validate_features(frame, "pre_weekend", evidence=evidence, dataset=pinned)
     proof["features"]["driver_finish_mean_last_3"][clock] = "2027-03-05T00:00:00+00:00"
     with pytest.raises(TemporalViolation, match="future"):
-        validate_features(frame, "pre_weekend", evidence=evidence)
+        validate_features(frame, "pre_weekend", evidence=evidence, dataset=pinned)
 
 
 def test_archived_flags_cannot_be_upgraded_without_proof(data):
     frame = data[0]["pre_weekend"].copy()
     frame["asof_eligible"] = True
     with pytest.raises(TemporalViolation, match="evidence"):
-        validate_features(frame, "pre_weekend", evidence={})
+        validate_features(frame, "pre_weekend", evidence={}, dataset=data[2])
 
 
 def test_post_qualifying_requires_current_qualifying_and_grid_before_cutoff(data):
-    frame, evidence, proof = asof_sample(data)
+    frame, evidence, proof, pinned = asof_sample(data)
     frame["horizon"] = "post_qualifying"
     frame["cutoff"] = "2027-03-03T00:00:00+00:00"
     frame["qualifying_position"] = 1
@@ -148,22 +160,22 @@ def test_post_qualifying_requires_current_qualifying_and_grid_before_cutoff(data
     proof["grid_verified_at"] = "2027-03-02T21:00:00+00:00"
     for name in ("qualifying_position", "qualifying_normalized_position"):
         proof["features"][name] = {k: "2027-03-02T21:00:00+00:00" for k in ("event_at", "available_at", "retrieved_at")}
-    validate_features(frame, "post_qualifying", evidence=evidence)
+    validate_features(frame, "post_qualifying", evidence=evidence, dataset=pinned)
     proof["features"]["qualifying_position"]["available_at"] = "2027-03-04T00:00:00+00:00"
     with pytest.raises(TemporalViolation):
-        validate_features(frame, "post_qualifying", evidence=evidence)
+        validate_features(frame, "post_qualifying", evidence=evidence, dataset=pinned)
 
 
-def test_calibration_adapter_rejects_test_before_fit(data):
+def test_feature_model_rejects_calibration_purpose_for_every_block(data):
     frames, _, dataset = data
     splits = make_splits(dataset)
     fold = splits["folds"][0]
     called = []
-    for block in ("train", "tune", "evaluation"):
+    for block in ("train", "tune", "calibration", "evaluation"):
         frame = frames["pre_weekend"]
         frame = frame[frame.race_key.isin(fold[block])]
         labels = frame[["race_key", KEY]].assign(target=1)
-        with pytest.raises(ValueError, match="outside"):
+        with pytest.raises(ValueError, match="cannot fit calibration"):
             fit_in_block(
                 lambda x, y: called.append(True),
                 frame,
@@ -176,21 +188,6 @@ def test_calibration_adapter_rejects_test_before_fit(data):
                 feature_names=["driver_finish_mean_last_3"],
             )
     assert not called
-    frame = frames["pre_weekend"]
-    frame = frame[frame.race_key.isin(fold["calibration"])]
-    labels = frame[["race_key", KEY]].assign(target=1)
-    fit_in_block(
-        lambda x, y: called.append(len(y)),
-        frame,
-        labels,
-        dataset=dataset,
-        splits=splits,
-        fold_id=fold["id"],
-        purpose="calibration",
-        horizon="pre_weekend",
-        feature_names=["driver_finish_mean_last_3"],
-    )
-    assert called == [len(frame)]
 
 
 def test_calibration_labels_must_be_available_before_evaluation():
@@ -438,11 +435,11 @@ def test_failed_run_keeps_full_provenance_and_failure_event(tmp_path, monkeypatc
         cli.run(tmp_path)
     started = list((tmp_path / "experiments").glob("*/started.json"))
     assert len(started) == 1
-    event = read_json(started[0])
-    assert event["metadata"]["code_sha256"]
-    assert event["metadata"]["dependency_lock_sha256"]
-    assert event["metadata"]["dataset_sha256"]
-    assert event["metadata"]["compute"]
+    event = read_json(started[0].parent / "prepared.json")
+    assert event["code_sha256"]
+    assert event["dependency_lock_sha256"]
+    assert event["dataset_sha256"]
+    assert event["compute"]
     finished = read_json(started[0].parent / "finished.json")
     assert finished["status"] == "failed"
     assert "locked artifact" in finished["error"]

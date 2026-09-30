@@ -43,6 +43,10 @@ def validate_splits(manifest: dict, dataset: dict) -> None:
     if manifest["dataset_sha256"] != digest(dataset):
         raise ValueError("split dataset mismatch")
     races = {r["race"]: r for r in dataset["races"]}
+    folds = manifest["folds"]
+    ids = [fold.get("id") for fold in folds]
+    if not ids or any(not isinstance(key, str) or not key.strip() for key in ids) or len(set(ids)) != len(ids):
+        raise ValueError("fold ids must be unique nonempty strings; empty folds are forbidden")
     evaluated = set()
     for fold in manifest["folds"]:
         seen = set()
@@ -84,6 +88,22 @@ def validate_label_availability(available_at: list[str], evaluation_cutoff: str)
     if not cutoff.tzinfo or not available_at:
         raise ValueError("missing timezone-aware label availability")
     for value in available_at:
-        timestamp = datetime.fromisoformat(value)
+        try:
+            timestamp = datetime.fromisoformat(value)
+        except (ValueError, TypeError) as error:
+            raise ValueError("invalid label availability timestamp") from error
         if not timestamp.tzinfo or timestamp >= cutoff:
             raise ValueError("fitting labels unavailable before evaluation")
+
+
+def fold_by_id(splits: dict, fold_id: str) -> dict:
+    if isinstance(fold_id, str):
+        for fold in splits["folds"]:
+            if fold["id"] == fold_id:
+                return fold
+    raise ValueError(f"unknown fold_id: {fold_id!r}")
+
+
+def evaluation_start(fold: dict, dataset: dict) -> str:
+    races = {r["race"]: r for r in dataset["races"]}
+    return min(races[key]["event_at"] for key in fold["evaluation"])

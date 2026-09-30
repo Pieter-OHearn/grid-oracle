@@ -8,6 +8,10 @@ import pandas as pd
 
 from pipeline.dataset.historical import FeatureHorizon, FeatureRegistry
 
+CURRENT_QUALIFYING_FEATURES = frozenset(
+    {"qualifying_position", "qualifying_normalized_position", "missing__qualifying"}
+)
+
 
 class TemporalViolation(ValueError):
     pass
@@ -23,7 +27,11 @@ def timestamp(value: str) -> datetime:
         raise TemporalViolation("missing/invalid temporal evidence") from error
 
 
-def validate_features(frame: pd.DataFrame, horizon: str, *, evidence: dict | None = None) -> None:
+def validate_features(
+    frame: pd.DataFrame, horizon: str, *, evidence: dict | None = None, dataset: dict | None = None
+) -> None:
+    if frame.columns.has_duplicates:
+        raise TemporalViolation("duplicate feature columns")
     registry = FeatureRegistry.audited_default()
     try:
         registry.validate_columns(frame, FeatureHorizon(horizon))
@@ -36,11 +44,14 @@ def validate_features(frame: pd.DataFrame, horizon: str, *, evidence: dict | Non
     if horizon == "pre_weekend" and not frame.missing__qualifying.eq(True).all():
         raise TemporalViolation("pre-weekend qualifying missingness leaks current session")
     if evidence is not None:
-        validate_asof(frame, horizon, registry, evidence)
+        if dataset is None:
+            raise TemporalViolation("as-of evidence needs pinned race times")
+        validate_asof(frame, horizon, registry, evidence, dataset)
 
 
-def validate_asof(frame: pd.DataFrame, horizon: str, registry: FeatureRegistry, evidence: dict) -> None:
+def validate_asof(frame: pd.DataFrame, horizon: str, registry: FeatureRegistry, evidence: dict, dataset: dict) -> None:
     names = {d.name for d in registry.enabled_for(FeatureHorizon(horizon))} & set(frame.columns)
+    races = {race["race"]: race for race in dataset["races"]}
     for row in frame.to_dict("records"):
         key = f"{row['race_key']}/{row['driver_identity_key']}"
         proof = evidence.get(key)
@@ -49,8 +60,10 @@ def validate_asof(frame: pd.DataFrame, horizon: str, registry: FeatureRegistry, 
         if row["entry_provenance"] != "verified_entry_list":
             raise TemporalViolation("result-reconstructed entry list is not as-of eligible")
         cutoff = timestamp(row["cutoff"])
-        first_session = timestamp(proof.get("first_competitive_session_at"))
-        race_start = timestamp(proof.get("race_start_at"))
+        race = races.get(row["race_key"])
+        if race is None or row["driver_identity_key"] not in race["drivers"]:
+            raise TemporalViolation("entry absent from pinned race")
+        first_session, race_start = pinned_times(proof, race)
         if first_session >= race_start:
             raise TemporalViolation("invalid session/race chronology")
         if cutoff >= race_start or (horizon == "pre_weekend" and cutoff >= first_session):
@@ -76,6 +89,18 @@ def validate_feature_time(
     for field in ("available_at", "retrieved_at", "event_at"):
         if timestamp(proof.get(field)) > cutoff:
             raise TemporalViolation(f"future {field} in {name}")
-    is_qualifying = "qualifying" in name and horizon == "post_qualifying"
+    is_qualifying = name in CURRENT_QUALIFYING_FEATURES and horizon == "post_qualifying"
     if not is_qualifying and timestamp(proof["event_at"]) >= first_session:
         raise TemporalViolation(f"current/future race target in historical feature: {name}")
+
+
+def pinned_times(proof: dict, race: dict) -> tuple[datetime, datetime]:
+    race_start = timestamp(race["event_at"])
+    if timestamp(proof.get("race_start_at")) != race_start:
+        raise TemporalViolation("proof race time differs from pinned race")
+    if race.get("first_competitive_session_at") is None:
+        raise TemporalViolation("pinned first competitive session unavailable; as-of use is forbidden")
+    first_session = timestamp(race["first_competitive_session_at"])
+    if timestamp(proof.get("first_competitive_session_at")) != first_session:
+        raise TemporalViolation("proof first session differs from pinned race")
+    return first_session, race_start
