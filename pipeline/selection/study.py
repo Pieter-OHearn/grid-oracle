@@ -7,6 +7,7 @@ import json
 from itertools import combinations
 
 from pipeline.benchmark.artifacts import BENCHMARK, CONTRACT, ROOT, digest, file_hash, read_json, verify_lock
+from pipeline.benchmark.contracts import verify_feature_values, verify_inputs
 from pipeline.benchmark.evaluation import evaluate_predictions
 from pipeline.benchmark.metrics import aggregate
 from pipeline.benchmark.promotion import comparison_failures, review_gate
@@ -143,6 +144,14 @@ def counted_reliability(outputs, targets, event, bins=10):
 def run_comparison(frames, targets, dataset, splits):
     inputs = verify_sources()
     config = read_json(CONTRACT / "config.json")
+    verify_inputs(dataset, splits, config)
+    if set(frames) != set(config["baselines"]):
+        raise ValueError("comparison requires both registered horizons")
+    expected_races = {race["race"] for race in dataset["races"]}
+    for horizon, frame in frames.items():
+        if set(frame.race_key) != expected_races:
+            raise ValueError("comparison feature cohort differs from frozen dataset")
+        verify_feature_values(frame, horizon, dataset)
     policy = read_json(DOCS / "policy.json")
     old7, old8 = zipped(WP07 / "report.json.gz"), zipped(WP08 / "report.json.gz")
     manifest7 = read_json(WP07 / "run-manifest.json")

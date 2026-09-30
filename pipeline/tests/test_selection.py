@@ -367,3 +367,16 @@ def test_review_cannot_invent_a_missing_incumbent(tmp_path):
     head = ledger.append("challenge", {"identity": "new"}, actor="owner", reason="request review", expected_head=head)
     with pytest.raises(ValueError, match="current incumbent"):
         ledger.append("approve", {"identity": "new"}, actor="reviewer", reason="no incumbent", expected_head=head)
+
+
+def test_comparison_rejects_changed_feature_values_before_replay(frozen):
+    from pipeline.selection.study import run_comparison
+
+    frames, targets, dataset, splits, _ = frozen
+    altered = {h: frame.copy() for h, frame in frames.items()}
+    frame = altered["pre_weekend"]
+    frame.loc[frame.index[0], "driver_championship_position_race_only"] = 999.0
+    with pytest.raises(ValueError, match="feature values differ"):
+        run_comparison(altered, targets, dataset, splits)
+    with pytest.raises(ValueError, match="both registered horizons"):
+        run_comparison({"pre_weekend": frames["pre_weekend"]}, targets, dataset, splits)
