@@ -101,3 +101,21 @@ has not created a serving pointer. The retained promotion record is a decision
 to keep the baseline, with `promoted: false` for each horizon. Operational use,
 prospective enrollment, independent review and actual publication remain later
 steps under the existing workplans.
+
+## Retained review evidence
+
+- [Selection report](REPORT.md), [model card](MODEL_CARD.md), [calibration card](CALIBRATION_CARD.md).
+- [Validation summary](validation/SUMMARY.json) and [training reproduction](validation/training-reproduction.json).
+- Final runs: [first](runs/wp09-ae81f27829c14b9f84a40aeaa0deaa5c/manifest.json)
+  and [repeat](runs/wp09-bdbbaeadb4ba42698cefe8de28e77a6d/manifest.json), both
+  measured at `43b0c9c` with matching semantic report hash
+  `e1c5d0fd6b002e48a10a428b27f64348b72be217cd86e97720d4a9cc4d9c99c7`.
+- [Pre-weekend reliability](runs/wp09-ae81f27829c14b9f84a40aeaa0deaa5c/reliability-pre_weekend.png)
+  and [post-qualifying reliability](runs/wp09-ae81f27829c14b9f84a40aeaa0deaa5c/reliability-post_qualifying.png).
+
+Run `python -m docs.models.wp09.verify_artifacts` to check the retained hashes,
+measured source revisions, current source and matching final reports. All five
+WP09 attempts are retained. The dirty development run and earlier clean pair
+are explicitly superseded in `retention.json`; do not consume those outputs.
+The complete reports intentionally include every conditional marginal, so their
+compressed JSON files are larger than the earlier winner-only studies.

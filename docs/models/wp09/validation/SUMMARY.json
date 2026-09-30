@@ -1,0 +1,153 @@
+{
+  "artifact_replays": 75,
+  "calibration_replays": 75,
+  "checks": [
+    {
+      "command": [
+        "/tmp/gridoracle-wp08-venv/bin/python",
+        "-m",
+        "pipeline.selection",
+        "--output",
+        "/tmp/wp09-clean"
+      ],
+      "exit_code": 0,
+      "log": "/tmp/wp09-clean-repeat.log",
+      "name": "clean-repeat",
+      "seconds": 55.83208066702355
+    },
+    {
+      "command": [
+        "/tmp/gridoracle-wp08-venv/bin/python",
+        "-m",
+        "pipeline.challengers",
+        "--output",
+        "/tmp/wp09-wp07-repro"
+      ],
+      "exit_code": 0,
+      "log": "/tmp/wp09-wp07-training.log",
+      "name": "wp07-training",
+      "seconds": 75.18057516694535
+    },
+    {
+      "command": [
+        "/tmp/gridoracle-wp08-venv/bin/python",
+        "-m",
+        "pipeline.custom_model.experiment",
+        "--output",
+        "/tmp/wp09-wp08-repro",
+        "--backend",
+        "cpu"
+      ],
+      "exit_code": 0,
+      "log": "/tmp/wp09-wp08-training.log",
+      "name": "wp08-training",
+      "seconds": 19.27390925004147
+    },
+    {
+      "command": [
+        "make",
+        "check"
+      ],
+      "exit_code": 0,
+      "log": "/tmp/wp09-make-check.log",
+      "name": "make-check",
+      "seconds": 6.013155208900571
+    },
+    {
+      "command": [
+        "make",
+        "test"
+      ],
+      "exit_code": 0,
+      "log": "/tmp/wp09-make-test.log",
+      "name": "make-test",
+      "seconds": 26.133917790954
+    },
+    {
+      "command": [
+        "bun",
+        "run",
+        "--cwd",
+        "dashboard",
+        "build"
+      ],
+      "exit_code": 0,
+      "log": "/tmp/wp09-dashboard-build.log",
+      "name": "dashboard-build",
+      "seconds": 2.843931333045475
+    },
+    {
+      "command": [
+        "/tmp/gridoracle-wp08-venv/bin/python",
+        "-m",
+        "docs.research.wp08.verify_artifacts"
+      ],
+      "exit_code": 0,
+      "log": "/tmp/wp09-wp08-retention.log",
+      "name": "wp08-retention",
+      "seconds": 1.0884535419754684
+    },
+    {
+      "command": [
+        "/tmp/gridoracle-wp08-venv/bin/python",
+        "-m",
+        "pytest",
+        "pipeline/tests/test_selection.py",
+        "-q",
+        "--junitxml=/tmp/wp09-acceptance.xml"
+      ],
+      "exit_code": 0,
+      "log": "/tmp/wp09-wp09-acceptance.log",
+      "name": "wp09-acceptance",
+      "seconds": 2.3157571660121903
+    }
+  ],
+  "coherent_fields": 2240,
+  "conditional_calibration_races_per_horizon": 11,
+  "final_runs": [
+    "wp09-ae81f27829c14b9f84a40aeaa0deaa5c",
+    "wp09-bdbbaeadb4ba42698cefe8de28e77a6d"
+  ],
+  "max_winner_probability_replay_error": 3.731348877100693e-08,
+  "report_sha256": "e1c5d0fd6b002e48a10a428b27f64348b72be217cd86e97720d4a9cc4d9c99c7",
+  "simulation_validation": {
+    "coherence": "permutation, nested marginal and slot-sum assertions run for every decoded field",
+    "convergence": [
+      {
+        "mean_squared_matrix_error": 0.0042420845291241465,
+        "samples_per_winner": 64,
+        "seeds": 12
+      },
+      {
+        "mean_squared_matrix_error": 0.0007457818790357931,
+        "samples_per_winner": 512,
+        "seeds": 12
+      },
+      {
+        "mean_squared_matrix_error": 6.21659901677342e-05,
+        "samples_per_winner": 4096,
+        "seeds": 12
+      }
+    ],
+    "cross_entry_dependence": "one winner and fixed top-k slots per draw; tested negative indicator covariance",
+    "exact_three_entry_rank_marginals": [
+      [
+        0.5,
+        0.3392857142857143,
+        0.16071428571428573
+      ],
+      [
+        0.3,
+        0.375,
+        0.325
+      ],
+      [
+        0.2,
+        0.28571428571428575,
+        0.5142857142857142
+      ]
+    ],
+    "richer_simulator": "not implemented or released",
+    "scope": "synthetic numerical checks only; never prospective race observations"
+  }
+}

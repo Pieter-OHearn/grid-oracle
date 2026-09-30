@@ -1,0 +1,15 @@
+{
+  "artifacts": {
+    "REPORT.md": "9168429ef0271e096a06a97845d7f2b7028e1f74368057fd033b8286bd61bedd",
+    "manifest.json": "af489230b8ec0a381274d3f22dd8fe092ed65ca52667e83a80db11888cf9a314",
+    "promotion-record.json": "f802abb41779dc2195696bce8c3abefa80787f5832a91bcd55f9708dc0a77c8a",
+    "reliability-post_qualifying.png": "ef2d555abc50f218ec194fd1ea2af7e17563b102aff4834814d82dd88bceb587",
+    "reliability-pre_weekend.png": "ef8efacd40db4a93904af16eb4d4a318113032a69a35e6127153e28f795732a8",
+    "report.json.gz": "9d566f89eea75eec5f9308beb595f86404fa81217db8d9d165d72cfb8a45859b",
+    "started.json": "5910815cb773a5d2387c1392745dac06070cefaca5ba5d05e4227366f49a22fa"
+  },
+  "elapsed_seconds": 62.51383683306631,
+  "peak_rss_mib": 728.46875,
+  "report_sha256": "e70786b28c0c6903fa568495345563a6b8b4cea871e07691630a1af459b6f180",
+  "status": "succeeded"
+}
