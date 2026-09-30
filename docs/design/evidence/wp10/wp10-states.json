@@ -1,0 +1,218 @@
+[
+  {
+    "bodyWidth": 320,
+    "hasNaN": false,
+    "journey": "#race",
+    "notice": "Loading sample forecast",
+    "rows": 0,
+    "state": "loading",
+    "viewport": 320
+  },
+  {
+    "bodyWidth": 320,
+    "hasNaN": false,
+    "journey": "#race",
+    "notice": "Forecast unavailable",
+    "rows": 0,
+    "state": "unavailable",
+    "viewport": 320
+  },
+  {
+    "bodyWidth": 320,
+    "hasNaN": false,
+    "journey": "#race",
+    "notice": "Could not load forecast",
+    "rows": 0,
+    "state": "error",
+    "viewport": 320
+  },
+  {
+    "bodyWidth": 320,
+    "hasNaN": false,
+    "journey": "#race",
+    "notice": "Some data is unknown",
+    "rows": 5,
+    "state": "unknown",
+    "viewport": 320
+  },
+  {
+    "bodyWidth": 320,
+    "hasNaN": false,
+    "journey": "#race",
+    "notice": "No entries available",
+    "rows": 0,
+    "state": "empty",
+    "viewport": 320
+  },
+  {
+    "bodyWidth": 320,
+    "hasNaN": false,
+    "journey": "#race",
+    "notice": null,
+    "rows": 5,
+    "state": "ready",
+    "viewport": 320
+  },
+  {
+    "bodyWidth": 320,
+    "hasNaN": false,
+    "journey": "#comparison",
+    "notice": "Loading sample forecast",
+    "rows": 0,
+    "state": "loading",
+    "viewport": 320
+  },
+  {
+    "bodyWidth": 320,
+    "hasNaN": false,
+    "journey": "#comparison",
+    "notice": "Forecast unavailable",
+    "rows": 0,
+    "state": "unavailable",
+    "viewport": 320
+  },
+  {
+    "bodyWidth": 320,
+    "hasNaN": false,
+    "journey": "#comparison",
+    "notice": "Could not load forecast",
+    "rows": 0,
+    "state": "error",
+    "viewport": 320
+  },
+  {
+    "bodyWidth": 320,
+    "hasNaN": false,
+    "journey": "#comparison",
+    "notice": "Some data is unknown",
+    "rows": 22,
+    "state": "unknown",
+    "viewport": 320
+  },
+  {
+    "bodyWidth": 320,
+    "hasNaN": false,
+    "journey": "#comparison",
+    "notice": "No entries available",
+    "rows": 0,
+    "state": "empty",
+    "viewport": 320
+  },
+  {
+    "bodyWidth": 320,
+    "hasNaN": false,
+    "journey": "#comparison",
+    "notice": null,
+    "rows": 22,
+    "state": "ready",
+    "viewport": 320
+  },
+  {
+    "bodyWidth": 320,
+    "hasNaN": false,
+    "journey": "#scorecard",
+    "notice": "Loading sample scorecard",
+    "rows": 0,
+    "state": "loading",
+    "viewport": 320
+  },
+  {
+    "bodyWidth": 320,
+    "hasNaN": false,
+    "journey": "#scorecard",
+    "notice": "Scorecard unavailable",
+    "rows": 0,
+    "state": "unavailable",
+    "viewport": 320
+  },
+  {
+    "bodyWidth": 320,
+    "hasNaN": false,
+    "journey": "#scorecard",
+    "notice": "Could not load scorecard",
+    "rows": 0,
+    "state": "error",
+    "viewport": 320
+  },
+  {
+    "bodyWidth": 320,
+    "hasNaN": false,
+    "journey": "#scorecard",
+    "notice": "Performance is unknown",
+    "rows": 0,
+    "state": "unknown",
+    "viewport": 320
+  },
+  {
+    "bodyWidth": 320,
+    "hasNaN": false,
+    "journey": "#scorecard",
+    "notice": "No evaluated races",
+    "rows": 0,
+    "state": "empty",
+    "viewport": 320
+  },
+  {
+    "bodyWidth": 320,
+    "hasNaN": false,
+    "journey": "#scorecard",
+    "notice": null,
+    "rows": 0,
+    "state": "ready",
+    "viewport": 320
+  },
+  {
+    "bodyWidth": 320,
+    "hasNaN": false,
+    "journey": "#archive",
+    "notice": "Loading sample archive",
+    "rows": 0,
+    "state": "loading",
+    "viewport": 320
+  },
+  {
+    "bodyWidth": 320,
+    "hasNaN": false,
+    "journey": "#archive",
+    "notice": "Archive unavailable",
+    "rows": 0,
+    "state": "unavailable",
+    "viewport": 320
+  },
+  {
+    "bodyWidth": 320,
+    "hasNaN": false,
+    "journey": "#archive",
+    "notice": "Could not load archive",
+    "rows": 0,
+    "state": "error",
+    "viewport": 320
+  },
+  {
+    "bodyWidth": 320,
+    "hasNaN": false,
+    "journey": "#archive",
+    "notice": "Archive coverage unknown",
+    "rows": 0,
+    "state": "unknown",
+    "viewport": 320
+  },
+  {
+    "bodyWidth": 320,
+    "hasNaN": false,
+    "journey": "#archive",
+    "notice": "No archive events",
+    "rows": 0,
+    "state": "empty",
+    "viewport": 320
+  },
+  {
+    "bodyWidth": 320,
+    "hasNaN": false,
+    "journey": "#archive",
+    "notice": null,
+    "rows": 0,
+    "state": "ready",
+    "viewport": 320
+  }
+]

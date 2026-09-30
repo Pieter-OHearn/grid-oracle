@@ -1,6 +1,6 @@
 # GridOracle build plan
 
-Updated 2026-09-30. **Current state: WP01–08 integrated; WP09 assigned under the frozen v2 benchmark.**
+Updated 2026-09-30. **Current state: WP01–08 and WP10 integrated; WP09 is ready for review on PR #104.**
 
 For assignment prompts, ownership rules and state transitions, read the [agent execution guide](docs/workplans/README.md). Fresh agents start at [HANDOFF](HANDOFF.md).
 
@@ -89,11 +89,11 @@ The coordinator updates this overview when assigning or integrating work. Detail
 | [WP04](docs/workplans/WP04.md) | `complete` | WP02, WP03             | Integrated as `f2a722a` through PR #97               |
 | [WP05](docs/workplans/WP05.md) | `complete` | WP03, WP04             | Integrated as `927c9ec` through PR #98               |
 | [WP06](docs/workplans/WP06.md) | `complete` | WP05                   | Integrated as `b9439e7` through PR #99               |
-| [WP07](docs/workplans/WP07.md) | `complete` | WP06                   | Integrated as `32b1f60` through PR #101                |
-| [WP08](docs/workplans/WP08.md) | `complete` | WP06                   | Integrated as `3ad2113` through PR #102                |
-| [WP09](docs/workplans/WP09.md) | `active`   | WP03, WP07, WP08       | Codex `/root`; owner-assigned selection/calibration    |
-| [WP10](docs/workplans/WP10.md) | `ready`    | WP02                   | Acceptance, PR review and integration                |
-| [WP11](docs/workplans/WP11.md) | `waiting`  | WP03, WP04, WP10       | Acceptance, review and integration                   |
+| [WP07](docs/workplans/WP07.md) | `complete` | WP06                   | Integrated as `32b1f60` through PR #101             |
+| [WP08](docs/workplans/WP08.md) | `complete` | WP06                   | Integrated as `3ad2113` through PR #102             |
+| [WP09](docs/workplans/WP09.md) | `review_ready` | WP03, WP07, WP08  | [PR #104](https://github.com/Pieter-OHearn/grid-oracle/pull/104); review and integration outstanding |
+| [WP10](docs/workplans/WP10.md) | `complete` | WP02                   | Integrated as `867bdad` through PR #103             |
+| [WP11](docs/workplans/WP11.md) | `ready`    | WP03, WP04, WP10       | Acceptance, review and integration                   |
 | [WP12](docs/workplans/WP12.md) | `waiting`  | WP06, WP09, WP11       | Acceptance, review and integration                   |
 | [WP13](docs/workplans/WP13.md) | `waiting`  | WP01                   | WP03, WP04, WP11                                     |
 | [WP14](docs/workplans/WP14.md) | `waiting`  | WP04, WP06, WP11       | WP09, WP12, WP13                                     |
@@ -104,15 +104,7 @@ WP13/WP14 include separate start and finish gates. Every package, including thos
 
 ## Exact next action for the next implementation agent
 
-The owner assigned **WP09** to Codex `/root` on 2026-09-30, and explicitly
-authorized correction of stale prerequisite tracking in one commit on its branch
-before continuing. GitHub confirms PR #96 at `9c57877aac5ac311944d8d5eea31f46eb39acbee`,
-PR #101 at `32b1f60c3116fe6d02e7c55c92b7461f5fb7eaf4`, and PR #102 at
-`3ad2113186a715215e484e11950541a61577c09f` are merged into main.
-Consume the frozen WP06 v2 protocol and retained WP07/WP08 artifacts. Keep the
-metrics, splits and tolerances locked; explored history is not prospective or
-as-of promotion evidence. WP09's exact implementation action is in its state.
-WP10 remains independently assignable.
+Review the WP09 candidate on [PR #104](https://github.com/Pieter-OHearn/grid-oracle/pull/104) against its branch state and acceptance evidence; integrate it only after review. WP11 is now eligible for assignment because WP03, WP04 and WP10 are integrated. Reserve WP11 and create its isolated branch before implementation. WP12 remains gated on WP09 and WP11 integration. The frozen [v2 protocol](docs/benchmark/v2/PROTOCOL.md) and its metrics and tolerances remain unchanged.
 
 The model winner, deployment host and public route remain unresolved; their decision gates are specified, so they need not block unrelated ready work.
 

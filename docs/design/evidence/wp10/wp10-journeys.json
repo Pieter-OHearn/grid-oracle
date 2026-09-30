@@ -1,0 +1,24 @@
+[
+  {
+    "test": "Archive example selection",
+    "text": "2018 example archive · Synthetic coverage only"
+  },
+  {
+    "hash": "#race",
+    "sample": "Design reference · Synthetic sample data · Not a real forecastSample July 2026 context · No API calls · No production forecasts",
+    "test": "Archive to labelled race"
+  },
+  {
+    "hash": "#comparison",
+    "rows": 22,
+    "test": "Race to full field"
+  },
+  {
+    "test": "Historical reconstruction",
+    "text": "Historical reconstruction cohort: hindsight reconstruction is separate from live-issued evidence."
+  },
+  {
+    "test": "Legacy unverified",
+    "text": "Legacy unverified cohort: excluded from validated performance claims."
+  }
+]
