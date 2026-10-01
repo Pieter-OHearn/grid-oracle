@@ -50,3 +50,11 @@ Native screen-reader, hardware-device and participant usability testing were
 not run. There is no deployed endpoint, real published forecast or migration/
 backfill performed here. These checks verify the public foundation, not model
 quality, a WP12 scorecard or operational release readiness.
+
+CI dependency repair: the first API CI run failed collection because its minimal
+requirements omitted Alembic. The API development requirements now include the
+already-adopted `1.14.1` pin. A fresh requirements-only environment passed all
+41 API tests and the generated-contract/lint checks. Replacement [Backend CI
+36825792784](https://github.com/Pieter-OHearn/grid-oracle/actions/runs/36825792784)
+passed the API and Ruff jobs at repair revision `d813b7e`. No application
+behavior or screenshot changed in that repair.
