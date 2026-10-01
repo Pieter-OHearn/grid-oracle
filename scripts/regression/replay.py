@@ -383,31 +383,81 @@ class WeekendReplay:
         return model
 
     def snapshot(self, horizon):
-        adapter = ProviderAdapter(
-            "wp14-synthetic", "GridOracle offline test", self.root / "provider"
-        )
-        payload, _ = adapter.fetch_json(
-            "https://recorded.invalid/weekend",
-            validator=require_keys("entries", "sessions"),
-            session=RecordedSession(self.fixture),
-        )
-        raw = self._artifact(
-            "providers/wp14",
-            {
+        raw_id = f"{self.race_id}-{horizon}-raw"
+        with self.engine.connect() as conn:
+            existing = conn.execute(
+                text(
+                    "SELECT artifact_path,sha256 FROM raw_provider_snapshots "
+                    "WHERE snapshot_id=:id"
+                ),
+                {"id": raw_id},
+            ).one_or_none()
+        if existing is not None:
+            self.artifacts.verify(existing.artifact_path, existing.sha256)
+            observation = json.loads(
+                (self.root / "artifacts" / existing.artifact_path).read_bytes()
+            )
+        else:
+            adapter = ProviderAdapter(
+                "wp14-synthetic", "GridOracle offline test", self.root / "provider"
+            )
+            payload, _ = adapter.fetch_json(
+                "https://recorded.invalid/weekend",
+                validator=require_keys("entries", "sessions"),
+                session=RecordedSession(self.fixture),
+            )
+            observation = {
                 "observed_at": self.now.isoformat(),
                 "race_id": self.race_id,
                 "payload": payload,
+                # Capture ingested qualifying with the observation, before the
+                # first durable write. Retries cannot substitute later values.
+                "features": self.feature_records(
+                    horizon, payload, self.now.isoformat()
+                ),
+            }
+            self.store.record_raw_snapshot(
+                snapshot_id=raw_id,
+                provider="wp14-synthetic",
+                retrieved_at=self.now,
+                source_available_at=self.now,
+                **self._artifact("providers/wp14", observation),
+            )
+        captured_at = time(observation["observed_at"])
+        records = observation["features"]
+        feature_id = f"{self.race_id}-{horizon}-features"
+        self.store.record_feature_snapshot(
+            feature_snapshot_id=feature_id,
+            dataset_id="wp14",
+            **self._artifact("features/wp14", records),
+        )
+        self.frames[horizon] = pd.DataFrame(records)
+        self.inputs[horizon] = ForecastRunInput(
+            race_id=self.race_id,
+            horizon=horizon,
+            input_cutoff_at=captured_at,
+            issue_at=captured_at,
+            source_available_at=captured_at,
+            provenance_grade="observed",
+            expected_entry_count=22,
+            idempotency_key=f"wp14/{self.race_id}/{horizon}",
+            input_manifest={
+                "synthetic": True,
+                "field_revision": 1,
+                "weather": select_weather_for_interval(
+                    [],
+                    self.event.timestamp("Race"),
+                    self.event.timestamp("Race") + timedelta(hours=2),
+                ),
             },
+            raw_snapshot_id=raw_id,
+            dataset_id="wp14",
+            feature_snapshot_id=feature_id,
+            model_manifest_id="wp14",
+            calibrator_manifest_id="wp14",
         )
-        raw_id = f"{self.race_id}-{horizon}-raw"
-        self.store.record_raw_snapshot(
-            snapshot_id=raw_id,
-            provider="wp14-synthetic",
-            retrieved_at=self.now,
-            source_available_at=self.now,
-            **raw,
-        )
-        cutoff = self.now.isoformat()
+
+    def feature_records(self, horizon, payload, cutoff):
         records = []
         for i, entry in enumerate(payload["entries"], 1):
             row = {
@@ -432,37 +482,7 @@ class WeekendReplay:
                         {"race": self.race_id, "driver": i},
                     ).scalar_one()
             records.append(row)
-        feature_id = f"{self.race_id}-{horizon}-features"
-        self.store.record_feature_snapshot(
-            feature_snapshot_id=feature_id,
-            dataset_id="wp14",
-            **self._artifact("features/wp14", records),
-        )
-        self.frames[horizon] = pd.DataFrame(records)
-        self.inputs[horizon] = ForecastRunInput(
-            race_id=self.race_id,
-            horizon=horizon,
-            input_cutoff_at=self.now,
-            issue_at=self.now,
-            source_available_at=self.now,
-            provenance_grade="observed",
-            expected_entry_count=22,
-            idempotency_key=f"wp14/{self.race_id}/{horizon}",
-            input_manifest={
-                "synthetic": True,
-                "field_revision": 1,
-                "weather": select_weather_for_interval(
-                    [],
-                    self.event.timestamp("Race"),
-                    self.event.timestamp("Race") + timedelta(hours=2),
-                ),
-            },
-            raw_snapshot_id=raw_id,
-            dataset_id="wp14",
-            feature_snapshot_id=feature_id,
-            model_manifest_id="wp14",
-            calibrator_manifest_id="wp14",
-        )
+        return records
 
     def predict(self, horizon, *, persist=True):
         model = self.load_model()
@@ -541,6 +561,16 @@ class WeekendReplay:
     def result(self, _job=None, *, correction=False):
         revision = 2 if correction else 1
         with self.engine.begin() as conn:
+            existing = conn.execute(
+                text(
+                    "SELECT id FROM result_revisions "
+                    "WHERE race_id=:race AND revision=:rev"
+                ),
+                {"race": self.race_id, "rev": revision},
+            ).scalar_one_or_none()
+            if existing is not None:
+                self.result_revision = existing
+                return existing
             self.result_revision = conn.execute(
                 text(
                     "INSERT INTO result_revisions (race_id,revision,source,r"
@@ -591,6 +621,19 @@ class WeekendReplay:
         ]
         config = json.loads((ROOT / "docs/benchmark/v2/config.json").read_text())
         for horizon, run_id in self.runs.items():
+            evaluation_id = f"{run_id}/{self.result_revision}"
+            with self.engine.connect() as conn:
+                existing = conn.execute(
+                    text(
+                        "SELECT evaluation_id FROM evaluation_runs "
+                        "WHERE evaluation_id=:id"
+                    ),
+                    {"id": evaluation_id},
+                ).scalar_one_or_none()
+            if existing is not None:
+                # Acknowledgment can fail after either evaluation commits.
+                # Retain its original metrics/time and finish only missing work.
+                continue
             scored = score_race(
                 targets,
                 self.predictions[horizon],
@@ -599,7 +642,7 @@ class WeekendReplay:
             )
             values = {k: scored[k] for k in SCALARS}
             self.store.record_evaluation(
-                evaluation_id=f"{run_id}/{self.result_revision}",
+                evaluation_id=evaluation_id,
                 forecast_run_id=run_id,
                 result_revision_id=self.result_revision,
                 evaluator_manifest={

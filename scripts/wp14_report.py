@@ -56,7 +56,9 @@ def main():
         report["failures"] = len(list(suite.iter("failure")))
         report["errors"] = len(list(suite.iter("error")))
         report["skips"] = len(list(suite.iter("skipped")))
-        assert report["tests"] >= 28, "missing lifecycle cases"
+        assert report["tests"] >= 39, (
+            "missing lifecycle and committed-write retry cases"
+        )
         assert not any(report[k] for k in ("failures", "errors", "skips"))
         report["passed"] = True
     finally:

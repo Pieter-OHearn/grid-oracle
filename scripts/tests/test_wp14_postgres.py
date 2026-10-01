@@ -50,12 +50,13 @@ def no_provider_network(monkeypatch):
 
 @pytest.fixture(autouse=True)
 def intentional_mutation(monkeypatch):
-    """Compile one exact known production defect in-process, only on opt-in run."""
+    """Compile one exact known defect in-process, only on opt-in run."""
     mutant = os.getenv("WP14_MUTANT")
     if not mutant:
         return
     from gridoracle.ops import recovery
     from gridoracle.provenance import store as storage
+    from scripts.regression import replay as replay_module
 
     choices = {
         "partial-publication": (
@@ -82,11 +83,32 @@ def intentional_mutation(monkeypatch):
             'if digest(output) != row["output_sha256"]:',
             "if False:",
         ),
+        "future-live-qualifying": (
+            replay_module.WeekendReplay,
+            "predict",
+            "    field = Field(",
+            "    if horizon == 'post_qualifying':\n"
+            "        with self.engine.connect() as conn:\n"
+            "            for index in frame.index:\n"
+            "                frame.at[index, 'qualifying_position'] = conn.execute(\n"
+            "                    text('SELECT grid_position FROM qualifying_results "
+            "WHERE race_id=:race AND driver_id=:driver'),\n"
+            "                    {'race': self.race_id, 'driver': "
+            "int(frame.at[index, 'driver_identity_key'].split(':')[1]) % 100},\n"
+            "                ).scalar_one()\n"
+            "    field = Field(",
+        ),
+        "recaptured-snapshot": (
+            replay_module.WeekendReplay,
+            "snapshot",
+            "if existing is not None:",
+            "if False:",
+        ),
     }
     owner, name, before, after = choices[mutant]
     function = getattr(owner, name)
     source = textwrap.dedent(inspect.getsource(function))
-    assert source.count(before) == 1, "mutation drift: expected exact production guard"
+    assert source.count(before) == 1, "mutation drift: expected exact guard"
     namespace = dict(function.__globals__)
     exec(
         compile(source.replace(before, after), f"<WP14 mutant {mutant}>", "exec"),
@@ -266,6 +288,7 @@ def test_future_availability_is_rejected(replay):
 
 def test_future_sources_results_and_newer_model_cannot_change_issued_forecast(replay):
     replay.complete()
+    expected_predictions = dict(replay.predictions)
     saved = replay.public()
     before = {k: v for k, v in replay.hashes().items() if k.startswith("forecast_")}
     replay.fixture["entries"][0]["standings"] = 22
@@ -292,11 +315,18 @@ def test_future_sources_results_and_newer_model_cannot_change_issued_forecast(re
     )
     replay.result(correction=True)
     replay.evaluate()
-    reproduced = replay.predict("pre_weekend", persist=False)
-    assert all(v == pytest.approx(1 / 22) for v in reproduced["winner"].values())
     prior_post = replay.public("post_qualifying")
-    replay.predict("post_qualifying", persist=False)
-    assert replay.predictions["post_qualifying"]["order"][0] == "entry:202602"
+    for horizon in replay.runs:
+
+        def reproduce(_manifest, horizon=horizon):
+            prediction = replay.predict(horizon, persist=False)
+            assert prediction["order"] == expected_predictions[horizon]["order"]
+            assert prediction["winner"] == pytest.approx(
+                expected_predictions[horizon]["winner"], abs=1e-14
+            )
+            return {entry.entry_key: entry.output for entry in replay.outputs[horizon]}
+
+        replay.store.verify_reproduction(replay.runs[horizon], reproduce)
     assert replay.public("post_qualifying") == prior_post
     assert replay.public() == saved
     assert {
@@ -342,25 +372,31 @@ def test_outage_retry_quarantine_and_last_good(replay):
     "stage",
     [
         "post_qualifying.ingest",
+        "post_qualifying.feature",
         "post_qualifying.predict",
         "post_qualifying.publish",
+        "result.ingest",
         "result.evaluate",
     ],
 )
-def test_worker_stage_failure_preserves_last_good_and_recovers(replay, stage):
+@pytest.mark.parametrize("phase", ["before", "after"])
+def test_worker_stage_failure_preserves_last_good_and_recovers(replay, stage, phase):
     replay.drain()
     saved = replay.public()
-    if stage == "result.evaluate":
+    if stage.startswith("result."):
         replay.now = time("2026-05-02T15:30:00+00:00")
         replay.drain()
     replay.now = time(
         "2026-05-03T16:00:00+00:00"
-        if stage == "result.evaluate"
+        if stage.startswith("result.")
         else "2026-05-02T15:30:00+00:00"
     )
     handlers = replay.handlers()
+    original = handlers[stage]
 
-    def interrupted(_job):
+    def interrupted(job):
+        if phase == "after":
+            original(job)
         raise requests.Timeout("WP14 injected source/worker interruption")
 
     handlers[stage] = interrupted
@@ -378,11 +414,18 @@ def test_worker_stage_failure_preserves_last_good_and_recovers(replay, stage):
         assert row.status == "pending" and row.attempts == 1
         assert "interruption" in row.last_error
     assert replay.public() == saved
+    after_failure = replay.hashes()
     replay.now += timedelta(seconds=16)
     replay.drain()
     replay.now = time("2026-05-03T16:00:00+00:00")
     replay.drain()
     assert replay.public() == saved
+    # A completed-but-unacknowledged handler must retain all committed rows.
+    if phase == "after":
+        after_retry = replay.hashes()
+        for table in ("raw_provider_snapshots", "result_revisions", "evaluation_runs"):
+            if after_failure[table]["count"] == after_retry[table]["count"]:
+                assert after_failure[table] == after_retry[table]
     with replay.engine.connect() as conn:
         assert (
             conn.execute(
@@ -392,6 +435,113 @@ def test_worker_stage_failure_preserves_last_good_and_recovers(replay, stage):
         )
 
 
+@pytest.mark.parametrize("horizon", ["pre_weekend", "post_qualifying"])
+def test_feature_retry_reuses_partially_committed_observation(
+    replay, horizon, monkeypatch
+):
+    if horizon == "post_qualifying":
+        replay.drain()
+        saved = replay.public()
+        replay.now = time("2026-05-02T15:30:00+00:00")
+    captured_at = replay.now
+    original = replay.store.record_feature_snapshot
+    failed = False
+
+    def after_raw_commit(**kwargs):
+        nonlocal failed
+        if not failed:
+            failed = True
+            raise requests.Timeout(
+                "interrupted after raw commit, before feature commit"
+            )
+        return original(**kwargs)
+
+    monkeypatch.setattr(replay.store, "record_feature_snapshot", after_raw_commit)
+    replay.drain()
+    assert failed
+    raw_before = replay.hashes()["raw_provider_snapshots"]
+    replay.fixture["entries"][0]["standings"] = 22
+    replay.fixture["entries"][0]["qualifying"] = 22
+    if horizon == "post_qualifying":
+        with replay.engine.begin() as conn:
+            conn.execute(
+                text("UPDATE qualifying_results SET grid_position=22 WHERE driver_id=1")
+            )
+    replay.now += timedelta(seconds=16)
+    replay.drain()
+    feature_job = next(
+        job for job in weekend_graph(replay.event) if job.kind == f"{horizon}.feature"
+    )
+    assert replay.ledger.status(feature_job.key) == "succeeded"
+    assert replay.hashes()["raw_provider_snapshots"] == raw_before
+    assert replay.inputs[horizon].input_cutoff_at == captured_at
+    assert replay.inputs[horizon].issue_at == captured_at
+    first = replay.frames[horizon].iloc[0]
+    assert first.driver_championship_position_race_only == 1
+    if horizon == "post_qualifying":
+        assert first.qualifying_position == 2
+        assert replay.public() == saved
+    else:
+        assert all(
+            p == pytest.approx(1 / 22)
+            for p in replay.predictions[horizon]["winner"].values()
+        )
+    assert replay.public(horizon)["state"] == "published"
+
+
+def test_evaluation_retry_preserves_first_commit_and_finishes_missing_horizon(
+    replay, monkeypatch
+):
+    replay.drain()
+    replay.now = time("2026-05-02T15:30:00+00:00")
+    replay.drain()
+    saved = replay.public()
+    replay.now = time("2026-05-03T16:00:00+00:00")
+    original = replay.store.record_evaluation
+    failed = False
+
+    def after_first_commit(**kwargs):
+        nonlocal failed
+        result = original(**kwargs)
+        if not failed:
+            failed = True
+            raise requests.Timeout("interrupted after first evaluation commit")
+        return result
+
+    monkeypatch.setattr(replay.store, "record_evaluation", after_first_commit)
+    replay.drain()
+    with replay.engine.connect() as conn:
+        first = dict(
+            conn.execute(text("SELECT * FROM evaluation_runs")).mappings().one()
+        )
+    replay.now += timedelta(seconds=16)
+    replay.drain()
+    with replay.engine.connect() as conn:
+        retained = dict(
+            conn.execute(
+                text("SELECT * FROM evaluation_runs WHERE evaluation_id=:id"),
+                {"id": first["evaluation_id"]},
+            )
+            .mappings()
+            .one()
+        )
+        assert retained == first
+        assert (
+            conn.execute(text("SELECT count(*) FROM evaluation_runs")).scalar_one() == 2
+        )
+    assert replay.public() == saved
+    assert (
+        replay.ledger.status(
+            next(
+                j.key
+                for j in weekend_graph(replay.event)
+                if j.kind == "result.evaluate"
+            )
+        )
+        == "succeeded"
+    )
+
+
 def test_duplicate_workers_claim_once_and_recover_lost_lease(replay):
     with ThreadPoolExecutor(max_workers=2) as pool:
         claimed = list(
@@ -399,6 +549,8 @@ def test_duplicate_workers_claim_once_and_recover_lost_lease(replay):
         )
     job = next(j for j in claimed if j is not None)
     assert sum(j is not None for j in claimed) == 1
+    replay.handlers()[job.kind](job)  # durable work committed; acknowledgment lost
+    original_raw = replay.hashes()["raw_provider_snapshots"]
     replay.now += timedelta(minutes=31)
     restarted = JobLedger(replay.engine, now=lambda: replay.now)
     assert restarted.recover_expired_leases() == 1
@@ -407,6 +559,7 @@ def test_duplicate_workers_claim_once_and_recover_lost_lease(replay):
     replay.handlers()[retried.kind](retried)
     restarted.finish(retried, "replacement")
     replay.drain()
+    assert replay.hashes()["raw_provider_snapshots"] == original_raw
     saved = replay.public()
     replay.store.publish(replay.runs["pre_weekend"], published_at=replay.now)
     assert replay.public() == saved

@@ -52,8 +52,29 @@ const report = { passed: false, checks: [], accessibility: [], errors: [], reque
     await page.getByRole('link', { name: 'Skip to main content' }).focus();
     await page.keyboard.press('Enter');
     assert.equal(await page.evaluate(() => document.activeElement.id), 'main');
-    await page.getByRole('button', { name: /After qualifying/ }).focus(); await page.keyboard.press('Space');
-    await field.waitFor();
+    const afterQualifying = page.getByRole('button', { name: /After qualifying/ });
+    const storedPost = await (await context.request.get(base + '/api/v1/seasons/2026/events/2026/forecast?horizon=post_qualifying')).json();
+    assert.equal(storedPost.state, 'published');
+    assert.notEqual(storedPost.run.run_id, saved.run.run_id);
+    if (process.env.WP14_BROWSER_MUTANT === 'horizon-keyboard') {
+      // Opt-in negative control: break Space activation without response mocks.
+      await page.evaluate(() => document.addEventListener('keydown', event => {
+        if (event.code === 'Space' && event.target instanceof HTMLButtonElement && event.target.textContent.includes('After qualifying')) {
+          event.preventDefault(); event.stopImmediatePropagation();
+        }
+      }, true));
+    }
+    try {
+      await afterQualifying.focus(); await page.keyboard.press('Space');
+      await page.waitForURL(url => url.searchParams.get('horizon') === 'post_qualifying', { timeout: 5000 });
+      await page.getByRole('button', { name: /After qualifying/, pressed: true }).waitFor();
+      const selectedRun = page.locator('div[aria-busy] > .go-context .go-run-id');
+      await selectedRun.filter({ hasText: storedPost.run.run_id }).waitFor();
+      assert.equal(await selectedRun.innerText(), storedPost.run.run_id);
+      assert.equal(await page.getByRole('button', { name: /Pre-weekend/ }).getAttribute('aria-pressed'), 'false');
+    } catch (error) {
+      throw new Error('Keyboard horizon activation failed', { cause: error });
+    }
     record('Keyboard skip and horizon controls work on persisted forecast');
     await open('/seasons/2026/events/2026/results', 'Results and correction history');
     await page.getByText('Result revision 2', { exact: false }).waitFor();

@@ -1,0 +1,50 @@
+{
+  "passed": false,
+  "checks": [
+    {
+      "name": "Deep-link refresh serves persisted 22-entry field across both horizons",
+      "passed": true
+    },
+    {
+      "name": "Displayed field has actual stored equal season-opening baseline probabilities",
+      "passed": true
+    }
+  ],
+  "accessibility": [
+    {
+      "name": "published comparison light",
+      "violations": [],
+      "incomplete": []
+    },
+    {
+      "name": "published comparison dark",
+      "violations": [],
+      "incomplete": []
+    }
+  ],
+  "errors": [],
+  "requests": [
+    "http://127.0.0.1:4174/seasons/2026/events/2026/field",
+    "http://127.0.0.1:4174/assets/index-njRn5K6j.js",
+    "http://127.0.0.1:4174/assets/index-CukveZyX.css",
+    "http://127.0.0.1:4174/assets/Inter-VF2RPR_K.ttf",
+    "http://127.0.0.1:4174/assets/BarlowCondensed-Medium-kxnlQoDx.ttf",
+    "http://127.0.0.1:4174/assets/IBMPlexMono-Regular-C5_jWxVG.ttf",
+    "http://127.0.0.1:4174/api/v1/seasons/2026/events/2026",
+    "http://127.0.0.1:4174/api/v1/seasons",
+    "http://127.0.0.1:4174/api/v1/seasons/2026/events/2026/runs",
+    "http://127.0.0.1:4174/api/v1/seasons/2026/events/2026/forecast?horizon=pre_weekend",
+    "http://127.0.0.1:4174/seasons/2026/events/2026/field",
+    "http://127.0.0.1:4174/assets/index-njRn5K6j.js",
+    "http://127.0.0.1:4174/assets/index-CukveZyX.css",
+    "http://127.0.0.1:4174/assets/Inter-VF2RPR_K.ttf",
+    "http://127.0.0.1:4174/assets/BarlowCondensed-Medium-kxnlQoDx.ttf",
+    "http://127.0.0.1:4174/assets/IBMPlexMono-Regular-C5_jWxVG.ttf",
+    "http://127.0.0.1:4174/api/v1/seasons/2026/events/2026",
+    "http://127.0.0.1:4174/api/v1/seasons",
+    "http://127.0.0.1:4174/api/v1/seasons/2026/events/2026/runs",
+    "http://127.0.0.1:4174/api/v1/seasons/2026/events/2026/forecast?horizon=pre_weekend"
+  ],
+  "limits": "Synthetic replay with real PG/API/built React. Automated Chromium/axe only; no assistive-technology/device or public-ingress claim.",
+  "failure": "Error: Keyboard horizon activation failed\n    at /Users/pieterohearn/.codex/worktrees/wp14-end-to-end/grid-oracle/scripts/wp14_browser.cjs:76:13"
+}

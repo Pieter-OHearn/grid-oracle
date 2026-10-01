@@ -1,0 +1,33 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_____________________ test_partial_publish_keeps_last_good _____________________
+
+replay = <scripts.regression.replay.WeekendReplay object at 0x11bdce690>
+
+    def test_partial_publish_keeps_last_good(replay):
+        replay.drain()
+        saved = replay.public()
+        staged = replay.store.create_forecast_run(
+            replace(
+                replay.inputs["pre_weekend"],
+                horizon="post_qualifying",
+                idempotency_key="partial",
+            )
+        )
+        replay.store.add_entry_outputs(
+            staged, [ForecastEntry("entry:202601", {"win_probability": 1})]
+        )
+>       with pytest.raises(ProvenanceError, match="incomplete field"):
+E       Failed: DID NOT RAISE <class 'gridoracle.provenance.store.ProvenanceError'>
+
+scripts/tests/test_wp14_postgres.py:270: Failed
+=============================== warnings summary ===============================
+../../../../../../private/tmp/grid-oracle-wp13/.venv/lib/python3.12/site-packages/starlette/testclient.py:40
+  /private/tmp/grid-oracle-wp13/.venv/lib/python3.12/site-packages/starlette/testclient.py:40: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = typing.Callable[[], typing.ContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /private/tmp/wp14-fixes-evidence/mutations-final/partial-publication.xml -
+=========================== short test summary info ============================
+FAILED scripts/tests/test_wp14_postgres.py::test_partial_publish_keeps_last_good
+1 failed, 1 warning in 2.57s

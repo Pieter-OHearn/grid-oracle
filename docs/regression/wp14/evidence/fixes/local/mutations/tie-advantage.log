@@ -1,0 +1,25 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+________________ test_season_opening_ties_never_favor_identity _________________
+
+replay = <scripts.regression.replay.WeekendReplay object at 0x11b86a450>
+
+    def test_season_opening_ties_never_favor_identity(replay):
+        replay.drain()
+        values = list(replay.predictions["pre_weekend"]["winner"].values())
+        assert len(values) == 22
+>       assert all(p == pytest.approx(1 / 22, abs=1e-14) for p in values)
+E       assert False
+E        +  where False = all(<generator object test_season_opening_ties_never_favor_identity.<locals>.<genexpr> at 0x11c66ab20>)
+
+scripts/tests/test_wp14_postgres.py:254: AssertionError
+=============================== warnings summary ===============================
+../../../../../../private/tmp/grid-oracle-wp13/.venv/lib/python3.12/site-packages/starlette/testclient.py:40
+  /private/tmp/grid-oracle-wp13/.venv/lib/python3.12/site-packages/starlette/testclient.py:40: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = typing.Callable[[], typing.ContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /private/tmp/wp14-fixes-evidence/mutations-final/tie-advantage.xml -
+=========================== short test summary info ============================
+FAILED scripts/tests/test_wp14_postgres.py::test_season_opening_ties_never_favor_identity
+1 failed, 1 warning in 2.12s

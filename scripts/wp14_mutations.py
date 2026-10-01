@@ -13,6 +13,12 @@ MUTATIONS = {
     "future-availability": "test_future_availability_is_rejected",
     "tie-advantage": "test_season_opening_ties_never_favor_identity",
     "unchecked-output-hash": "test_corrupt_stored_output_hash_is_rejected",
+    "future-live-qualifying": (
+        "test_future_sources_results_and_newer_model_cannot_change_issued_forecast"
+    ),
+    "recaptured-snapshot": (
+        "test_feature_retry_reuses_partially_committed_observation[post_qualifying]"
+    ),
 }
 
 

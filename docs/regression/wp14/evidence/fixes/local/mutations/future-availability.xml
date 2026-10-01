@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="2.102" timestamp="2026-10-02T00:11:14.321856+02:00" hostname="Pieters-MacBook-Pro.local"><testcase classname="scripts.tests.test_wp14_postgres" name="test_future_availability_is_rejected" time="0.487"><failure message="Failed: DID NOT RAISE &lt;class 'gridoracle.provenance.store.ProvenanceError'&gt;">replay = &lt;scripts.regression.replay.WeekendReplay object at 0x11b86abd0&gt;
+
+    def test_future_availability_is_rejected(replay):
+        replay.drain()
+        old = replay.inputs["pre_weekend"]
+&gt;       with pytest.raises(ProvenanceError, match="availability"):
+E       Failed: DID NOT RAISE &lt;class 'gridoracle.provenance.store.ProvenanceError'&gt;
+
+scripts/tests/test_wp14_postgres.py:279: Failed</failure></testcase></testsuite></testsuites>

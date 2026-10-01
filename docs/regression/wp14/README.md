@@ -24,6 +24,9 @@ corrections are authored scenarios, not actual 2026/2027 observations. The
 season-rollover test advances session/issue dates with the season. Raw synthetic
 observations retain their capture time and race identity in their immutable
 envelope; the provider response snapshot remains separate.
+The envelope freezes the ingested qualifying feature values as well. A feature
+retry reuses this verified observation and its original cutoff, even when source
+payloads or qualifying SQL change after the first raw-snapshot commit.
 
 The two unmodified Jolpica response members were recorded on 2026-09-28 in
 `docs/evidence/jolpica-2022-2025.tar.gz`. Attribution and CC BY-NC-SA 4.0 terms
@@ -54,9 +57,10 @@ All names below are in `scripts/tests/test_wp14_postgres.py`.
 | D21 populated migrations | `test_migration_populated_legacy_repeat_and_unknown_refusal`, `test_wp04_to_head_upgrade_preserves_issued_forecast`: all historical SQL → Alembic head, populated identity sentinel, repeat upgrade, WP03→WP04 upgrade retains issued hashes |
 | Unknown schema refusal | `test_unknown_postgresql_schema_is_refused_without_reset`: sentinel survives rejected upgrade |
 | D09 publication completeness | `test_partial_publish_keeps_last_good`: incomplete new horizon cannot publish or replace saved output |
-| D09 future data | `test_future_availability_is_rejected`, `test_future_sources_results_and_newer_model_cannot_change_issued_forecast`: mutable sources/new model/results change; both horizons reproduce immutable features, original public bytes/table hashes survive |
-| D17 outages/retry | `test_outage_retry_quarantine_and_last_good`, four `test_worker_stage_failure_preserves_last_good_and_recovers` cases: provider delay/quarantine and ledger ingest/inference/publication/evaluation interruption preserve last-good reads and recover |
-| D17 duplicate worker/restart | `test_duplicate_workers_claim_once_and_recover_lost_lease`: concurrent PostgreSQL claims, lease expiry, replacement worker, idempotent publication |
+| D09 future data | `test_future_availability_is_rejected`, `test_future_sources_results_and_newer_model_cannot_change_issued_forecast`: mutable sources/new model/results change; both horizons compare every reproduced order/probability and entry output with original predictions/persisted outputs, original public bytes/table hashes survive |
+| D17 outages/retry | `test_outage_retry_quarantine_and_last_good`, 12 before/after-write `test_worker_stage_failure_preserves_last_good_and_recovers` cases: qualifying ingest/features/inference/publication and result ingest/evaluation recover through the ledger while preserving last-good reads |
+| D17 partial commits | Two `test_feature_retry_reuses_partially_committed_observation` cases retain raw observations/cutoffs/features after a raw-only commit and subsequent source changes; `test_evaluation_retry_preserves_first_commit_and_finishes_missing_horizon` preserves the first evaluation and finishes the second |
+| D17 duplicate worker/restart | `test_duplicate_workers_claim_once_and_recover_lost_lease`: concurrent PostgreSQL claims, durable feature work before acknowledgment loss, lease expiry, replacement worker, unchanged observation and idempotent publication |
 | WP06 known tie defect | `test_season_opening_ties_never_favor_identity`: all 22 probabilities equal 1/22 |
 | WP02 sprint/late/weather/domain | `test_sprint_late_qualifying_weather_withdrawal_reserve_transfer`: sprint first-competitive cutoff, final qualifying delay, null weather, full intended denominator including withdrawal, reserve and transferred-team entry; partial qualifying/forbidden current qualifying rejected |
 | Pit-lane start | Lifecycle test preserves final grid 0 in real result SQL; qualifying model uses recorded qualifying, never final grid |
@@ -71,12 +75,15 @@ All names below are in `scripts/tests/test_wp14_postgres.py`.
 
 ## Reproduction and CI
 
-The `Weekend regression` workflow runs the PostgreSQL suite and four opt-in
+The `Weekend regression` workflow runs the PostgreSQL suite and six opt-in
 defect controls on native Ubuntu AMD64 and ARM64. It uses the same PG16 index
 digest as WP13. No emulation counts as native evidence. It additionally runs
 hash/contract drift checks and bounded offline image smoke. AMD64 builds and
 checks the frontend, then runs pinned Playwright 1.62.1 and axe-core 4.10.3
 against loopback. Normal backend/frontend workflows remain independent gates.
+Current acceptance requires 39 cases, six Python defect controls, and one browser
+keyboard defect control. Initial 28-case/four-control receipts are retained as
+historical evidence; follow-up receipts live under `evidence/fixes/`.
 
 Local reproduction after installing the frozen API/pipeline/dev environment:
 
@@ -109,11 +116,18 @@ HTTP delay/503 injection; it does not intercept or fabricate browser responses.
 It serves compiled assets without Nginx; WP13 retains Nginx/container proxy
 recovery evidence. The server drops only its own random DB on graceful exit.
 
-`wp14_mutations` compiles four exact production function mutations in isolated
-pytest processes: bypass completeness, bypass future availability, restore the
-known first-rank tie advantage, bypass stored output hashing. Each must produce
-one failure in the named assertion, exit 1, zero skips and zero collection/setup
+`wp14_mutations` compiles four exact production function mutations and two replay
+mutations in isolated pytest processes: bypass completeness, bypass future availability, restore the
+known first-rank tie advantage, bypass stored output hashing, reread live
+qualifying on reproduction, and recapture a committed observation on retry.
+Each must produce one failure in the named assertion, exit 1, zero skips and zero collection/setup
 errors. Drift in a mutation target fails closed. Source files are never edited.
+`node scripts/wp14_browser_mutations.cjs` additionally prevents Space activation
+of After qualifying in the actual browser. It must fail the named horizon check
+after the first two successful checks. The positive test waits for the new URL,
+pressed state and selected forecast's exact stored run ID, outside the separate
+comparison panel. Both native CI jobs check six Python controls; AMD64 checks the
+browser control and retains its failure screenshot/trace/JSON/log.
 
 Both native CI jobs upload coverage limits, source/fixture hashes, JUnit, logs,
 mutation failure evidence and smoke receipts for 30 days, including on failure.

@@ -1,0 +1,44 @@
+{
+  "passed": true,
+  "revision": "b7a29e50f696f2820a5bcb77d4e89a7907858f16",
+  "architecture": "arm64",
+  "python": "3.12.14",
+  "source_sha256": {
+    "scripts/regression/replay.py": "f0175dd342accc94bcdb17a7e5aa4056f0d0c3724e1719a8672a0929f5e0a742",
+    "scripts/tests/test_wp14_postgres.py": "afd6c0c1a25c777f7686b2968f6d4ff20b9eed31ef17713402582cde96414a31",
+    "scripts/wp14_browser.cjs": "ba749228472b1b13f9534ab43ee9f4d850f31763ba0382cf14b6ce13f84dbd9c",
+    "scripts/wp14_browser_mutations.cjs": "7651e1a091864e89bd9a84f65dc79c0579d20c10acdf4eef100418072ee6a3fa",
+    "scripts/wp14_mutations.py": "828daaf357889e68cea63739a923d7bfa4f66f13c1ab001e75b4290fdd7eac2a",
+    "scripts/wp14_preview.py": "0ef0f3d2f741f7bbdaeed9bdb680ff4355aa2ff1a8c446e9f94196ecbdcc63c6",
+    "scripts/wp14_report.py": "2e2b4d91abe301234fbdac2aa8851af44fc49e7133984e624ad6d2b1bdf45911",
+    "scripts/wp14_smoke.py": "34dcea163eb2474998b75a291936b214538b44d86e9dddd223d78504bbf3a516"
+  },
+  "fixture_lineage": {
+    "format": "wp14-fixture-lineage-v1",
+    "weekend_sha256": "4b2f5a5871de9d7574bdc0dc1a73539f4055b09146ef485996673f89a1b84937",
+    "archive": "docs/evidence/jolpica-2022-2025.tar.gz",
+    "archive_sha256": "23df6387eecb0266cfa028c43569d71e73cdfb25366900e177eec4d000db94f9",
+    "recordings": {
+      "2022-results-0.json": "545424231206080742645c24f95c1f61f55fa13d1063389e084b120590e2bd73",
+      "2022-qualifying-0.json": "a59264a8f9c10b6ac1d8aea3a9d4bf6ccf8a2700568161db3e3ac8a2e539545d"
+    },
+    "provider": "Jolpica-F1",
+    "retrieved_at": "2026-09-28 (archive retrieval; availability at race time unknown)",
+    "license": "CC BY-NC-SA 4.0",
+    "attribution": "docs/evidence/README.md#attribution-and-license",
+    "changes": "Two unmodified response members replayed; weekend.json independently authored synthetic 22-entry sprint/season-opening scenario; not real 2026 data",
+    "benchmark_lock_sha256": "fa55bee0b5abe02f3f48bc8f9971a558f69f62dd2e49f5647ca8710c9b9dc8bb"
+  },
+  "limits": [
+    "Synthetic test adapter; production feature/predict/publish/evaluate adapters remain blocked. No production bundle or promotion claim.",
+    "Fixed retained baselines execute; retained XGBoost weights load offline on frozen historical features, without refit or selection.",
+    "Recorded Jolpica contracts only; no current terms, provider uptime, FastF1/F1 live protocol or actual source publication-time claim.",
+    "Native AMD64/ARM64 CPU runners and pinned WP13 containers only; no CUDA/MPS, physical Pi load, off-disk transfer or public deployment.",
+    "Chromium/axe automation only; native screen reader, real devices, human usability and public ingress remain release checks.",
+    "Tiny bounded fixture proves lifecycle/storage integrity, not forecast accuracy, prospective quality, production RPO/RTO or SLOs."
+  ],
+  "tests": 39,
+  "failures": 0,
+  "errors": 0,
+  "skips": 0
+}

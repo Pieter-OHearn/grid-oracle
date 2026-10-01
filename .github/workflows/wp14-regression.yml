@@ -103,6 +103,7 @@ jobs:
             sleep 1
           done
           node scripts/wp14_browser.cjs
+          WP14_BROWSER_MUTATION_OUTPUT=wp14-evidence/browser-mutations node scripts/wp14_browser_mutations.cjs
           cp /tmp/wp14-preview/replay.json wp14-evidence/replay.json
       - name: Coverage limits, even when an earlier step failed
         if: always()
