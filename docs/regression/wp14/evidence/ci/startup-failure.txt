@@ -1,0 +1,228 @@
+Native arm64 lifecycle	Initialize containers	﻿2026-10-01T21:19:41.0954339Z ##[group]Checking docker version
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.0968318Z ##[command]/usr/bin/docker version --format '{{.Server.APIVersion}}'
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.1825619Z '1.48'
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.1839115Z Docker daemon API version: '1.48'
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.1840018Z ##[command]/usr/bin/docker version --format '{{.Client.APIVersion}}'
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.1998258Z '1.48'
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.2009739Z Docker client API version: '1.48'
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.2017185Z ##[endgroup]
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.2020675Z ##[group]Clean up resources from previous jobs
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.2026106Z ##[command]/usr/bin/docker ps --all --quiet --no-trunc --filter "label=a81643"
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.2167995Z ##[command]/usr/bin/docker network prune --force --filter "label=a81643"
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.2299422Z ##[endgroup]
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.2300067Z ##[group]Create local container network
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.2312488Z ##[command]/usr/bin/docker network create --label a81643 github_network_4e637850dba543afa64a07e51d967765
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.2779458Z ecaff37d891544231e11fa04630c117c252b233950bad1958ccc709ead646fac
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.2794572Z ##[endgroup]
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.2823140Z ##[group]Starting postgres service container
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.2847259Z ##[command]/usr/bin/docker pull postgres:16.15-alpine3.23@sha256:621a761097839bdb50207afd6b87a72f38e2d718dd46c3d744828d8917c4f1e0
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.4908303Z docker.io/library/postgres@sha256:621a761097839bdb50207afd6b87a72f38e2d718dd46c3d744828d8917c4f1e0: Pulling from library/postgres
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.5952052Z ace1621be7ff: Pulling fs layer
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.5953218Z 5ae9e3f2dedf: Pulling fs layer
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.5953724Z 360225e4051b: Pulling fs layer
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.5954187Z 051bfe3016ba: Pulling fs layer
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.5954706Z cf430bb0bfe8: Pulling fs layer
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.5955199Z e77d69964895: Pulling fs layer
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.5955756Z 2c977d106e2c: Pulling fs layer
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.5956278Z 5c1b96962017: Pulling fs layer
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.5956728Z 00d65226173a: Pulling fs layer
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.5957436Z f3b3fbebc483: Pulling fs layer
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.5957890Z e36184cbc8b1: Pulling fs layer
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.5958311Z e77d69964895: Waiting
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.5958813Z 2c977d106e2c: Waiting
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.5959256Z 5c1b96962017: Waiting
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.5959700Z 00d65226173a: Waiting
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.5960181Z f3b3fbebc483: Waiting
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.5960815Z e36184cbc8b1: Waiting
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.5961363Z 051bfe3016ba: Waiting
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.5961800Z cf430bb0bfe8: Waiting
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.7194008Z 5ae9e3f2dedf: Verifying Checksum
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.7194811Z 5ae9e3f2dedf: Download complete
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.7520569Z 360225e4051b: Verifying Checksum
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.7522072Z 360225e4051b: Download complete
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.7749438Z ace1621be7ff: Verifying Checksum
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.7750548Z ace1621be7ff: Download complete
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.7752335Z 051bfe3016ba: Download complete
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.8039238Z cf430bb0bfe8: Verifying Checksum
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.8041429Z cf430bb0bfe8: Download complete
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.8222269Z 2c977d106e2c: Verifying Checksum
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.8228940Z 2c977d106e2c: Download complete
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.8609522Z 5c1b96962017: Verifying Checksum
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.8619595Z 5c1b96962017: Download complete
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.8620731Z ace1621be7ff: Pull complete
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.8786314Z 00d65226173a: Verifying Checksum
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.8787428Z 00d65226173a: Download complete
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.9136388Z f3b3fbebc483: Verifying Checksum
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.9137368Z f3b3fbebc483: Download complete
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.9298031Z e36184cbc8b1: Verifying Checksum
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:41.9301427Z e36184cbc8b1: Download complete
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:42.1937201Z e77d69964895: Verifying Checksum
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:42.1937847Z e77d69964895: Download complete
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:43.9258202Z 5ae9e3f2dedf: Pull complete
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:43.9552997Z 360225e4051b: Pull complete
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:43.9672712Z 051bfe3016ba: Pull complete
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:43.9778865Z cf430bb0bfe8: Pull complete
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:46.4138589Z e77d69964895: Pull complete
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:46.4305427Z 2c977d106e2c: Pull complete
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:46.4431318Z 5c1b96962017: Pull complete
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:46.4573526Z 00d65226173a: Pull complete
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:46.4688591Z f3b3fbebc483: Pull complete
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:46.4805185Z e36184cbc8b1: Pull complete
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:46.4862295Z Digest: sha256:621a761097839bdb50207afd6b87a72f38e2d718dd46c3d744828d8917c4f1e0
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:46.4879831Z Status: Downloaded newer image for postgres@sha256:621a761097839bdb50207afd6b87a72f38e2d718dd46c3d744828d8917c4f1e0
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:46.4892556Z docker.io/library/postgres:16.15-alpine3.23@sha256:621a761097839bdb50207afd6b87a72f38e2d718dd46c3d744828d8917c4f1e0
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:46.4955708Z ##[command]/usr/bin/docker create --name bdd95ad7c0f24ad69de7c057ed07bafa_postgres1615alpine323sha256621a761097839bdb50207afd6b87a72f38e2d718dd46c3d744828d8917c4f1e0_e484c4 --label a81643 --network github_network_4e637850dba543afa64a07e51d967765 --network-alias postgres -p 5432:5432 --memory 512m --cpus 1 --health-cmd 'pg_isready -U postgres' --health-interval 3s --health-timeout 3s --health-retries 30 -e "POSTGRES_HOST_AUTH_METHOD=trust" -e GITHUB_ACTIONS=true -e CI=true postgres:16.15-alpine3.23@sha256:621a761097839bdb50207afd6b87a72f38e2d718dd46c3d744828d8917c4f1e0
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:46.6822464Z unknown shorthand flag: 'U' in -U
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:46.6828181Z Usage:  docker create [OPTIONS] IMAGE [COMMAND] [ARG...]
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:46.6829302Z Run 'docker create --help' for more information
+Native arm64 lifecycle	Initialize containers	2026-10-01T21:19:46.6957930Z ##[error]Exit code 125 returned from process: file name '/usr/bin/docker', arguments 'create --name bdd95ad7c0f24ad69de7c057ed07bafa_postgres1615alpine323sha256621a761097839bdb50207afd6b87a72f38e2d718dd46c3d744828d8917c4f1e0_e484c4 --label a81643 --network github_network_4e637850dba543afa64a07e51d967765 --network-alias postgres -p 5432:5432 --memory 512m --cpus 1 --health-cmd 'pg_isready -U postgres' --health-interval 3s --health-timeout 3s --health-retries 30 -e "POSTGRES_HOST_AUTH_METHOD=trust" -e GITHUB_ACTIONS=true -e CI=true postgres:16.15-alpine3.23@sha256:621a761097839bdb50207afd6b87a72f38e2d718dd46c3d744828d8917c4f1e0'.
+Native arm64 lifecycle	Coverage limits, even when an earlier step failed	﻿2026-10-01T21:19:46.7358541Z ##[group]Run mkdir -p wp14-evidence
+Native arm64 lifecycle	Coverage limits, even when an earlier step failed	2026-10-01T21:19:46.7359195Z ^[[36;1mmkdir -p wp14-evidence^[[0m
+Native arm64 lifecycle	Coverage limits, even when an earlier step failed	2026-10-01T21:19:46.7359824Z ^[[36;1mcp docs/regression/wp14/README.md wp14-evidence/coverage-limits.md^[[0m
+Native arm64 lifecycle	Coverage limits, even when an earlier step failed	2026-10-01T21:19:46.7360746Z ^[[36;1mdocker logs "$TEST_DB_CONTAINER" >wp14-evidence/postgres-service.log 2>&1^[[0m
+Native arm64 lifecycle	Coverage limits, even when an earlier step failed	2026-10-01T21:19:46.7361374Z ^[[36;1mif test -f /tmp/wp14-preview/replay.json; then^[[0m
+Native arm64 lifecycle	Coverage limits, even when an earlier step failed	2026-10-01T21:19:46.7361844Z ^[[36;1m  cp /tmp/wp14-preview/replay.json wp14-evidence/replay.json^[[0m
+Native arm64 lifecycle	Coverage limits, even when an earlier step failed	2026-10-01T21:19:46.7362242Z ^[[36;1mfi^[[0m
+Native arm64 lifecycle	Coverage limits, even when an earlier step failed	2026-10-01T21:19:46.7362603Z ^[[36;1mif test -f wp14-evidence/postgres.xml; then^[[0m
+Native arm64 lifecycle	Coverage limits, even when an earlier step failed	2026-10-01T21:19:46.7363276Z ^[[36;1m  uv run --no-sync python -m scripts.wp14_report --junit wp14-evidence/postgres.xml --output wp14-evidence/coverage.json^[[0m
+Native arm64 lifecycle	Coverage limits, even when an earlier step failed	2026-10-01T21:19:46.7363842Z ^[[36;1mfi^[[0m
+Native arm64 lifecycle	Coverage limits, even when an earlier step failed	2026-10-01T21:19:46.7480567Z shell: /usr/bin/bash -e {0}
+Native arm64 lifecycle	Coverage limits, even when an earlier step failed	2026-10-01T21:19:46.7481629Z env:
+Native arm64 lifecycle	Coverage limits, even when an earlier step failed	2026-10-01T21:19:46.7482342Z   WP14_POSTGRES_URL: postgresql://postgres@127.0.0.1:5432/postgres
+Native arm64 lifecycle	Coverage limits, even when an earlier step failed	2026-10-01T21:19:46.7483205Z   WP14_BROWSER_OUTPUT: /home/runner/work/grid-oracle/grid-oracle/wp14-evidence/browser
+Native arm64 lifecycle	Coverage limits, even when an earlier step failed	2026-10-01T21:19:46.7483773Z   WP14_PREVIEW_OUTPUT: /tmp/wp14-preview
+Native arm64 lifecycle	Coverage limits, even when an earlier step failed	2026-10-01T21:19:46.7484120Z   TEST_DB_CONTAINER: 
+Native arm64 lifecycle	Coverage limits, even when an earlier step failed	2026-10-01T21:19:46.7484366Z ##[endgroup]
+Native arm64 lifecycle	Coverage limits, even when an earlier step failed	2026-10-01T21:19:46.7663396Z cp: cannot stat 'docs/regression/wp14/README.md': No such file or directory
+Native arm64 lifecycle	Coverage limits, even when an earlier step failed	2026-10-01T21:19:46.7670829Z ##[error]Process completed with exit code 1.
+Native arm64 lifecycle	Retain reports, JUnit, logs, traces and screenshots for 30 days	﻿2026-10-01T21:19:46.7839464Z ##[group]Run actions/upload-artifact@v4
+Native arm64 lifecycle	Retain reports, JUnit, logs, traces and screenshots for 30 days	2026-10-01T21:19:46.7840113Z with:
+Native arm64 lifecycle	Retain reports, JUnit, logs, traces and screenshots for 30 days	2026-10-01T21:19:46.7840962Z   name: wp14-arm64-1
+Native arm64 lifecycle	Retain reports, JUnit, logs, traces and screenshots for 30 days	2026-10-01T21:19:46.7841252Z   path: wp14-evidence/
+Native arm64 lifecycle	Retain reports, JUnit, logs, traces and screenshots for 30 days	2026-10-01T21:19:46.7841510Z   retention-days: 30
+Native arm64 lifecycle	Retain reports, JUnit, logs, traces and screenshots for 30 days	2026-10-01T21:19:46.7841881Z   if-no-files-found: error
+Native arm64 lifecycle	Retain reports, JUnit, logs, traces and screenshots for 30 days	2026-10-01T21:19:46.7842177Z   compression-level: 6
+Native arm64 lifecycle	Retain reports, JUnit, logs, traces and screenshots for 30 days	2026-10-01T21:19:46.7842517Z   overwrite: false
+Native arm64 lifecycle	Retain reports, JUnit, logs, traces and screenshots for 30 days	2026-10-01T21:19:46.7842816Z   include-hidden-files: false
+Native arm64 lifecycle	Retain reports, JUnit, logs, traces and screenshots for 30 days	2026-10-01T21:19:46.7843111Z env:
+Native arm64 lifecycle	Retain reports, JUnit, logs, traces and screenshots for 30 days	2026-10-01T21:19:46.7843733Z   WP14_POSTGRES_URL: postgresql://postgres@127.0.0.1:5432/postgres
+Native arm64 lifecycle	Retain reports, JUnit, logs, traces and screenshots for 30 days	2026-10-01T21:19:46.7844377Z   WP14_BROWSER_OUTPUT: /home/runner/work/grid-oracle/grid-oracle/wp14-evidence/browser
+Native arm64 lifecycle	Retain reports, JUnit, logs, traces and screenshots for 30 days	2026-10-01T21:19:46.7845000Z   WP14_PREVIEW_OUTPUT: /tmp/wp14-preview
+Native arm64 lifecycle	Retain reports, JUnit, logs, traces and screenshots for 30 days	2026-10-01T21:19:46.7845416Z ##[endgroup]
+Native arm64 lifecycle	Retain reports, JUnit, logs, traces and screenshots for 30 days	2026-10-01T21:19:46.9377526Z (node:2309) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+Native arm64 lifecycle	Retain reports, JUnit, logs, traces and screenshots for 30 days	2026-10-01T21:19:46.9378425Z (Use `node --trace-deprecation ...` to show where the warning was created)
+Native arm64 lifecycle	Retain reports, JUnit, logs, traces and screenshots for 30 days	2026-10-01T21:19:46.9439771Z ##[error]No files were found with the provided path: wp14-evidence/. No artifacts will be uploaded.
+Native amd64 lifecycle	Initialize containers	﻿2026-10-01T21:19:38.8595996Z ##[group]Checking docker version
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:38.8606505Z ##[command]/usr/bin/docker version --format '{{.Server.APIVersion}}'
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:38.9268938Z '1.48'
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:38.9281891Z Docker daemon API version: '1.48'
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:38.9282627Z ##[command]/usr/bin/docker version --format '{{.Client.APIVersion}}'
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:38.9418343Z '1.48'
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:38.9428918Z Docker client API version: '1.48'
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:38.9433367Z ##[endgroup]
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:38.9435458Z ##[group]Clean up resources from previous jobs
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:38.9440771Z ##[command]/usr/bin/docker ps --all --quiet --no-trunc --filter "label=40f8f0"
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:38.9557332Z ##[command]/usr/bin/docker network prune --force --filter "label=40f8f0"
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:38.9660211Z ##[endgroup]
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:38.9660820Z ##[group]Create local container network
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:38.9669028Z ##[command]/usr/bin/docker network create --label 40f8f0 github_network_7d55e16ca881459a894e9db1883e6974
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.0203657Z ac129d07fb00bb876f925d2a4ba23eaa688daf88f0313cc0e80702335d32d070
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.0219412Z ##[endgroup]
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.0240817Z ##[group]Starting postgres service container
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.0258379Z ##[command]/usr/bin/docker pull postgres:16.15-alpine3.23@sha256:621a761097839bdb50207afd6b87a72f38e2d718dd46c3d744828d8917c4f1e0
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.2092782Z docker.io/library/postgres@sha256:621a761097839bdb50207afd6b87a72f38e2d718dd46c3d744828d8917c4f1e0: Pulling from library/postgres
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.2932336Z d0c1d894c237: Pulling fs layer
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.2933188Z 32010050e4e1: Pulling fs layer
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.2933834Z 513bd12fa72d: Pulling fs layer
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.2934486Z 3c96b4a823fa: Pulling fs layer
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.2935623Z 084503cac84e: Pulling fs layer
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.2936688Z 6746d40cc5d5: Pulling fs layer
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.2937505Z 4f3e11a7388b: Pulling fs layer
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.2938652Z 3b81c6b0dd27: Pulling fs layer
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.2939446Z eba2ae173d9b: Pulling fs layer
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.2940388Z 9244009140de: Pulling fs layer
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.2941200Z 7d53a202899d: Pulling fs layer
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.2942028Z 3b81c6b0dd27: Waiting
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.2942738Z 3c96b4a823fa: Waiting
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.2943462Z 084503cac84e: Waiting
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.2944119Z 6746d40cc5d5: Waiting
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.2944834Z 4f3e11a7388b: Waiting
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.2945522Z eba2ae173d9b: Waiting
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.2946225Z 7d53a202899d: Waiting
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.2946900Z 9244009140de: Waiting
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.3197460Z 32010050e4e1: Download complete
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.3335595Z 513bd12fa72d: Verifying Checksum
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.3336397Z 513bd12fa72d: Download complete
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.3470026Z d0c1d894c237: Verifying Checksum
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.3475750Z d0c1d894c237: Download complete
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.3476913Z 3c96b4a823fa: Verifying Checksum
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.3477813Z 3c96b4a823fa: Download complete
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.3634659Z 084503cac84e: Verifying Checksum
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.3635570Z 084503cac84e: Download complete
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.3742097Z 4f3e11a7388b: Verifying Checksum
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.3743179Z 4f3e11a7388b: Download complete
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.3913916Z 3b81c6b0dd27: Verifying Checksum
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.3914767Z 3b81c6b0dd27: Download complete
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.4044899Z eba2ae173d9b: Verifying Checksum
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.4045833Z eba2ae173d9b: Download complete
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.4230288Z 9244009140de: Verifying Checksum
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.4231688Z 9244009140de: Download complete
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.4376926Z 7d53a202899d: Verifying Checksum
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.4377616Z 7d53a202899d: Download complete
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.4436089Z d0c1d894c237: Pull complete
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.6027004Z 32010050e4e1: Pull complete
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.7529013Z 513bd12fa72d: Pull complete
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:39.9137423Z 3c96b4a823fa: Pull complete
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:40.1244009Z 084503cac84e: Pull complete
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:40.1463421Z 6746d40cc5d5: Verifying Checksum
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:40.1464685Z 6746d40cc5d5: Download complete
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:43.2242896Z 6746d40cc5d5: Pull complete
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:43.2550745Z 4f3e11a7388b: Pull complete
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:43.2640297Z 3b81c6b0dd27: Pull complete
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:43.2742798Z eba2ae173d9b: Pull complete
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:43.2819328Z 9244009140de: Pull complete
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:43.2886638Z 7d53a202899d: Pull complete
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:43.2919971Z Digest: sha256:621a761097839bdb50207afd6b87a72f38e2d718dd46c3d744828d8917c4f1e0
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:43.2925683Z Status: Downloaded newer image for postgres@sha256:621a761097839bdb50207afd6b87a72f38e2d718dd46c3d744828d8917c4f1e0
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:43.2933083Z docker.io/library/postgres:16.15-alpine3.23@sha256:621a761097839bdb50207afd6b87a72f38e2d718dd46c3d744828d8917c4f1e0
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:43.2982290Z ##[command]/usr/bin/docker create --name 1176ee72a93648178d90fdb285983a74_postgres1615alpine323sha256621a761097839bdb50207afd6b87a72f38e2d718dd46c3d744828d8917c4f1e0_548f32 --label 40f8f0 --network github_network_7d55e16ca881459a894e9db1883e6974 --network-alias postgres -p 5432:5432 --memory 512m --cpus 1 --health-cmd 'pg_isready -U postgres' --health-interval 3s --health-timeout 3s --health-retries 30 -e "POSTGRES_HOST_AUTH_METHOD=trust" -e GITHUB_ACTIONS=true -e CI=true postgres:16.15-alpine3.23@sha256:621a761097839bdb50207afd6b87a72f38e2d718dd46c3d744828d8917c4f1e0
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:45.7358479Z unknown shorthand flag: 'U' in -U
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:45.7365146Z Usage:  docker create [OPTIONS] IMAGE [COMMAND] [ARG...]
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:45.7365922Z Run 'docker create --help' for more information
+Native amd64 lifecycle	Initialize containers	2026-10-01T21:19:45.7459840Z ##[error]Exit code 125 returned from process: file name '/usr/bin/docker', arguments 'create --name 1176ee72a93648178d90fdb285983a74_postgres1615alpine323sha256621a761097839bdb50207afd6b87a72f38e2d718dd46c3d744828d8917c4f1e0_548f32 --label 40f8f0 --network github_network_7d55e16ca881459a894e9db1883e6974 --network-alias postgres -p 5432:5432 --memory 512m --cpus 1 --health-cmd 'pg_isready -U postgres' --health-interval 3s --health-timeout 3s --health-retries 30 -e "POSTGRES_HOST_AUTH_METHOD=trust" -e GITHUB_ACTIONS=true -e CI=true postgres:16.15-alpine3.23@sha256:621a761097839bdb50207afd6b87a72f38e2d718dd46c3d744828d8917c4f1e0'.
+Native amd64 lifecycle	Coverage limits, even when an earlier step failed	﻿2026-10-01T21:19:45.7683722Z ##[group]Run mkdir -p wp14-evidence
+Native amd64 lifecycle	Coverage limits, even when an earlier step failed	2026-10-01T21:19:45.7684087Z ^[[36;1mmkdir -p wp14-evidence^[[0m
+Native amd64 lifecycle	Coverage limits, even when an earlier step failed	2026-10-01T21:19:45.7684442Z ^[[36;1mcp docs/regression/wp14/README.md wp14-evidence/coverage-limits.md^[[0m
+Native amd64 lifecycle	Coverage limits, even when an earlier step failed	2026-10-01T21:19:45.7684898Z ^[[36;1mdocker logs "$TEST_DB_CONTAINER" >wp14-evidence/postgres-service.log 2>&1^[[0m
+Native amd64 lifecycle	Coverage limits, even when an earlier step failed	2026-10-01T21:19:45.7685285Z ^[[36;1mif test -f /tmp/wp14-preview/replay.json; then^[[0m
+Native amd64 lifecycle	Coverage limits, even when an earlier step failed	2026-10-01T21:19:45.7685603Z ^[[36;1m  cp /tmp/wp14-preview/replay.json wp14-evidence/replay.json^[[0m
+Native amd64 lifecycle	Coverage limits, even when an earlier step failed	2026-10-01T21:19:45.7685874Z ^[[36;1mfi^[[0m
+Native amd64 lifecycle	Coverage limits, even when an earlier step failed	2026-10-01T21:19:45.7686077Z ^[[36;1mif test -f wp14-evidence/postgres.xml; then^[[0m
+Native amd64 lifecycle	Coverage limits, even when an earlier step failed	2026-10-01T21:19:45.7686558Z ^[[36;1m  uv run --no-sync python -m scripts.wp14_report --junit wp14-evidence/postgres.xml --output wp14-evidence/coverage.json^[[0m
+Native amd64 lifecycle	Coverage limits, even when an earlier step failed	2026-10-01T21:19:45.7686971Z ^[[36;1mfi^[[0m
+Native amd64 lifecycle	Coverage limits, even when an earlier step failed	2026-10-01T21:19:45.7846597Z shell: /usr/bin/bash -e {0}
+Native amd64 lifecycle	Coverage limits, even when an earlier step failed	2026-10-01T21:19:45.7847014Z env:
+Native amd64 lifecycle	Coverage limits, even when an earlier step failed	2026-10-01T21:19:45.7847392Z   WP14_POSTGRES_URL: postgresql://postgres@127.0.0.1:5432/postgres
+Native amd64 lifecycle	Coverage limits, even when an earlier step failed	2026-10-01T21:19:45.7847872Z   WP14_BROWSER_OUTPUT: /home/runner/work/grid-oracle/grid-oracle/wp14-evidence/browser
+Native amd64 lifecycle	Coverage limits, even when an earlier step failed	2026-10-01T21:19:45.7848382Z   WP14_PREVIEW_OUTPUT: /tmp/wp14-preview
+Native amd64 lifecycle	Coverage limits, even when an earlier step failed	2026-10-01T21:19:45.7848614Z   TEST_DB_CONTAINER: 
+Native amd64 lifecycle	Coverage limits, even when an earlier step failed	2026-10-01T21:19:45.7848832Z ##[endgroup]
+Native amd64 lifecycle	Coverage limits, even when an earlier step failed	2026-10-01T21:19:45.7993195Z cp: cannot stat 'docs/regression/wp14/README.md': No such file or directory
+Native amd64 lifecycle	Coverage limits, even when an earlier step failed	2026-10-01T21:19:45.7997563Z ##[error]Process completed with exit code 1.
+Native amd64 lifecycle	Retain reports, JUnit, logs, traces and screenshots for 30 days	﻿2026-10-01T21:19:45.8095847Z ##[group]Run actions/upload-artifact@v4
+Native amd64 lifecycle	Retain reports, JUnit, logs, traces and screenshots for 30 days	2026-10-01T21:19:45.8096117Z with:
+Native amd64 lifecycle	Retain reports, JUnit, logs, traces and screenshots for 30 days	2026-10-01T21:19:45.8096293Z   name: wp14-amd64-1
+Native amd64 lifecycle	Retain reports, JUnit, logs, traces and screenshots for 30 days	2026-10-01T21:19:45.8096482Z   path: wp14-evidence/
+Native amd64 lifecycle	Retain reports, JUnit, logs, traces and screenshots for 30 days	2026-10-01T21:19:45.8096671Z   retention-days: 30
+Native amd64 lifecycle	Retain reports, JUnit, logs, traces and screenshots for 30 days	2026-10-01T21:19:45.8096852Z   if-no-files-found: error
+Native amd64 lifecycle	Retain reports, JUnit, logs, traces and screenshots for 30 days	2026-10-01T21:19:45.8097049Z   compression-level: 6
+Native amd64 lifecycle	Retain reports, JUnit, logs, traces and screenshots for 30 days	2026-10-01T21:19:45.8097229Z   overwrite: false
+Native amd64 lifecycle	Retain reports, JUnit, logs, traces and screenshots for 30 days	2026-10-01T21:19:45.8097407Z   include-hidden-files: false
+Native amd64 lifecycle	Retain reports, JUnit, logs, traces and screenshots for 30 days	2026-10-01T21:19:45.8097611Z env:
+Native amd64 lifecycle	Retain reports, JUnit, logs, traces and screenshots for 30 days	2026-10-01T21:19:45.8097880Z   WP14_POSTGRES_URL: postgresql://postgres@127.0.0.1:5432/postgres
+Native amd64 lifecycle	Retain reports, JUnit, logs, traces and screenshots for 30 days	2026-10-01T21:19:45.8098421Z   WP14_BROWSER_OUTPUT: /home/runner/work/grid-oracle/grid-oracle/wp14-evidence/browser
+Native amd64 lifecycle	Retain reports, JUnit, logs, traces and screenshots for 30 days	2026-10-01T21:19:45.8098772Z   WP14_PREVIEW_OUTPUT: /tmp/wp14-preview
+Native amd64 lifecycle	Retain reports, JUnit, logs, traces and screenshots for 30 days	2026-10-01T21:19:45.8098994Z ##[endgroup]
+Native amd64 lifecycle	Retain reports, JUnit, logs, traces and screenshots for 30 days	2026-10-01T21:19:45.9437471Z (node:2143) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+Native amd64 lifecycle	Retain reports, JUnit, logs, traces and screenshots for 30 days	2026-10-01T21:19:45.9438409Z (Use `node --trace-deprecation ...` to show where the warning was created)
+Native amd64 lifecycle	Retain reports, JUnit, logs, traces and screenshots for 30 days	2026-10-01T21:19:45.9501282Z ##[error]No files were found with the provided path: wp14-evidence/. No artifacts will be uploaded.
