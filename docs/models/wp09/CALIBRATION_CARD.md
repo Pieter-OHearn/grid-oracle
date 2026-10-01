@@ -12,7 +12,9 @@ weights/vocabularies/transforms used only train+tune rows; calibration labels ne
 enter weights. Calibration race identities, predictions hash, fitting races,
 objective, selected power, every trial loss and evaluation deadline are retained.
 
-The frozen blocks are chronological and disjoint. Actual availability remains
+The frozen blocks are chronological and disjoint. Calibration verifies the supplied
+fold against the registered split before checking fitting races or deadlines;
+modifying a fold copy cannot expand its permitted training scope. Actual availability remains
 unverified in this historical archive, so `asof_eligible` stays false. Supplied
 future label timestamps are rejected; absent timestamps do not become verified.
 Prospective models must separately freeze calibration and authentic label/input

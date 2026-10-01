@@ -167,13 +167,57 @@
     }
   ],
   "final_runs": [
-    "wp09-0762031a4c934b9e900160435be657ca",
-    "wp09-db775b5e89324234a4c4e6438908dd24"
+    "wp09-862243fc69d04f5ab9967b8499ca19da",
+    "wp09-fcdcb9b4f7cc4438b2f0f14905b047e1"
   ],
-  "final_source_revision": "93f3fe0b4e3c47d5cb166e4f4a7c72bd823bf4a9",
+  "final_source_revision": "c719c8566a1a3f7d2531d5ade6e273b5c1a434e6",
   "max_winner_probability_replay_error": 3.731348877100693e-08,
-  "note": "Final direct-library frozen-feature check added; both new runs match the existing semantic report exactly.",
+  "note": "Review fixes bind calibration folds to the verified split and persist the full research forecast envelope. Both new clean runs reproduce the existing report hash; training/model weights/scoring are unchanged.",
   "report_sha256": "e1c5d0fd6b002e48a10a428b27f64348b72be217cd86e97720d4a9cc4d9c99c7",
+  "review_fix_checks": [
+    {
+      "command": [
+        "make",
+        "test"
+      ],
+      "exit_code": 0,
+      "log": "/tmp/wp09-review-make-test.log",
+      "name": "review-make-test",
+      "seconds": 29.54992995795328
+    },
+    {
+      "command": [
+        "/tmp/gridoracle-wp08-venv/bin/python",
+        "-m",
+        "pipeline.selection",
+        "--output",
+        "/tmp/wp09-review-final"
+      ],
+      "exit_code": 0,
+      "log": "/tmp/wp09-review-final-first.log",
+      "name": "review-final-first",
+      "seconds": 51.90669233293738
+    },
+    {
+      "command": [
+        "/tmp/gridoracle-wp08-venv/bin/python",
+        "-m",
+        "pipeline.selection",
+        "--output",
+        "/tmp/wp09-review-final"
+      ],
+      "exit_code": 0,
+      "log": "/tmp/wp09-review-final-second.log",
+      "name": "review-final-second",
+      "seconds": 54.199327041977085
+    }
+  ],
+  "review_regressions": {
+    "after": "35 WP09 acceptance tests passed",
+    "before": "4 expected failures and 1 passing split-lock control",
+    "package": "make check passed; make test: 28 API, 428 pipeline, 9 dashboard passed, 1 unavailable-CUDA skip",
+    "training": "Not repeated: unchanged upstream models and fitting procedures; original exact training reproduction evidence retained."
+  },
   "simulation_validation": {
     "coherence": "permutation, nested marginal and slot-sum assertions run for every decoded field",
     "convergence": [

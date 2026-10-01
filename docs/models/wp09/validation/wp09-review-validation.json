@@ -1,0 +1,38 @@
+[
+  {
+    "name": "review-make-test",
+    "command": [
+      "make",
+      "test"
+    ],
+    "exit_code": 0,
+    "seconds": 29.54992995795328,
+    "log": "/tmp/wp09-review-make-test.log"
+  },
+  {
+    "name": "review-final-first",
+    "command": [
+      "/tmp/gridoracle-wp08-venv/bin/python",
+      "-m",
+      "pipeline.selection",
+      "--output",
+      "/tmp/wp09-review-final"
+    ],
+    "exit_code": 0,
+    "seconds": 51.90669233293738,
+    "log": "/tmp/wp09-review-final-first.log"
+  },
+  {
+    "name": "review-final-second",
+    "command": [
+      "/tmp/gridoracle-wp08-venv/bin/python",
+      "-m",
+      "pipeline.selection",
+      "--output",
+      "/tmp/wp09-review-final"
+    ],
+    "exit_code": 0,
+    "seconds": 54.199327041977085,
+    "log": "/tmp/wp09-review-final-second.log"
+  }
+]

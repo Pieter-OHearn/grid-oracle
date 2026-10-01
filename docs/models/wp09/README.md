@@ -108,15 +108,15 @@ steps under the existing workplans.
 
 - [Selection report](REPORT.md), [model card](MODEL_CARD.md), [calibration card](CALIBRATION_CARD.md).
 - [Validation summary](validation/SUMMARY.json) and [training reproduction](validation/training-reproduction.json).
-- Final runs: [first](runs/wp09-0762031a4c934b9e900160435be657ca/manifest.json)
-  and [repeat](runs/wp09-db775b5e89324234a4c4e6438908dd24/manifest.json), both
-  measured at `93f3fe0` with matching semantic report hash
+- Final runs: [first](runs/wp09-862243fc69d04f5ab9967b8499ca19da/manifest.json)
+  and [repeat](runs/wp09-fcdcb9b4f7cc4438b2f0f14905b047e1/manifest.json), both
+  measured at `c719c85` with matching semantic report hash
   `e1c5d0fd6b002e48a10a428b27f64348b72be217cd86e97720d4a9cc4d9c99c7`.
-- [Pre-weekend reliability](runs/wp09-0762031a4c934b9e900160435be657ca/reliability-pre_weekend.png)
-  and [post-qualifying reliability](runs/wp09-0762031a4c934b9e900160435be657ca/reliability-post_qualifying.png).
+- [Pre-weekend reliability](runs/wp09-862243fc69d04f5ab9967b8499ca19da/reliability-pre_weekend.png)
+  and [post-qualifying reliability](runs/wp09-862243fc69d04f5ab9967b8499ca19da/reliability-post_qualifying.png).
 
 Run `python -m docs.models.wp09.verify_artifacts` to check the retained hashes,
-measured source revisions, current source and matching final reports. All seven
+measured source revisions, current source and matching final reports. All nine
 WP09 attempts are retained. The dirty development run and earlier clean pairs
 are explicitly superseded in `retention.json`; do not consume those outputs.
 The complete reports intentionally include every conditional marginal, so their

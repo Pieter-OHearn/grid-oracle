@@ -27,6 +27,14 @@
     "runs/wp09-6ed91abf8b0a4ad7bb925cfa277f43f0/reliability-pre_weekend.png": "ef8efacd40db4a93904af16eb4d4a318113032a69a35e6127153e28f795732a8",
     "runs/wp09-6ed91abf8b0a4ad7bb925cfa277f43f0/report.json.gz": "4b7e272e0327720160235b3f96b26fa5908e50d9051907de4c4f332770a08255",
     "runs/wp09-6ed91abf8b0a4ad7bb925cfa277f43f0/started.json": "3f0640de497954338c3ccdc8add3fca4f1c07f2beea1811cc9254e1836e2a3a3",
+    "runs/wp09-862243fc69d04f5ab9967b8499ca19da/REPORT.md": "914b02d73f0f1c53defc94eee36215c9ee5b13bd8913477ec1a5eb17522fa63e",
+    "runs/wp09-862243fc69d04f5ab9967b8499ca19da/finished.json": "6122c231f0e446ecc7cc09912924a661efe8f995ff2669bfbda10466d7715c5e",
+    "runs/wp09-862243fc69d04f5ab9967b8499ca19da/manifest.json": "d9031570247bdacfcabf0ff86fe08316d51dc3960cac867b914d69bb39c6f86e",
+    "runs/wp09-862243fc69d04f5ab9967b8499ca19da/promotion-record.json": "f47f85f18ef655076ec6b8e75295b7c922c2e98494db0b960f45ac208979acda",
+    "runs/wp09-862243fc69d04f5ab9967b8499ca19da/reliability-post_qualifying.png": "ef2d555abc50f218ec194fd1ea2af7e17563b102aff4834814d82dd88bceb587",
+    "runs/wp09-862243fc69d04f5ab9967b8499ca19da/reliability-pre_weekend.png": "ef8efacd40db4a93904af16eb4d4a318113032a69a35e6127153e28f795732a8",
+    "runs/wp09-862243fc69d04f5ab9967b8499ca19da/report.json.gz": "015ae69c986e79c57f2d29bdcb8d200189d2eb881909f7f2a658e5334ea2031a",
+    "runs/wp09-862243fc69d04f5ab9967b8499ca19da/started.json": "e54e19200bf17c2ccff1b4846c116a82196fdf1c15d4e743299347af532be79c",
     "runs/wp09-ae81f27829c14b9f84a40aeaa0deaa5c/REPORT.md": "914b02d73f0f1c53defc94eee36215c9ee5b13bd8913477ec1a5eb17522fa63e",
     "runs/wp09-ae81f27829c14b9f84a40aeaa0deaa5c/finished.json": "7029fa8ac6ef006e18539b413353033edbbc5a6e1ea97c2af06ae6c35259b767",
     "runs/wp09-ae81f27829c14b9f84a40aeaa0deaa5c/manifest.json": "424c0b4713608b673216e9ab690302f0e127f0838826eab742c8a1f60235c83c",
@@ -59,7 +67,15 @@
     "runs/wp09-f47631f4cad445f695cc816341b3764d/reliability-pre_weekend.png": "ef8efacd40db4a93904af16eb4d4a318113032a69a35e6127153e28f795732a8",
     "runs/wp09-f47631f4cad445f695cc816341b3764d/report.json.gz": "9d566f89eea75eec5f9308beb595f86404fa81217db8d9d165d72cfb8a45859b",
     "runs/wp09-f47631f4cad445f695cc816341b3764d/started.json": "5910815cb773a5d2387c1392745dac06070cefaca5ba5d05e4227366f49a22fa",
-    "validation/SUMMARY.json": "14af5d53c3fdf1dd4ba99ed2c8a1cadacc148d137ed19b01d865d61114975b9f",
+    "runs/wp09-fcdcb9b4f7cc4438b2f0f14905b047e1/REPORT.md": "914b02d73f0f1c53defc94eee36215c9ee5b13bd8913477ec1a5eb17522fa63e",
+    "runs/wp09-fcdcb9b4f7cc4438b2f0f14905b047e1/finished.json": "4179f7be543b7747c1b4f1692647d3ddf2cd3de3faf526c147b8c9f992b2b533",
+    "runs/wp09-fcdcb9b4f7cc4438b2f0f14905b047e1/manifest.json": "d9031570247bdacfcabf0ff86fe08316d51dc3960cac867b914d69bb39c6f86e",
+    "runs/wp09-fcdcb9b4f7cc4438b2f0f14905b047e1/promotion-record.json": "f47f85f18ef655076ec6b8e75295b7c922c2e98494db0b960f45ac208979acda",
+    "runs/wp09-fcdcb9b4f7cc4438b2f0f14905b047e1/reliability-post_qualifying.png": "ef2d555abc50f218ec194fd1ea2af7e17563b102aff4834814d82dd88bceb587",
+    "runs/wp09-fcdcb9b4f7cc4438b2f0f14905b047e1/reliability-pre_weekend.png": "ef8efacd40db4a93904af16eb4d4a318113032a69a35e6127153e28f795732a8",
+    "runs/wp09-fcdcb9b4f7cc4438b2f0f14905b047e1/report.json.gz": "015ae69c986e79c57f2d29bdcb8d200189d2eb881909f7f2a658e5334ea2031a",
+    "runs/wp09-fcdcb9b4f7cc4438b2f0f14905b047e1/started.json": "e6493ddba04e1a23b5f17ceae13338cbfe51415c020fd2c0e8619f633f6f1f82",
+    "validation/SUMMARY.json": "ffa313248d404d038ea5a5805a0a788bb40ee7af5c8d7afa3793a10178d6ed5a",
     "validation/training-reproduction.json": "df67eb9c2922a864b7c49ae46b75dbf799617101a7922828270d1a771265c88c",
     "validation/wp07/finished.json": "7b793029ec5356dad5788edd055e8d246e6e07648850042009ce586084b6d0a1",
     "validation/wp07/report.json.gz": "1a051759c2f381d55acafa8344de9ef9224cb11b96cf0ddd015a7a90083cdb86",
@@ -89,6 +105,14 @@
     "validation/wp09-final-second.log": "7686ed738bcb971b75c128d9235709d6281249cffe9bd859cd466181b81480b9",
     "validation/wp09-make-check.log": "c9f6804a4108081b4cc8aa883fd640dabcbbe9d01b3be477a0548e2a3cb7296f",
     "validation/wp09-make-test.log": "d344ccfb631e68165c57106e208ffd842d42b7eb6216196393d7d2cd8de23a81",
+    "validation/wp09-review-acceptance.log": "e6606c80ac8bea91fd5859dcbd1a647b507f9b17b68f6440122724fcdfd155dd",
+    "validation/wp09-review-acceptance.xml": "c72bdc12847daf20baeccac856ae7922ad4ad1228eaccafd24994e818db23bf7",
+    "validation/wp09-review-final-first.log": "1d7a023a74e20a54640a2e114b2d949f117f0fc2e70b90b98f240bb9f7ec4683",
+    "validation/wp09-review-final-second.log": "79b19607d373869d066e10a2db97b52be247c48bf0c111887f0821a0ca7ffb26",
+    "validation/wp09-review-make-check.log": "c9f6804a4108081b4cc8aa883fd640dabcbbe9d01b3be477a0548e2a3cb7296f",
+    "validation/wp09-review-make-test.log": "a8941afe178ccf56e6413b5e37a600323aa3f36fbd57d51302c637ba837e97e7",
+    "validation/wp09-review-regressions-before.log": "f89285a06e755cfbe4dcd37adb2a33517a3319c8284a447578fb1d68500123f2",
+    "validation/wp09-review-validation.json": "e4f30e1648f75491fec5cdfe9a98533600c5bc90130064a97a0d9c43e6f56500",
     "validation/wp09-tests.log": "0d52839a1155622bfa1d481f16babe76dca85d91875b07bf40c9edf1e6d8e83b",
     "validation/wp09-validation.json": "aa362d3d8e908281d6eac679c0aa8096b5f9800741ecdc42d7a06ac0e8f8a45b",
     "validation/wp09-wp07-training.log": "133a2966ffdabcc19e79609a7450cda0bc2cc5344a9a0dd5b7af45e56fb5344f",
@@ -97,14 +121,16 @@
     "validation/wp09-wp09-acceptance.log": "636d9d23c4438d7b5d1c31cd0559ad3eea0e73b71a9b18f55a4481e2913ddfcf"
   },
   "final_runs": [
-    "wp09-0762031a4c934b9e900160435be657ca",
-    "wp09-db775b5e89324234a4c4e6438908dd24"
+    "wp09-862243fc69d04f5ab9967b8499ca19da",
+    "wp09-fcdcb9b4f7cc4438b2f0f14905b047e1"
   ],
-  "note": "All seven WP09 runs retained. Dirty development output is superseded. Four earlier clean reports are preserved. The final pair includes direct-library frozen-feature verification; semantic results match the prior pair. No failed fitting trial was dropped.",
+  "note": "All nine WP09 runs retained. Dirty development output and six prior clean runs are superseded. The final pair includes the two independent review fixes and reproduces the prior semantic report. No failed fitting trial was dropped.",
   "superseded_clean_runs": [
     "wp09-207988ef73fc4e53aa8db2fb4d5306e2",
     "wp09-6ed91abf8b0a4ad7bb925cfa277f43f0",
     "wp09-ae81f27829c14b9f84a40aeaa0deaa5c",
-    "wp09-bdbbaeadb4ba42698cefe8de28e77a6d"
+    "wp09-bdbbaeadb4ba42698cefe8de28e77a6d",
+    "wp09-0762031a4c934b9e900160435be657ca",
+    "wp09-db775b5e89324234a4c4e6438908dd24"
   ]
 }
