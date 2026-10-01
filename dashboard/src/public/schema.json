@@ -160,6 +160,74 @@
       "title": "EventIndex",
       "type": "object"
     },
+    "EventPerformance": {
+      "additionalProperties": false,
+      "properties": {
+        "corrections": {
+          "items": {
+            "$ref": "#/$defs/ResultCorrection"
+          },
+          "title": "Corrections",
+          "type": "array"
+        },
+        "event_id": {
+          "title": "Event Id",
+          "type": "integer"
+        },
+        "event_name": {
+          "title": "Event Name",
+          "type": "string"
+        },
+        "horizon": {
+          "enum": [
+            "pre_weekend",
+            "post_qualifying"
+          ],
+          "title": "Horizon",
+          "type": "string"
+        },
+        "round": {
+          "title": "Round",
+          "type": "integer"
+        },
+        "run_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Run Id"
+        },
+        "season": {
+          "title": "Season",
+          "type": "integer"
+        },
+        "status": {
+          "enum": [
+            "stored_evaluation",
+            "evaluation_unavailable",
+            "no_published_forecast"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "season",
+        "event_id",
+        "event_name",
+        "round",
+        "horizon",
+        "run_id",
+        "corrections",
+        "status"
+      ],
+      "title": "EventPerformance",
+      "type": "object"
+    },
     "EventSession": {
       "additionalProperties": false,
       "properties": {
@@ -276,6 +344,333 @@
       "title": "Freshness",
       "type": "object"
     },
+    "HistoricalCandidate": {
+      "additionalProperties": false,
+      "properties": {
+        "expected_races": {
+          "title": "Expected Races",
+          "type": "integer"
+        },
+        "horizon": {
+          "enum": [
+            "pre_weekend",
+            "post_qualifying"
+          ],
+          "title": "Horizon",
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/PerformanceMetric"
+          },
+          "title": "Metrics",
+          "type": "array"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "predicted_races": {
+          "title": "Predicted Races",
+          "type": "integer"
+        },
+        "races": {
+          "items": {
+            "$ref": "#/$defs/HistoricalRace"
+          },
+          "title": "Races",
+          "type": "array"
+        },
+        "reliability": {
+          "items": {
+            "$ref": "#/$defs/ReliabilityBin"
+          },
+          "title": "Reliability",
+          "type": "array"
+        },
+        "retained": {
+          "title": "Retained",
+          "type": "boolean"
+        },
+        "winner_loss_interval": {
+          "items": {
+            "type": "number"
+          },
+          "title": "Winner Loss Interval",
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "horizon",
+        "retained",
+        "expected_races",
+        "predicted_races",
+        "metrics",
+        "winner_loss_interval",
+        "races",
+        "reliability"
+      ],
+      "title": "HistoricalCandidate",
+      "type": "object"
+    },
+    "HistoricalPerformance": {
+      "additionalProperties": false,
+      "properties": {
+        "candidates": {
+          "items": {
+            "$ref": "#/$defs/HistoricalCandidate"
+          },
+          "title": "Candidates",
+          "type": "array"
+        },
+        "evidence_id": {
+          "const": "wp09-862243fc69d04f5ab9967b8499ca19da",
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "scope": {
+          "const": "explored_chronological_reconstruction",
+          "title": "Scope",
+          "type": "string"
+        }
+      },
+      "required": [
+        "evidence_id",
+        "scope",
+        "candidates"
+      ],
+      "title": "HistoricalPerformance",
+      "type": "object"
+    },
+    "HistoricalRace": {
+      "additionalProperties": false,
+      "properties": {
+        "classified_entries": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Classified Entries"
+        },
+        "field_entries": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Field Entries"
+        },
+        "missing_feature_cells": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Missing Feature Cells"
+        },
+        "missing_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Missing Reason"
+        },
+        "rank_mae": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Rank Mae"
+        },
+        "round": {
+          "title": "Round",
+          "type": "integer"
+        },
+        "season": {
+          "title": "Season",
+          "type": "integer"
+        },
+        "top10_overlap": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Top10 Overlap"
+        },
+        "top3_overlap": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Top3 Overlap"
+        },
+        "winner_hit": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Winner Hit"
+        },
+        "winner_log_loss": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Winner Log Loss"
+        }
+      },
+      "required": [
+        "season",
+        "round",
+        "field_entries",
+        "classified_entries",
+        "missing_feature_cells",
+        "winner_log_loss",
+        "winner_hit",
+        "top3_overlap",
+        "top10_overlap",
+        "rank_mae",
+        "missing_reason"
+      ],
+      "title": "HistoricalRace",
+      "type": "object"
+    },
+    "LivePerformance": {
+      "additionalProperties": false,
+      "properties": {
+        "events": {
+          "items": {
+            "$ref": "#/$defs/EventPerformance"
+          },
+          "title": "Events",
+          "type": "array"
+        },
+        "horizon": {
+          "enum": [
+            "pre_weekend",
+            "post_qualifying"
+          ],
+          "title": "Horizon",
+          "type": "string"
+        },
+        "season": {
+          "title": "Season",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "season",
+        "horizon",
+        "events"
+      ],
+      "title": "LivePerformance",
+      "type": "object"
+    },
+    "PerformanceMetric": {
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "enum": [
+            "winner_log_loss",
+            "winner_hit",
+            "winner_brier",
+            "rank_mae",
+            "rank_correlation",
+            "top3_overlap",
+            "top10_overlap",
+            "ece"
+          ],
+          "title": "Key",
+          "type": "string"
+        },
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "observations": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Observations"
+        },
+        "outcome": {
+          "title": "Outcome",
+          "type": "string"
+        },
+        "unit": {
+          "enum": [
+            "fraction",
+            "loss",
+            "positions",
+            "correlation"
+          ],
+          "title": "Unit",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Value"
+        }
+      },
+      "required": [
+        "key",
+        "label",
+        "outcome",
+        "value",
+        "unit",
+        "observations"
+      ],
+      "title": "PerformanceMetric",
+      "type": "object"
+    },
     "PublicEntry": {
       "additionalProperties": false,
       "properties": {
@@ -370,6 +765,39 @@
       "title": "PublicError",
       "type": "object"
     },
+    "PublicEvaluation": {
+      "additionalProperties": false,
+      "properties": {
+        "evaluated_at": {
+          "format": "date-time",
+          "title": "Evaluated At",
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/PerformanceMetric"
+          },
+          "title": "Metrics",
+          "type": "array"
+        },
+        "result_revision": {
+          "title": "Result Revision",
+          "type": "integer"
+        },
+        "run_id": {
+          "title": "Run Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "evaluated_at",
+        "run_id",
+        "result_revision",
+        "metrics"
+      ],
+      "title": "PublicEvaluation",
+      "type": "object"
+    },
     "PublishedForecast": {
       "additionalProperties": false,
       "properties": {
@@ -442,6 +870,18 @@
         "season": {
           "title": "Season",
           "type": "integer"
+        },
+        "source_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Name"
         }
       },
       "required": [
@@ -456,6 +896,101 @@
         "entries"
       ],
       "title": "PublishedRun",
+      "type": "object"
+    },
+    "ReliabilityBin": {
+      "additionalProperties": false,
+      "properties": {
+        "entries": {
+          "title": "Entries",
+          "type": "integer"
+        },
+        "lower": {
+          "title": "Lower",
+          "type": "number"
+        },
+        "mean_probability": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Mean Probability"
+        },
+        "observed_rate": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Observed Rate"
+        },
+        "races": {
+          "title": "Races",
+          "type": "integer"
+        },
+        "upper": {
+          "title": "Upper",
+          "type": "number"
+        }
+      },
+      "required": [
+        "lower",
+        "upper",
+        "mean_probability",
+        "observed_rate",
+        "entries",
+        "races"
+      ],
+      "title": "ReliabilityBin",
+      "type": "object"
+    },
+    "ResultCorrection": {
+      "additionalProperties": false,
+      "properties": {
+        "change": {
+          "enum": [
+            "Initial recorded result",
+            "Result correction recorded"
+          ],
+          "title": "Change",
+          "type": "string"
+        },
+        "evaluations": {
+          "items": {
+            "$ref": "#/$defs/PublicEvaluation"
+          },
+          "title": "Evaluations",
+          "type": "array"
+        },
+        "official": {
+          "title": "Official",
+          "type": "boolean"
+        },
+        "recorded_at": {
+          "format": "date-time",
+          "title": "Recorded At",
+          "type": "string"
+        },
+        "revision": {
+          "title": "Revision",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "revision",
+        "recorded_at",
+        "official",
+        "change",
+        "evaluations"
+      ],
+      "title": "ResultCorrection",
       "type": "object"
     },
     "RunIndex": {

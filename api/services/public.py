@@ -261,6 +261,13 @@ def project_run(db, event, run):
         event_id=event["id"],
         horizon=run["horizon"],
         published_at=timestamp(run["published_at"]),
+        source_name={
+            "jolpica": "Jolpica",
+            "fastf1": "FastF1",
+            "open-meteo": "Open-Meteo",
+            "openf1": "OpenF1",
+            "fixture": "Synthetic acceptance fixture",
+        }.get(run["source_provider"]),
         provenance=run["provenance_grade"],
         freshness=_freshness(run),
         coverage=Coverage(
@@ -279,9 +286,11 @@ def published_runs(db, season, event_id, *, horizon=None, run_id=None):
     event = require_event(db, season, event_id)
     sql = """SELECT f.forecast_run_id, f.horizon, f.input_cutoff_at, f.issue_at,
     f.source_available_at, f.provenance_grade, f.expected_entry_count,
-    f.result_revision_id, p.published_at FROM forecast_publications p
+    f.result_revision_id, p.published_at, s.provider AS source_provider
+    FROM forecast_publications p
     JOIN forecast_runs f ON f.forecast_run_id = p.forecast_run_id
       AND f.race_id = p.race_id AND f.horizon = p.horizon
+    LEFT JOIN raw_provider_snapshots s ON s.snapshot_id = f.raw_snapshot_id
     WHERE p.race_id = :id"""
     if horizon is not None:
         sql += " AND p.horizon = :horizon"

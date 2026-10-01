@@ -23,6 +23,16 @@ export interface EventIndex {
   season: number;
   events: Array<Event>;
 }
+export interface EventPerformance {
+  season: number;
+  event_id: number;
+  event_name: string;
+  round: number;
+  horizon: 'pre_weekend' | 'post_qualifying';
+  run_id: string | null;
+  corrections: Array<ResultCorrection>;
+  status: 'stored_evaluation' | 'evaluation_unavailable' | 'no_published_forecast';
+}
 export interface EventSession {
   id: number;
   kind: string;
@@ -38,6 +48,56 @@ export interface Freshness {
   source_available_at: string | null;
   reason: string | null;
 }
+export interface HistoricalCandidate {
+  name: string;
+  horizon: 'pre_weekend' | 'post_qualifying';
+  retained: boolean;
+  expected_races: number;
+  predicted_races: number;
+  metrics: Array<PerformanceMetric>;
+  winner_loss_interval: Array<number>;
+  races: Array<HistoricalRace>;
+  reliability: Array<ReliabilityBin>;
+}
+export interface HistoricalPerformance {
+  evidence_id: 'wp09-862243fc69d04f5ab9967b8499ca19da';
+  scope: 'explored_chronological_reconstruction';
+  candidates: Array<HistoricalCandidate>;
+}
+export interface HistoricalRace {
+  season: number;
+  round: number;
+  field_entries: number | null;
+  classified_entries: number | null;
+  missing_feature_cells: number | null;
+  winner_log_loss: number | null;
+  winner_hit: number | null;
+  top3_overlap: number | null;
+  top10_overlap: number | null;
+  rank_mae: number | null;
+  missing_reason: string | null;
+}
+export interface LivePerformance {
+  season: number;
+  horizon: 'pre_weekend' | 'post_qualifying';
+  events: Array<EventPerformance>;
+}
+export interface PerformanceMetric {
+  key:
+    | 'winner_log_loss'
+    | 'winner_hit'
+    | 'winner_brier'
+    | 'rank_mae'
+    | 'rank_correlation'
+    | 'top3_overlap'
+    | 'top10_overlap'
+    | 'ece';
+  label: string;
+  outcome: string;
+  value: number | null;
+  unit: 'fraction' | 'loss' | 'positions' | 'correlation';
+  observations: number | null;
+}
 export interface PublicEntry {
   entry_key: string;
   driver_name: string | null;
@@ -50,6 +110,12 @@ export interface PublicError {
   message: string;
   retryable: boolean;
 }
+export interface PublicEvaluation {
+  evaluated_at: string;
+  run_id: string;
+  result_revision: number;
+  metrics: Array<PerformanceMetric>;
+}
 export interface PublishedForecast {
   state: 'published';
   reason: null;
@@ -61,10 +127,26 @@ export interface PublishedRun {
   event_id: number;
   horizon: 'pre_weekend' | 'post_qualifying';
   published_at: string;
+  source_name: string | null;
   provenance: 'verified' | 'observed';
   freshness: Freshness;
   coverage: Coverage;
   entries: Array<PublicEntry>;
+}
+export interface ReliabilityBin {
+  lower: number;
+  upper: number;
+  mean_probability: number | null;
+  observed_rate: number | null;
+  entries: number;
+  races: number;
+}
+export interface ResultCorrection {
+  revision: number;
+  recorded_at: string;
+  official: boolean;
+  change: 'Initial recorded result' | 'Result correction recorded';
+  evaluations: Array<PublicEvaluation>;
 }
 export interface RunIndex {
   season: number;

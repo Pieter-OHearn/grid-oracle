@@ -30,3 +30,61 @@
 .go-public .go-panel:focus-within {
   overflow: visible;
 }
+.go-public .go-panel-body {
+  min-width: 0;
+}
+.go-public .go-metric-outcome {
+  display: block;
+  font-weight: normal;
+  color: var(--go-muted);
+  white-space: normal;
+  max-width: 32em;
+}
+.go-public .go-run-id {
+  overflow-wrap: anywhere;
+  font-family: var(--go-timing);
+  font-size: 12px;
+}
+.go-public .go-comparison-controls {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.go-public .go-comparison-controls label {
+  min-width: 0;
+  max-width: 100%;
+}
+.go-public .go-trust-control {
+  display: block;
+  margin: 16px 0;
+}
+.go-public .go-glossary dt {
+  font-weight: 600;
+  margin-top: 18px;
+}
+.go-public .go-glossary dd {
+  margin: 6px 0 0;
+}
+.go-public details summary {
+  cursor: pointer;
+  padding: 12px 0;
+}
+.go-public details summary:focus-visible {
+  outline: 3px solid var(--go-accent);
+  outline-offset: 3px;
+}
+
+/* Trust tables use a text row header, rather than the timing table's rank column. */
+.go-public .go-trust-table th:first-child,
+.go-public .go-trust-table td:first-child {
+  width: auto;
+  min-width: 180px;
+  max-width: 400px;
+  text-align: left;
+  color: var(--go-ink);
+  overflow-wrap: normal;
+}
+.go-public .go-trust-table td {
+  white-space: nowrap;
+}

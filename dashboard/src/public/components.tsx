@@ -59,6 +59,22 @@ export function ForecastContext({ run }: { run: PublishedRun }) {
           <dd>{time(run.freshness.issued_at)}</dd>
         </div>
         <div>
+          <dt>Source</dt>
+          <dd>{run.source_name ?? 'Source unavailable'}</dd>
+        </div>
+        <div>
+          <dt>Source available</dt>
+          <dd>{time(run.freshness.source_available_at)}</dd>
+        </div>
+        <div>
+          <dt>Run</dt>
+          <dd className="go-run-id">{run.run_id}</dd>
+        </div>
+        <div>
+          <dt>Horizon</dt>
+          <dd>{run.horizon === 'pre_weekend' ? 'Pre-weekend' : 'After qualifying'}</dd>
+        </div>
+        <div>
           <dt>Freshness</dt>
           <dd>{labels[run.freshness.state]}</dd>
         </div>
@@ -71,7 +87,13 @@ export function ForecastContext({ run }: { run: PublishedRun }) {
         </div>
       </dl>
       {run.freshness.reason && <p>{run.freshness.reason}</p>}
-      <p>Later information never rewrites this snapshot.</p>
+      <p>
+        Later information never rewrites this snapshot.{' '}
+        {run.horizon === 'pre_weekend'
+          ? 'Current-weekend qualifying is excluded by this horizon.'
+          : 'This horizon requires verified qualifying/grid readiness before race start.'}{' '}
+        Per-feature attribution and a model-specific public card are unavailable.
+      </p>
     </div>
   );
 }
@@ -146,10 +168,12 @@ export function FieldTable({ run, limit }: { run: PublishedRun; limit?: number }
       </div>
       <div className="go-field-note">
         <span>
-          Full field: {probability(total)} · {run.entries.length} entries
+          Full-field win chance total: {probability(total)} · {run.entries.length} entries
         </span>
         {total !== null && Math.abs(total - 1) > 0.00001 && (
-          <span>Published probabilities do not sum to 100%; no normalization applied.</span>
+          <span>
+            Published probabilities do not sum to 100% win chance; no normalization applied.
+          </span>
         )}
         {limit && <span>{run.entries.length - shown.length} additional entries in full field</span>}
       </div>

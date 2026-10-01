@@ -82,6 +82,7 @@ class PublishedRun(PublicModel):
     event_id: int
     horizon: Horizon
     published_at: datetime
+    source_name: str | None = None
     provenance: Literal["verified", "observed"]
     freshness: Freshness
     coverage: Coverage
@@ -119,3 +120,96 @@ class PublicError(PublicModel):
 
 class ErrorResponse(PublicModel):
     error: PublicError
+
+
+class PerformanceMetric(PublicModel):
+    key: Literal[
+        "winner_log_loss",
+        "winner_hit",
+        "winner_brier",
+        "rank_mae",
+        "rank_correlation",
+        "top3_overlap",
+        "top10_overlap",
+        "ece",
+    ]
+    label: str
+    outcome: str
+    value: float | None = Field(allow_inf_nan=False)
+    unit: Literal["fraction", "loss", "positions", "correlation"]
+    observations: int | None = Field(ge=0)
+
+
+class ReliabilityBin(PublicModel):
+    lower: float
+    upper: float
+    mean_probability: float | None
+    observed_rate: float | None
+    entries: int
+    races: int
+
+
+class HistoricalRace(PublicModel):
+    season: int
+    round: int
+    field_entries: int | None
+    classified_entries: int | None
+    missing_feature_cells: int | None
+    winner_log_loss: float | None
+    winner_hit: float | None
+    top3_overlap: float | None
+    top10_overlap: float | None
+    rank_mae: float | None
+    missing_reason: str | None
+
+
+class HistoricalCandidate(PublicModel):
+    name: str
+    horizon: Horizon
+    retained: bool
+    expected_races: int
+    predicted_races: int
+    metrics: list[PerformanceMetric]
+    winner_loss_interval: list[float]
+    races: list[HistoricalRace]
+    reliability: list[ReliabilityBin]
+
+
+class HistoricalPerformance(PublicModel):
+    evidence_id: Literal["wp09-862243fc69d04f5ab9967b8499ca19da"]
+    scope: Literal["explored_chronological_reconstruction"]
+    candidates: list[HistoricalCandidate]
+
+
+class PublicEvaluation(PublicModel):
+    evaluated_at: datetime
+    run_id: str
+    result_revision: int
+    metrics: list[PerformanceMetric]
+
+
+class ResultCorrection(PublicModel):
+    revision: int
+    recorded_at: datetime
+    official: bool
+    change: Literal["Initial recorded result", "Result correction recorded"]
+    evaluations: list[PublicEvaluation]
+
+
+class EventPerformance(PublicModel):
+    season: int
+    event_id: int
+    event_name: str
+    round: int
+    horizon: Horizon
+    run_id: str | None
+    corrections: list[ResultCorrection]
+    status: Literal[
+        "stored_evaluation", "evaluation_unavailable", "no_published_forecast"
+    ]
+
+
+class LivePerformance(PublicModel):
+    season: int
+    horizon: Horizon
+    events: list[EventPerformance]
