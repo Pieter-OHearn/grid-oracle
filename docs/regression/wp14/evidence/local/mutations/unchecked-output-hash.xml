@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="2.188" timestamp="2026-10-01T23:12:24.322406+02:00" hostname="Pieters-MacBook-Pro.local"><testcase classname="scripts.tests.test_wp14_postgres" name="test_corrupt_stored_output_hash_is_rejected" time="0.519"><failure message="Failed: DID NOT RAISE &lt;class 'ValueError'&gt;">replay = &lt;scripts.regression.replay.WeekendReplay object at 0x11b9713d0&gt;
+
+    def test_corrupt_stored_output_hash_is_rejected(replay):
+        from gridoracle.ops import recovery
+    
+        replay.drain()
+        with replay.engine.begin() as conn:
+            # Fault injection only in this randomly named disposable database:
+            # simulate a corrupted restore that bypassed the immutable SQL trigger.
+            conn.execute(text("SET LOCAL session_replication_role = replica"))
+            conn.execute(
+                text(
+                    "UPDATE forecast_entry_outputs SET output='{}' WHERE ent"
+                    "ry_key='entry:202601'"
+                )
+            )
+&gt;       with pytest.raises(ValueError, match="stored forecast output checksum"):
+E       Failed: DID NOT RAISE &lt;class 'ValueError'&gt;
+
+scripts/tests/test_wp14_postgres.py:536: Failed</failure></testcase></testsuite></testsuites>

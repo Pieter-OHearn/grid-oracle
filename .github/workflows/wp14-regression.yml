@@ -1,0 +1,128 @@
+name: Weekend regression
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main, test/wp14-end-to-end-regression]
+
+permissions:
+  contents: read
+  packages: read
+
+concurrency:
+  group: wp14-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  regression:
+    name: Native ${{ matrix.arch }} lifecycle
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {arch: amd64, runner: ubuntu-24.04}
+          - {arch: arm64, runner: ubuntu-24.04-arm}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:16.15-alpine3.23@sha256:621a761097839bdb50207afd6b87a72f38e2d718dd46c3d744828d8917c4f1e0
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports: ['5432:5432']
+        options: >-
+          --memory 512m --cpus 1
+          --health-cmd 'pg_isready -U postgres'
+          --health-interval 3s --health-timeout 3s --health-retries 30
+    env:
+      WP14_POSTGRES_URL: postgresql://postgres@127.0.0.1:5432/postgres
+      WP14_BROWSER_OUTPUT: ${{ github.workspace }}/wp14-evidence/browser
+      WP14_PREVIEW_OUTPUT: /tmp/wp14-preview
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with: {version: '0.12.19'}
+      - name: Prepare failure evidence
+        run: mkdir -p wp14-evidence
+      - name: Install locked backend
+        run: uv sync --frozen --extra api --extra pipeline --group dev
+      - name: Owned Python checks and generated API contracts
+        run: |
+          uv run --no-sync ruff check scripts/regression scripts/wp14_*.py scripts/tests/test_wp14_*.py
+          uv run --no-sync ruff format --check scripts/regression scripts/wp14_*.py scripts/tests/test_wp14_*.py
+          uv run --no-sync python -m scripts.generate_public_client --check
+          uv run --no-sync python -m scripts.generate_public_performance --check
+      - name: Actual PostgreSQL lifecycle, upgrade, model and new-DB recovery
+        env:
+          WP14_POSTGRES_CONTAINER: ${{ job.services.postgres.id }}
+        run: |
+          uv run --no-sync python -m pytest scripts/tests/test_wp14_postgres.py -q --junitxml=wp14-evidence/postgres.xml 2>&1 | tee wp14-evidence/postgres.log
+          uv run --no-sync python -m scripts.wp14_report --junit wp14-evidence/postgres.xml --output wp14-evidence/coverage.json
+      - name: Intentional known defects must fail the corresponding tests
+        run: uv run --no-sync python -m scripts.wp14_mutations --output wp14-evidence/mutations
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Offline native CPU image imports under caps
+        run: uv run --no-sync python -m scripts.wp14_smoke --output wp14-evidence/native.json
+      - uses: oven-sh/setup-bun@v2
+        if: matrix.arch == 'amd64'
+        with: {bun-version: '1.4.2'}
+      - name: Frontend unit, TypeScript, lint, format and production build
+        if: matrix.arch == 'amd64'
+        working-directory: dashboard
+        run: |
+          bun install --frozen-lockfile
+          bun run test
+          bun run typecheck
+          bun run lint
+          bun run format:check
+          bun run build
+      - uses: actions/setup-node@v4
+        if: matrix.arch == 'amd64'
+        with: {node-version: '22'}
+      - name: Pinned browser tooling
+        if: matrix.arch == 'amd64'
+        run: |
+          npm install --prefix /tmp/wp14-browser --no-save --ignore-scripts playwright@1.62.1 axe-core@4.10.3
+          /tmp/wp14-browser/node_modules/.bin/playwright install --with-deps chromium
+      - name: Built frontend against real replay API, keyboard and axe
+        if: matrix.arch == 'amd64'
+        env:
+          NODE_PATH: /tmp/wp14-browser/node_modules
+          AXE_PATH: /tmp/wp14-browser/node_modules/axe-core/axe.min.js
+        run: |
+          uv run --no-sync python -m scripts.wp14_preview --output /tmp/wp14-preview >wp14-evidence/preview.log 2>&1 &
+          preview_pid=$!
+          trap 'kill -TERM "$preview_pid"; wait "$preview_pid" || true' EXIT
+          for _attempt in {1..60}; do
+            if curl --fail --silent http://127.0.0.1:4174/api/v1/seasons >/dev/null; then break; fi
+            sleep 1
+          done
+          node scripts/wp14_browser.cjs
+          cp /tmp/wp14-preview/replay.json wp14-evidence/replay.json
+      - name: Coverage limits, even when an earlier step failed
+        if: always()
+        env:
+          TEST_DB_CONTAINER: ${{ job.services.postgres.id }}
+        run: |
+          mkdir -p wp14-evidence
+          cp docs/regression/wp14/README.md wp14-evidence/coverage-limits.md
+          docker logs "$TEST_DB_CONTAINER" >wp14-evidence/postgres-service.log 2>&1
+          if test -f /tmp/wp14-preview/replay.json; then
+            cp /tmp/wp14-preview/replay.json wp14-evidence/replay.json
+          fi
+          if test -f wp14-evidence/postgres.xml; then
+            uv run --no-sync python -m scripts.wp14_report --junit wp14-evidence/postgres.xml --output wp14-evidence/coverage.json
+          fi
+      - name: Retain reports, JUnit, logs, traces and screenshots for 30 days
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wp14-${{ matrix.arch }}-${{ github.run_attempt }}
+          path: wp14-evidence/
+          retention-days: 30
+          if-no-files-found: error

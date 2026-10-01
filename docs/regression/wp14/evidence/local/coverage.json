@@ -1,0 +1,43 @@
+{
+  "passed": true,
+  "revision": "fb9bb0d43ad2ad86b5b38509ce58a04dcc68c817",
+  "architecture": "arm64",
+  "python": "3.12.14",
+  "source_sha256": {
+    "scripts/regression/replay.py": "a05d468d6be7058aae1ad25ccdac13b08bff02bc5287470093ee7b9b0c816bc5",
+    "scripts/tests/test_wp14_postgres.py": "e1ded8428cf50b08cf6d0422e971a1a60ebd4209296d0db784a395ca0839420a",
+    "scripts/wp14_browser.cjs": "a21d5d09ccc93a3367f77b1bee3445dcc522fe90c5001989f5af04cadacf1e5d",
+    "scripts/wp14_mutations.py": "7e6ee61a9ac06311894765bf73dd87c60c40e5efae18ace962674c3d18901226",
+    "scripts/wp14_preview.py": "0ef0f3d2f741f7bbdaeed9bdb680ff4355aa2ff1a8c446e9f94196ecbdcc63c6",
+    "scripts/wp14_report.py": "6851a01341739c8354e1a4d75387b281b05a30536a986582167d6f7200b2d1aa",
+    "scripts/wp14_smoke.py": "34dcea163eb2474998b75a291936b214538b44d86e9dddd223d78504bbf3a516"
+  },
+  "fixture_lineage": {
+    "format": "wp14-fixture-lineage-v1",
+    "weekend_sha256": "4b2f5a5871de9d7574bdc0dc1a73539f4055b09146ef485996673f89a1b84937",
+    "archive": "docs/evidence/jolpica-2022-2025.tar.gz",
+    "archive_sha256": "23df6387eecb0266cfa028c43569d71e73cdfb25366900e177eec4d000db94f9",
+    "recordings": {
+      "2022-results-0.json": "545424231206080742645c24f95c1f61f55fa13d1063389e084b120590e2bd73",
+      "2022-qualifying-0.json": "a59264a8f9c10b6ac1d8aea3a9d4bf6ccf8a2700568161db3e3ac8a2e539545d"
+    },
+    "provider": "Jolpica-F1",
+    "retrieved_at": "2026-09-28 (archive retrieval; availability at race time unknown)",
+    "license": "CC BY-NC-SA 4.0",
+    "attribution": "docs/evidence/README.md#attribution-and-license",
+    "changes": "Two unmodified response members replayed; weekend.json independently authored synthetic 22-entry sprint/season-opening scenario; not real 2026 data",
+    "benchmark_lock_sha256": "fa55bee0b5abe02f3f48bc8f9971a558f69f62dd2e49f5647ca8710c9b9dc8bb"
+  },
+  "limits": [
+    "Synthetic test adapter; production feature/predict/publish/evaluate adapters remain blocked. No production bundle or promotion claim.",
+    "Fixed retained baselines execute; retained XGBoost weights load offline on frozen historical features, without refit or selection.",
+    "Recorded Jolpica contracts only; no current terms, provider uptime, FastF1/F1 live protocol or actual source publication-time claim.",
+    "Native AMD64/ARM64 CPU runners and pinned WP13 containers only; no CUDA/MPS, physical Pi load, off-disk transfer or public deployment.",
+    "Chromium/axe automation only; native screen reader, real devices, human usability and public ingress remain release checks.",
+    "Tiny bounded fixture proves lifecycle/storage integrity, not forecast accuracy, prospective quality, production RPO/RTO or SLOs."
+  ],
+  "tests": 28,
+  "failures": 0,
+  "errors": 0,
+  "skips": 0
+}
