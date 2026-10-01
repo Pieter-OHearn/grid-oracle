@@ -1,0 +1,165 @@
+{
+  "fixture": "Synthetic WP11 API acceptance database; percentages are test outputs, not real forecasts",
+  "preview": "http://127.0.0.1:4300",
+  "checks": [
+    {
+      "name": "Historical deep link survives browser refresh; 22 entries; historical branding only",
+      "passed": true
+    },
+    {
+      "name": "Visualization module absent before explicit chart request",
+      "passed": true
+    },
+    {
+      "name": "Large visualization requested lazily",
+      "passed": true
+    },
+    {
+      "name": "Season switch: events/2022",
+      "passed": true,
+      "url": "http://127.0.0.1:4300/seasons/2026/events/2026"
+    },
+    {
+      "name": "Season switch: events/2022/field",
+      "passed": true,
+      "url": "http://127.0.0.1:4300/seasons/2026/events/2026/field?view=field"
+    },
+    {
+      "name": "Season switch: events/2022/sessions",
+      "passed": true,
+      "url": "http://127.0.0.1:4300/seasons/2026/weekend?view=sessions"
+    },
+    {
+      "name": "Season switch: events",
+      "passed": true,
+      "url": "http://127.0.0.1:4300/seasons/2026/events"
+    },
+    {
+      "name": "Season switch: record",
+      "passed": true,
+      "url": "http://127.0.0.1:4300/seasons/2026/record"
+    },
+    {
+      "name": "Season switch: methodology",
+      "passed": true,
+      "url": "http://127.0.0.1:4300/seasons/2026/methodology"
+    },
+    {
+      "name": "Season switch: sources",
+      "passed": true,
+      "url": "http://127.0.0.1:4300/seasons/2026/sources"
+    },
+    {
+      "name": "Legacy link resolves its actual season without current-season fallback",
+      "passed": true
+    },
+    {
+      "name": "Legacy result link preserves event with explicit unavailable view",
+      "passed": true
+    },
+    {
+      "name": "Unknown legacy ID remains explicit not-found",
+      "passed": true
+    },
+    {
+      "name": "Absent publication is distinct from request failure",
+      "passed": true
+    },
+    {
+      "name": "API unavailable produces Retry; keyboard retry restores destination focus",
+      "passed": true
+    },
+    {
+      "name": "Loading exposes no retained percentages",
+      "passed": true
+    },
+    {
+      "name": "Explicit empty UI never invents zero or NaN",
+      "passed": true
+    },
+    {
+      "name": "Explicit unknown UI never invents zero or NaN",
+      "passed": true
+    },
+    {
+      "name": "Keyboard skip, horizon controls, links and browser-history focus",
+      "passed": true
+    },
+    {
+      "name": "Responsive reflow and keyboard table scrolling: 390",
+      "passed": true,
+      "viewport": 390,
+      "page": 390,
+      "table": 470,
+      "region": 364
+    },
+    {
+      "name": "Responsive reflow and keyboard table scrolling: 320",
+      "passed": true,
+      "viewport": 320,
+      "page": 320,
+      "table": 470,
+      "region": 294
+    },
+    {
+      "name": "Reflow: events at 390",
+      "passed": true
+    },
+    {
+      "name": "Reflow: record at 390",
+      "passed": true
+    },
+    {
+      "name": "Reflow: methodology at 390",
+      "passed": true
+    },
+    {
+      "name": "Reflow: sources at 390",
+      "passed": true
+    },
+    {
+      "name": "Reflow: events/2022/sessions at 390",
+      "passed": true
+    },
+    {
+      "name": "Reflow: events at 320",
+      "passed": true
+    },
+    {
+      "name": "Reflow: record at 320",
+      "passed": true
+    },
+    {
+      "name": "Reflow: methodology at 320",
+      "passed": true
+    },
+    {
+      "name": "Reflow: sources at 320",
+      "passed": true
+    },
+    {
+      "name": "Reflow: events/2022/sessions at 320",
+      "passed": true
+    },
+    {
+      "name": "Native Tab and Shift+Tab traversal",
+      "passed": true
+    },
+    {
+      "name": "320px season-switch journey",
+      "passed": true
+    }
+  ],
+  "screenshots": [
+    "desktop-full-field.jpg",
+    "desktop-dark.jpg",
+    "absent-forecast.jpg",
+    "api-unavailable.jpg",
+    "loading.jpg",
+    "empty.jpg",
+    "unknown.jpg",
+    "mobile-390.jpg",
+    "mobile-320.jpg"
+  ],
+  "pageErrors": []
+}

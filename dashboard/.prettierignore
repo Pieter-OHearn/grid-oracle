@@ -1,3 +1,6 @@
 dist
 design
 node_modules
+
+# Generated JSON Schema; generator check owns its deterministic formatting.
+src/public/schema.json

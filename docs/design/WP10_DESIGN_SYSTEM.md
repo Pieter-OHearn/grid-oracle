@@ -4,9 +4,9 @@ This is the implementation reference for the owner-approved [dashboard direction
 
 ## Run and build
 
-From `dashboard`, run `bun install --frozen-lockfile`, then `bunx vite --config vite.wp10.config.ts`. Open `http://127.0.0.1:3010/wp10.html`. Hash destinations support reference navigation and browser history; they are not WP11 season URLs. Build with `bunx vite build --config vite.wp10.config.ts` (output `dist/wp10`). Production `index.html`, its entry point and its build remain unchanged.
+From `dashboard`, run `bun install --frozen-lockfile`, then `bunx vite --config vite.wp10.config.ts`. Open `http://127.0.0.1:3010/wp10.html`. Hash destinations support reference navigation and browser history; they are not WP11 season URLs. Build with `bunx vite build --config vite.wp10.config.ts` (output `dist/wp10`). WP10 originally left production unchanged. The owner-accepted WP11 foundation in [PR #105](https://github.com/Pieter-OHearn/grid-oracle/pull/105) supplies the production entry on integration; the offline WP10 reference remains separate.
 
-Run `bun run format:check`, `bun run lint`, `bun run typecheck`, `bun run test`, `bun run build`, and the separate reference build. The reference code lives in `dashboard/src/design-system/`; production does not import it. WP11 may extract/import the reusable components after adapting their data contracts and URL ownership.
+Run `bun run format:check`, `bun run lint`, `bun run typecheck`, `bun run test`, `bun run build`, and the separate reference build. The reference code lives in `dashboard/src/design-system/`. WP11 production imports its tokens/fonts and extracted reusable Panel, with typed public data and season-owned URLs; it does not import the synthetic sample data. See [PUBLIC_V1](../api/PUBLIC_V1.md) for the implemented component/client contract.
 
 ## Tokens and typography
 

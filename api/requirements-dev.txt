@@ -2,6 +2,7 @@
 
 # Local and CI test/lint dependencies. Runtime images intentionally install only
 # requirements.txt.
+alembic==1.14.1
 httpx==0.28.1
 pytest==8.3.5
 ruff==0.9.6
