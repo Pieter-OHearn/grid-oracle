@@ -41,3 +41,11 @@ now copies with the same non-root UID in a network-disabled tools container and
 only relaxes synthetic temporary directories for owned cleanup. Failed runs
 36864322438 / prerelease v0.1.0-wp13.1 are retained as superseded diagnostics;
 no failed version is reused or represented as a released image.
+
+The second Linux copy attempt found metadata ownership on an existing host-owned
+destination. The final copy creates its own target directory under the permitted
+fixture parent, so files and directories have the application UID throughout.
+CodeQL also flagged generated fixture passwords written to temporary files.
+The synthetic-only DB now uses trust authentication on the internal unpublished
+network; no fixture password exists. Production SOPS/password-file separation
+in the homelab proposal remains required. No alert was dismissed or suppressed.

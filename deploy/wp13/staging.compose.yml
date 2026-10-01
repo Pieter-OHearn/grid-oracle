@@ -24,8 +24,9 @@ services:
     environment:
       POSTGRES_USER: gridoracle_admin
       POSTGRES_DB: gridoracle
-      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
-    secrets: [postgres_password]
+      # Disposable synthetic DB only, on an internal network without ports.
+      # Production proposal uses SOPS password files and separate DB roles.
+      POSTGRES_HOST_AUTH_METHOD: trust
     volumes: [pgdata:/var/lib/postgresql/data]
     tmpfs: ["/var/run/postgresql:uid=70,gid=70"]
     networks: [private]
@@ -102,7 +103,6 @@ services:
       - ${RECOVERY:?provide backup directory}:/recovery
 secrets:
   database_url: {file: "${DATABASE_URL_FILE:?provide local test URL secret}"}
-  postgres_password: {file: "${POSTGRES_PASSWORD_FILE:?provide local test password}"}
 networks:
   private: {internal: true}
   edge: {}
