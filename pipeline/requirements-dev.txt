@@ -2,5 +2,5 @@
 
 # Local and CI test/lint dependencies. Runtime images intentionally install only
 # requirements.txt.
-pytest==8.3.5
+pytest==9.0.3
 ruff==0.9.6
