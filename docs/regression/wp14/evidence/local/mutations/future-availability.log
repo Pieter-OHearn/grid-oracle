@@ -1,0 +1,23 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_____________________ test_future_availability_is_rejected _____________________
+
+replay = <scripts.regression.replay.WeekendReplay object at 0x11c1de480>
+
+    def test_future_availability_is_rejected(replay):
+        replay.drain()
+        old = replay.inputs["pre_weekend"]
+>       with pytest.raises(ProvenanceError, match="availability"):
+E       Failed: DID NOT RAISE <class 'gridoracle.provenance.store.ProvenanceError'>
+
+scripts/tests/test_wp14_postgres.py:257: Failed
+=============================== warnings summary ===============================
+../../../../../../private/tmp/grid-oracle-wp13/.venv/lib/python3.12/site-packages/starlette/testclient.py:40
+  /private/tmp/grid-oracle-wp13/.venv/lib/python3.12/site-packages/starlette/testclient.py:40: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = typing.Callable[[], typing.ContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /private/tmp/wp14-evidence/mutations-final/future-availability.xml -
+=========================== short test summary info ============================
+FAILED scripts/tests/test_wp14_postgres.py::test_future_availability_is_rejected
+1 failed, 1 warning in 2.75s

@@ -33,7 +33,7 @@ jobs:
         ports: ['5432:5432']
         options: >-
           --memory 512m --cpus 1
-          --health-cmd 'pg_isready -U postgres'
+          --health-cmd "pg_isready -U postgres"
           --health-interval 3s --health-timeout 3s --health-retries 30
     env:
       WP14_POSTGRES_URL: postgresql://postgres@127.0.0.1:5432/postgres
@@ -110,8 +110,16 @@ jobs:
           TEST_DB_CONTAINER: ${{ job.services.postgres.id }}
         run: |
           mkdir -p wp14-evidence
-          cp docs/regression/wp14/README.md wp14-evidence/coverage-limits.md
-          docker logs "$TEST_DB_CONTAINER" >wp14-evidence/postgres-service.log 2>&1
+          if test -f docs/regression/wp14/README.md; then
+            cp docs/regression/wp14/README.md wp14-evidence/coverage-limits.md
+          else
+            echo 'Checkout/container initialization failed; no lifecycle acceptance evidence. See job logs.' >wp14-evidence/coverage-limits.md
+          fi
+          if test -n "$TEST_DB_CONTAINER"; then
+            docker logs "$TEST_DB_CONTAINER" >wp14-evidence/postgres-service.log 2>&1 || true
+          else
+            echo 'No PostgreSQL container initialized; see Initialize containers logs.' >wp14-evidence/postgres-service.log
+          fi
           if test -f /tmp/wp14-preview/replay.json; then
             cp /tmp/wp14-preview/replay.json wp14-evidence/replay.json
           fi
