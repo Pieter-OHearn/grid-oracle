@@ -57,13 +57,14 @@ prune historical forecasts or shorten retention.
 
 `.github/workflows/oci-release.yml` owns tests/build/release. After integration,
 run **Immutable OCI release** on `main` with an explicit shared `version`
-(`vMAJOR.MINOR.PATCH`, optionally a prerelease such as `v1.2.3-rc.1`).
+(`vMAJOR.MINOR.PATCH`, for example `v1.2.3`). Prerelease versions, including
+`wp13.x` and `rc.x`, are rejected for publication.
 There is no automatic version bump: frontend, API and worker share this version.
 The workflow fixes the main source SHA, runs backend/frontend checks, creates an
 annotated Git tag for that tested SHA, then builds/publishes all images.
 A failed release reserves its tag; fix the failure and choose a fresh version.
-Existing owner-pushed version tags remain a supported staging/release trigger.
-Each version tag runs backend/frontend checks, builds API, worker and frontend on **native**
+Tag pushes do not trigger publication. Each manual main release runs
+backend/frontend checks, builds API, worker and frontend on **native**
 AMD64 and ARM64 runners, then runs the image-based install/restore drill before
 publishing either architecture. The release job assembles multi-platform GHCR
 indexes and records exact version@digest pins, source revision, architectures
@@ -92,7 +93,7 @@ gh workflow run oci-release.yml --ref main -f version=v1.2.3 -f notes_start_tag=
 
 Manual execution from feature branches is rejected. Tag creation uses the
 workflow token and continues within the same run; it does not depend on a
-second tag-push workflow being triggered. PR validation never creates tags,
+second workflow being triggered. PR validation never creates tags,
 publishes images or creates releases. The dispatch UI becomes available only
 after default-branch integration. No merge is performed by this task.
 
@@ -114,13 +115,49 @@ and any later authorized activation. The GridOracle staging Compose file is a
 disposable acceptance fixture, not the production stack. The earlier homelab
 draft is historical context only; this task makes no further homelab changes.
 
+### Post-deployment cleanup follow-up
+
+The owner requested removal of rebuild planning and historical migration
+information after deployment. Schedule one separately scoped cleanup after the
+first stable main release is deployed, its health checks pass, and production
+backup/restore and rollback are verified. This is a recorded follow-up, not a
+created GitHub ticket or authorization to delete deployed artifacts now.
+
+- Inventory `PLAN.md`, `WORKPLANS.md`, `DECISIONS.md`, `HANDOFF.md`,
+  `docs/workplans/**`, historical migration/design notes and temporary staging
+  evidence. Extract any still-current product, model, data and operations
+  contracts into maintained documentation, then remove the obsolete planning
+  and migration narrative from the active tree; Git history retains it.
+- Replace the workplan entry-point instructions and README links with the
+  maintained development, release and operations documentation. Check links,
+  generated-document references and CI paths before removing old files. Retire
+  the `wp13` naming and temporary fixtures where appropriate, updating scripts,
+  imports and workflow references together.
+- Inventory all staging Git tags, GitHub releases and GHCR versions, including
+  failed attempts and architecture tags. DevOps must confirm the live homelab
+  pins and rollback references. Remove obsolete staging artifacts only after
+  checking backup receipts and recovery references; retain the deployed stable
+  images and the required rollback versions and provenance.
+- Preserve executable database migrations and schema history required for
+  upgrade or restore, durable forecast/model lineage, and maintained release,
+  migration preflight, backup, restore and rollback runbooks. Historical
+  migration notes can be removed once their current requirements are captured.
+
+GridOracle cleanup belongs in a separate reviewed application PR. Homelab
+cleanup, promotion and deployment remain DevOps-owned. Validate the final
+documentation links, normal CI, fresh installation, schema upgrade and recovery
+after the cleanup; do not remove the current workplan coordination records while
+their dependent packages still use them.
+
 ## DevOps handoff: application inputs and platform ownership
 
 This repository delivers the application-side inputs:
 
-- `evidence/release.json`: released `v0.1.0-wp13.7`, source revision and exact
-  multi-platform API/worker/frontend version@digest pins. Scheduler uses the
-  worker pin. DevOps copies these immutable pins into its reviewed manifest.
+- `evidence/release.json`: historical staging `v0.1.0-wp13.7`, source revision
+  and exact multi-platform API/worker/frontend version@digest pins. After
+  integration, generate a stable release from main and use its attached receipt
+  for the production proposal. DevOps copies those stable pins into its reviewed
+  manifest; scheduler uses the worker pin. Do not promote the `wp13.x` images.
 - `deploy/wp13/Dockerfile` and `gridoracle/ops/runtime.py`: image users and
   commands `api`, `worker`, `scheduler --season YYYY`; migration is an explicit
   `python -m scripts.wp13_migrate` one-shot, never serving startup.
@@ -314,8 +351,9 @@ bundle; the serving worker never invokes the legacy latest-model selector.
 Recovery compares actual live mounts, supports pre-ledger rollback targets and
 rejects removed migration ledgers. New v2 lineage inventories stream within
 the tools memory budget; v1 reading retains historical hash semantics.
-The old `.3` release is historical and must not be promoted as the corrected
-candidate. Current release `v0.1.0-wp13.7`, source `1942bb859a13e532c7ade24de203a38186705500`,
+All `wp13.x` releases are historical staging evidence and must not be promoted
+to production. The final staging release `v0.1.0-wp13.7`, source
+`1942bb859a13e532c7ade24de203a38186705500`,
 passed twelve candidate and twelve released-digest checks on both architectures
 in [run 36906440683](https://github.com/Pieter-OHearn/grid-oracle/actions/runs/36906440683).
 The current receipt/reports are in `evidence/`; prior `.3` and `.4` reports are archived.

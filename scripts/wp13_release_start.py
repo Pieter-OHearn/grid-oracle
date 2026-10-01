@@ -9,17 +9,19 @@ from pathlib import Path
 from scripts.wp13_release import validate_version
 
 
+def validate_release_version(version: str) -> None:
+    validate_version(version)
+    if "-" in version:
+        raise ValueError("releases require a stable vMAJOR.MINOR.PATCH version")
+
+
 def identity(event: str, ref: str, sha: str, version: str = "") -> dict[str, str]:
     if not re.fullmatch(r"[0-9a-f]{40}", sha):
         raise ValueError("source must be a full commit SHA")
     if event == "workflow_dispatch":
         if ref != "refs/heads/main":
             raise ValueError("manual releases must run from main")
-        validate_version(version)
-        publish = "true"
-    elif event == "push" and ref.startswith("refs/tags/"):
-        version = ref.removeprefix("refs/tags/")
-        validate_version(version)
+        validate_release_version(version)
         publish = "true"
     elif event == "pull_request":
         version, publish = "ci-" + sha, "false"
@@ -29,7 +31,7 @@ def identity(event: str, ref: str, sha: str, version: str = "") -> dict[str, str
 
 
 def create_tag(version: str, source: str) -> None:
-    validate_version(version)
+    validate_release_version(version)
     if not re.fullmatch(r"[0-9a-f]{40}", source):
         raise ValueError("source must be a full commit SHA")
     head = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()

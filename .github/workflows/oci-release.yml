@@ -5,15 +5,13 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Shared release version, e.g. v1.2.3 or v1.2.3-rc.1'
+        description: 'Stable shared release version, e.g. v1.2.3 (main only)'
         required: true
         type: string
       notes_start_tag:
         description: 'Optional changelog start tag; defaults to the last published release'
         required: false
         type: string
-  push:
-    tags: ['v*']
 permissions:
   contents: read
 concurrency:
@@ -53,7 +51,7 @@ jobs:
       - working-directory: dashboard
         run: bun install --frozen-lockfile && bun run test && bun run typecheck && bun run lint && bun run build
   tag:
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && needs.prepare.outputs.publish == 'true'
     needs: [prepare, tests]
     runs-on: ubuntu-24.04
     permissions:
@@ -68,8 +66,8 @@ jobs:
           RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
           RELEASE_SOURCE: ${{ needs.prepare.outputs.source }}
         run: python -m scripts.wp13_release_start create-tag
-      # GITHUB_TOKEN pushes do not start another tag workflow. The current run
-      # continues into image publication, without requiring a PAT or recursion.
+      # Tag pushes do not trigger this workflow. The current main run continues
+      # into publication after the native candidate checks.
   images:
     if: >-
       always() && needs.prepare.result == 'success' && needs.tests.result == 'success' &&
@@ -118,13 +116,13 @@ jobs:
           name: staging-${{ matrix.arch }}
           path: drill.json
       - uses: docker/login-action@v3
-        if: github.event_name != 'pull_request' && needs.prepare.outputs.publish == 'true'
+        if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && needs.prepare.outputs.publish == 'true'
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Push verified candidates once per version
-        if: github.event_name != 'pull_request' && needs.prepare.outputs.publish == 'true'
+        if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && needs.prepare.outputs.publish == 'true'
         env: {ARCH: '${{ matrix.arch }}'}
         run: |
           for role in api worker frontend; do
@@ -150,7 +148,7 @@ jobs:
   release:
     if: >-
       always() && needs.prepare.result == 'success' && needs.images.result == 'success' &&
-      github.event_name != 'pull_request' && needs.prepare.outputs.publish == 'true'
+      github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && needs.prepare.outputs.publish == 'true'
     needs: [prepare, images]
     runs-on: ubuntu-24.04
     permissions:
@@ -179,12 +177,10 @@ jobs:
           VERSION: ${{ needs.prepare.outputs.version }}
           NOTES_START_TAG: ${{ inputs.notes_start_tag }}
         run: |
-          prerelease=()
-          [[ "$VERSION" != *-* ]] || prerelease+=(--prerelease)
           python -m scripts.wp13_release_notes --receipt release.json \
             --repository "$GITHUB_REPOSITORY" --start-tag "$NOTES_START_TAG" \
             --output release-notes.md
-          gh release create "$VERSION" --verify-tag "${prerelease[@]}" \
+          gh release create "$VERSION" --verify-tag \
             --title "GridOracle $VERSION" \
             --notes-file release-notes.md \
             release.json

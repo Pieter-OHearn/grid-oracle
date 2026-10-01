@@ -13,14 +13,31 @@ from scripts.wp13_release_start import create_tag, identity
 SHA = "a" * 40
 
 
-@pytest.mark.parametrize("version", ["v1.2.3", "v0.1.0-wp13.5", "v1.0.0-rc.1"])
-def test_shared_version_accepts_stable_and_prerelease(version):
-    assert identity("workflow_dispatch", "refs/heads/main", SHA, version) == {
-        "version": version,
+def test_manual_main_release_uses_one_stable_version():
+    assert identity("workflow_dispatch", "refs/heads/main", SHA, "v1.2.3") == {
+        "version": "v1.2.3",
         "source": SHA,
         "publish": "true",
     }
-    assert identity("push", "refs/tags/" + version, SHA)["version"] == version
+
+
+@pytest.mark.parametrize("version", ["v0.1.0-wp13.5", "v1.0.0-rc.1"])
+def test_prereleases_remain_readable_but_cannot_be_published(version, monkeypatch):
+    # Historic receipts and changelog baselines still use these versions.
+    release.validate_version(version)
+    with pytest.raises(ValueError, match="stable"):
+        identity("workflow_dispatch", "refs/heads/main", SHA, version)
+    run = Mock()
+    monkeypatch.setattr(subprocess, "run", run)
+    with pytest.raises(ValueError, match="stable"):
+        create_tag(version, SHA)
+    run.assert_not_called()
+
+
+@pytest.mark.parametrize("version", ["v1.2.3", "v0.1.0-wp13.5"])
+def test_pushed_tags_cannot_start_publication(version):
+    with pytest.raises(ValueError, match="unsupported"):
+        identity("push", "refs/tags/" + version, SHA)
 
 
 @pytest.mark.parametrize(
