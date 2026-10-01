@@ -45,6 +45,32 @@ def generate(receipt: dict, repository: str, start_tag: str = "") -> str:
     validate_version(version)
     if not re.fullmatch(r"[0-9a-f]{40}", source):
         raise ValueError("source must be a full commit SHA")
+    if not start_tag:
+        pages = json.loads(
+            subprocess.check_output(
+                [
+                    "gh",
+                    "api",
+                    "--paginate",
+                    "--slurp",
+                    f"repos/{repository}/releases?per_page=100",
+                ],
+                text=True,
+            )
+        )
+        # Failed/cancelled tag builds and draft releases cannot become the
+        # changelog baseline. Use the most recent actually published release.
+        start_tag = next(
+            (
+                item["tag_name"]
+                for page in pages
+                for item in page
+                if not item["draft"]
+                and item.get("published_at")
+                and item["tag_name"] != version
+            ),
+            "",
+        )
     command = [
         "gh",
         "api",

@@ -62,12 +62,13 @@ def docker(*args):
 
 
 def inspect(image):
-    manifest = json.loads(
+    summary = json.loads(
         docker(
             "buildx", "imagetools", "inspect", "--format", "{{json .Manifest}}", image
         )
     )
-    return manifest["digest"], manifest
+    manifest = json.loads(docker("buildx", "imagetools", "inspect", "--raw", image))
+    return summary["digest"], manifest
 
 
 def main():
@@ -97,7 +98,12 @@ def main():
         sources = []
         for arch in ("amd64", "arm64"):
             source = image + "-" + arch
-            checksum, _ = inspect(source)
+            checksum, source_manifest = inspect(source)
+            if source_manifest.get("mediaType") not in (
+                "application/vnd.oci.image.manifest.v1+json",
+                "application/vnd.oci.image.index.v1+json",
+            ):
+                raise ValueError("description annotations require OCI source images")
             sources.append(source + "@" + checksum)
         docker(
             "buildx",

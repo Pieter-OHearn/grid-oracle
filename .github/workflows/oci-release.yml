@@ -132,8 +132,20 @@ jobs:
             if docker manifest inspect "$image" >/dev/null 2>&1; then
               echo "Refusing an existing version tag: $image" >&2; exit 1
             fi
-            docker tag "gridoracle-$role:candidate" "$image"
-            docker push "$image"
+            # Docker's load/push exporter uses Docker media types, which drop
+            # index annotations. Export OCI from the same verified build cache.
+            docker buildx build --platform "linux/$ARCH" --target "$role" \
+              --file deploy/wp13/Dockerfile --provenance=false \
+              --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
+              --label "org.opencontainers.image.revision=$SOURCE" \
+              --label "org.opencontainers.image.version=$VERSION" \
+              --output type=image,push=true,oci-mediatypes=true --tag "$image" .
+            docker pull "$image"
+            candidate_id=$(docker image inspect --format '{{.Id}}' "gridoracle-$role:candidate")
+            published_id=$(docker image inspect --format '{{.Id}}' "$image")
+            [[ "$candidate_id" == "$published_id" ]] || {
+              echo "Published OCI config differs from tested candidate: $role" >&2; exit 1;
+            }
           done
   release:
     if: >-

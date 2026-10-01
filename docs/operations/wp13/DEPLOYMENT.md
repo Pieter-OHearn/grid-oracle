@@ -72,7 +72,8 @@ is produced. The GitHub release includes generated changelog notes (merged
 changes/contributors and comparison link; commit-list fallback for unmerged
 staging ranges), a described image/package table with
 all three digest pins, a source link, and the attached receipt. Optional
-`notes_start_tag` sets the changelog baseline; when empty GitHub selects it.
+`notes_start_tag` sets the changelog baseline; when empty the most recent published release is used (drafts and failed tags
+are excluded).
 Each image has its own OCI description label, and the multi-platform index
 repeats it as an annotation for GHCR package pages. Missing index descriptions
 fail release verification. Existing immutable images retain their original

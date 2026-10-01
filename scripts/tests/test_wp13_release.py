@@ -117,6 +117,7 @@ def test_release_annotates_both_architectures_and_writes_image_notes(
     def inspect(image):
         role = image.split("gridoracle-")[1].split(":")[0]
         return "sha256:" + SHA, {
+            "mediaType": "application/vnd.oci.image.index.v1+json",
             "annotations": {
                 "org.opencontainers.image.description": release.DESCRIPTIONS[role]
             },
@@ -165,7 +166,14 @@ def test_release_refuses_index_without_description(tmp_path, monkeypatch):
     monkeypatch.setenv("GITHUB_REPOSITORY", "fixture/grid-oracle")
     monkeypatch.setattr(release.subprocess, "run", lambda *a, **k: Mock(returncode=1))
     monkeypatch.setattr(release, "docker", Mock())
-    monkeypatch.setattr(release, "inspect", lambda _: ("sha256:" + SHA, {}))
+    monkeypatch.setattr(
+        release,
+        "inspect",
+        lambda _: (
+            "sha256:" + SHA,
+            {"mediaType": "application/vnd.oci.image.index.v1+json"},
+        ),
+    )
     monkeypatch.setattr(
         "sys.argv",
         ["release", "--version", "v1.2.3", "--output", str(tmp_path / "receipt")],
@@ -222,3 +230,45 @@ def test_merged_pr_changelog_is_preserved_without_duplicate_commit_list(monkeypa
     )
     assert changelog(body, SHA, "fixture/repo") == body
     git.assert_not_called()
+
+
+def test_inspection_reads_annotation_from_raw_manifest_not_summary(monkeypatch):
+    raw = {
+        "mediaType": "application/vnd.oci.image.index.v1+json",
+        "annotations": {"org.opencontainers.image.description": "API"},
+    }
+    responses = iter([json.dumps({"digest": "sha256:" + SHA}), json.dumps(raw)])
+    docker = Mock(side_effect=lambda *args: next(responses))
+    monkeypatch.setattr(release, "docker", docker)
+    assert release.inspect("fixture") == ("sha256:" + SHA, raw)
+    assert docker.call_args.args[-2:] == ("--raw", "fixture")
+
+
+def test_generated_notes_start_from_published_release_not_draft_or_failed_tag(
+    monkeypatch,
+):
+    from scripts.wp13_release_notes import generate
+
+    replies = iter(
+        [
+            json.dumps(
+                [
+                    [
+                        {"tag_name": "v1.2.4", "draft": True, "published_at": None},
+                        {
+                            "tag_name": "v1.2.2",
+                            "draft": False,
+                            "published_at": "2026-10-01",
+                        },
+                    ]
+                ]
+            ),
+            json.dumps({"body": "## What's Changed\n* Fix release metadata in #108"}),
+        ]
+    )
+    gh = Mock(side_effect=lambda *a, **k: next(replies))
+    monkeypatch.setattr(subprocess, "check_output", gh)
+    receipt = {"version": "v1.2.3", "source_revision": SHA, "images": {}}
+    notes = generate(receipt, "fixture/repo")
+    assert "* Fix release metadata" in notes
+    assert "previous_tag_name=v1.2.2" in gh.call_args.args[0]
