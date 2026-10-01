@@ -1,0 +1,587 @@
+{
+  "$defs": {
+    "Coverage": {
+      "additionalProperties": false,
+      "properties": {
+        "available": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Available"
+        },
+        "expected": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Expected"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reason"
+        },
+        "state": {
+          "enum": [
+            "complete",
+            "partial",
+            "unknown",
+            "empty"
+          ],
+          "title": "State",
+          "type": "string"
+        }
+      },
+      "required": [
+        "state",
+        "available"
+      ],
+      "title": "Coverage",
+      "type": "object"
+    },
+    "ErrorResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "error": {
+          "$ref": "#/$defs/PublicError"
+        }
+      },
+      "required": [
+        "error"
+      ],
+      "title": "ErrorResponse",
+      "type": "object"
+    },
+    "Event": {
+      "additionalProperties": false,
+      "properties": {
+        "circuit_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Circuit Name"
+        },
+        "coverage": {
+          "$ref": "#/$defs/Coverage"
+        },
+        "date": {
+          "format": "date",
+          "title": "Date",
+          "type": "string"
+        },
+        "event_key": {
+          "title": "Event Key",
+          "type": "string"
+        },
+        "id": {
+          "title": "Id",
+          "type": "integer"
+        },
+        "lifecycle": {
+          "enum": [
+            "scheduled",
+            "postponed",
+            "cancelled",
+            "completed"
+          ],
+          "title": "Lifecycle",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "round": {
+          "title": "Round",
+          "type": "integer"
+        },
+        "season": {
+          "title": "Season",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "event_key",
+        "season",
+        "round",
+        "name",
+        "date",
+        "lifecycle",
+        "circuit_name",
+        "coverage"
+      ],
+      "title": "Event",
+      "type": "object"
+    },
+    "EventIndex": {
+      "additionalProperties": false,
+      "properties": {
+        "events": {
+          "items": {
+            "$ref": "#/$defs/Event"
+          },
+          "title": "Events",
+          "type": "array"
+        },
+        "season": {
+          "title": "Season",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "season",
+        "events"
+      ],
+      "title": "EventIndex",
+      "type": "object"
+    },
+    "EventSession": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "integer"
+        },
+        "kind": {
+          "title": "Kind",
+          "type": "string"
+        },
+        "revision": {
+          "title": "Revision",
+          "type": "integer"
+        },
+        "scheduled_at": {
+          "format": "date-time",
+          "title": "Scheduled At",
+          "type": "string"
+        },
+        "status": {
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "scheduled_at",
+        "revision",
+        "status"
+      ],
+      "title": "EventSession",
+      "type": "object"
+    },
+    "ForecastSelection": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PublishedForecast"
+        },
+        {
+          "$ref": "#/$defs/UnavailableForecast"
+        }
+      ]
+    },
+    "Freshness": {
+      "additionalProperties": false,
+      "properties": {
+        "input_cutoff_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Input Cutoff At"
+        },
+        "issued_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Issued At"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reason"
+        },
+        "source_available_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Source Available At"
+        },
+        "state": {
+          "enum": [
+            "verified_as_of_cutoff",
+            "source_late",
+            "stale",
+            "unknown"
+          ],
+          "title": "State",
+          "type": "string"
+        }
+      },
+      "required": [
+        "state",
+        "input_cutoff_at",
+        "issued_at",
+        "source_available_at"
+      ],
+      "title": "Freshness",
+      "type": "object"
+    },
+    "PublicEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "driver_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Driver Name"
+        },
+        "entry_key": {
+          "title": "Entry Key",
+          "type": "string"
+        },
+        "team_color": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Team Color"
+        },
+        "team_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Team Name"
+        },
+        "win_probability": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Win Probability"
+        }
+      },
+      "required": [
+        "entry_key",
+        "driver_name",
+        "team_name",
+        "win_probability"
+      ],
+      "title": "PublicEntry",
+      "type": "object"
+    },
+    "PublicError": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "enum": [
+            "not_found",
+            "invalid_request",
+            "api_unavailable",
+            "invalid_publication"
+          ],
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        },
+        "retryable": {
+          "title": "Retryable",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "retryable"
+      ],
+      "title": "PublicError",
+      "type": "object"
+    },
+    "PublishedForecast": {
+      "additionalProperties": false,
+      "properties": {
+        "reason": {
+          "default": null,
+          "title": "Reason",
+          "type": "null"
+        },
+        "run": {
+          "$ref": "#/$defs/PublishedRun"
+        },
+        "state": {
+          "const": "published",
+          "default": "published",
+          "title": "State",
+          "type": "string"
+        }
+      },
+      "required": [
+        "run"
+      ],
+      "title": "PublishedForecast",
+      "type": "object"
+    },
+    "PublishedRun": {
+      "additionalProperties": false,
+      "properties": {
+        "coverage": {
+          "$ref": "#/$defs/Coverage"
+        },
+        "entries": {
+          "items": {
+            "$ref": "#/$defs/PublicEntry"
+          },
+          "title": "Entries",
+          "type": "array"
+        },
+        "event_id": {
+          "title": "Event Id",
+          "type": "integer"
+        },
+        "freshness": {
+          "$ref": "#/$defs/Freshness"
+        },
+        "horizon": {
+          "enum": [
+            "pre_weekend",
+            "post_qualifying"
+          ],
+          "title": "Horizon",
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "verified",
+            "observed"
+          ],
+          "title": "Provenance",
+          "type": "string"
+        },
+        "published_at": {
+          "format": "date-time",
+          "title": "Published At",
+          "type": "string"
+        },
+        "run_id": {
+          "title": "Run Id",
+          "type": "string"
+        },
+        "season": {
+          "title": "Season",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "run_id",
+        "season",
+        "event_id",
+        "horizon",
+        "published_at",
+        "provenance",
+        "freshness",
+        "coverage",
+        "entries"
+      ],
+      "title": "PublishedRun",
+      "type": "object"
+    },
+    "RunIndex": {
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "title": "Event Id",
+          "type": "integer"
+        },
+        "runs": {
+          "items": {
+            "$ref": "#/$defs/PublishedRun"
+          },
+          "title": "Runs",
+          "type": "array"
+        },
+        "season": {
+          "title": "Season",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "season",
+        "event_id",
+        "runs"
+      ],
+      "title": "RunIndex",
+      "type": "object"
+    },
+    "Season": {
+      "additionalProperties": false,
+      "properties": {
+        "coverage": {
+          "$ref": "#/$defs/Coverage"
+        },
+        "ruleset_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Ruleset Version"
+        },
+        "year": {
+          "title": "Year",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "year",
+        "ruleset_version",
+        "coverage"
+      ],
+      "title": "Season",
+      "type": "object"
+    },
+    "SeasonIndex": {
+      "additionalProperties": false,
+      "properties": {
+        "seasons": {
+          "items": {
+            "$ref": "#/$defs/Season"
+          },
+          "title": "Seasons",
+          "type": "array"
+        }
+      },
+      "required": [
+        "seasons"
+      ],
+      "title": "SeasonIndex",
+      "type": "object"
+    },
+    "SessionIndex": {
+      "additionalProperties": false,
+      "properties": {
+        "event_id": {
+          "title": "Event Id",
+          "type": "integer"
+        },
+        "season": {
+          "title": "Season",
+          "type": "integer"
+        },
+        "sessions": {
+          "items": {
+            "$ref": "#/$defs/EventSession"
+          },
+          "title": "Sessions",
+          "type": "array"
+        }
+      },
+      "required": [
+        "season",
+        "event_id",
+        "sessions"
+      ],
+      "title": "SessionIndex",
+      "type": "object"
+    },
+    "UnavailableForecast": {
+      "additionalProperties": false,
+      "properties": {
+        "reason": {
+          "const": "no_published_forecast",
+          "default": "no_published_forecast",
+          "title": "Reason",
+          "type": "string"
+        },
+        "run": {
+          "default": null,
+          "title": "Run",
+          "type": "null"
+        },
+        "state": {
+          "const": "unavailable",
+          "default": "unavailable",
+          "title": "State",
+          "type": "string"
+        }
+      },
+      "title": "UnavailableForecast",
+      "type": "object"
+    }
+  }
+}

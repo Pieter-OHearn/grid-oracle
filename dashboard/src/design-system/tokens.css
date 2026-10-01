@@ -16,7 +16,7 @@
   font-weight: 400;
   font-display: swap;
 }
-/* Scoped WP10 tokens: production entry point does not import this stylesheet. */
+/* Scoped WP10 tokens, shared by the reference and WP11 public application. */
 .go-system {
   color-scheme: light dark;
   --go-surface: light-dark(#ffffff, #121416);

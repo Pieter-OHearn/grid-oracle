@@ -1,0 +1,13 @@
+{
+  "date": "2026-10-01",
+  "static_build": "passed; Vite production dist only, WP10 reference output removed",
+  "nginx_version": "1.28.2",
+  "nginx_runtime": "cached local quro-frontend image, exact WP11 config and built assets mounted read-only; no deployment",
+  "configuration_syntax": "passed: nginx -t",
+  "spa_refresh": "passed: /seasons/2022/events/2022/field serves index.html and browser loads selected event",
+  "api_proxy": "passed: /api/v1/seasons resolves synthetic local API",
+  "hashed_asset_cache": "passed: Cache-Control public, max-age=31536000, immutable",
+  "dockerfile_image_build": "not completed: Docker registry base-image metadata requests failed with DeadlineExceeded/context deadline exceeded; final pinned base versions still require a clean registry-based image build",
+  "final_base_images": ["oven/bun:1.4.2-debian", "nginx:1.28.2-alpine"],
+  "font_licenses": "SIL license files accompany static fonts under /font-licenses/"
+}
