@@ -67,6 +67,7 @@ jobs:
       - name: Native installation, schema upgrade, offline restart and recovery drill
         run: python scripts/wp13_drill.py --candidate --output drill.json
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: staging-${{ matrix.arch }}
           path: drill.json

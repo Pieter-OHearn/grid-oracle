@@ -34,3 +34,10 @@ The measured HDD backup path, production secret/role creation, real bundle,
 representative loaded-host measurements, app/DB trace spans and public ingress
 are production release prerequisites; they are never represented by synthetic
 or same-disk local test evidence.
+
+Native CI first built both architectures successfully, then exposed host UID
+copy/cleanup failures for application-owned 0600 artifacts on Linux. The drill
+now copies with the same non-root UID in a network-disabled tools container and
+only relaxes synthetic temporary directories for owned cleanup. Failed runs
+36864322438 / prerelease v0.1.0-wp13.1 are retained as superseded diagnostics;
+no failed version is reused or represented as a released image.
