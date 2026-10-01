@@ -1,0 +1,29 @@
+{
+  "format": "gridoracle-oci-release-v1",
+  "version": "v0.1.0-wp13.3",
+  "source_revision": "d22b650d221c256ef41a077d1eef1d52a8323b7e",
+  "workflow_run": "36866480857",
+  "images": {
+    "api": {
+      "pin": "ghcr.io/pieter-ohearn/gridoracle-api:v0.1.0-wp13.3@sha256:fea750f2b804f6fab8c73bd79d19d91911ae5a6b33b126a328a26077f58e45b7",
+      "platforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ]
+    },
+    "worker": {
+      "pin": "ghcr.io/pieter-ohearn/gridoracle-worker:v0.1.0-wp13.3@sha256:c76ad19c6b892da380325e19a1d7132384364c5986d254be4719e6ee97901bbc",
+      "platforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ]
+    },
+    "frontend": {
+      "pin": "ghcr.io/pieter-ohearn/gridoracle-frontend:v0.1.0-wp13.3@sha256:754aa928a1fbc2e73c1e4ce382e1c81ecd9b814944b1da3957b590259868870e",
+      "platforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ]
+    }
+  }
+}

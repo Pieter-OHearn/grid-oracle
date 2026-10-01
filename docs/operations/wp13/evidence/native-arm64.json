@@ -1,0 +1,129 @@
+{
+  "passed": true,
+  "mode": "candidate",
+  "architecture": "aarch64",
+  "images": {
+    "api": "gridoracle-api:candidate",
+    "worker": "gridoracle-worker:candidate",
+    "frontend": "gridoracle-frontend:candidate"
+  },
+  "checks": [
+    "backup-before-migration + explicit empty initialization + Alembic upgrade",
+    "migration refuses a stale schema backup",
+    "repeat schema upgrade with a fresh backup is idempotent",
+    "native worker image and bounded single-event ledger backfill",
+    "non-root read-only API/frontend serve 22-entry published fixture",
+    "separate private metrics listener works; public listener cannot proxy operations/admin",
+    "restart serves identical saved forecast with training/providers absent",
+    "DB/API have no published port; frontend binds loopback only",
+    "new environment restore verifies all lineage/output hashes, bundle and identical public response"
+  ],
+  "fixture": "synthetic WP11 saved forecasts; no model-quality or training claim",
+  "schema_upgrade": {
+    "from": "empty -> inspected historical baseline",
+    "to": "20260929_05",
+    "backup_receipt_sha256": "dca578591cb041337dbd3c96a85b075245f70d0b269e1ce69bb18dad483a14a4"
+  },
+  "backfill": {
+    "mode": "synthetic-ledger-only",
+    "native_libraries": {
+      "xgboost": "3.2.0",
+      "pyarrow": "23.0.1",
+      "sklearn": "1.8.0"
+    },
+    "revisions": 24,
+    "events_concurrent": 1,
+    "provider_requests": 0,
+    "reconcile_p95_seconds": 0.01324801399999842,
+    "reconcile_max_seconds": 0.016254962999994405,
+    "peak_rss_mib": 210.71875,
+    "backfill_limit": "one event / one worker; production prediction adapter remains blocked"
+  },
+  "recovery_receipt_sha256": "44a0e39445416c2189b503de670b31cd6cb0910cebf49cfcd6c4dc3b1a7b96e9",
+  "bundle_sha256": "9193c4186312821be62ddbd1aa9eeaca283236fad105b08c49781af2889f4f1a",
+  "lineage": {
+    "calibrator_manifests": {
+      "count": 1,
+      "sha256": "806c23616004fdddf91b98bd14adfad8f7a568997a1898b6847a575aa77e4e54"
+    },
+    "dataset_manifests": {
+      "count": 1,
+      "sha256": "6a96a8660e2ab606899722ea84c5b76fd174244293b9e37b0a4cf3083acff08b"
+    },
+    "evaluation_runs": {
+      "count": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "feature_snapshots": {
+      "count": 1,
+      "sha256": "1949515592a32ad5875a9606449aceb5e729fd6efd3e91d8fdf7528eaccbb4aa"
+    },
+    "forecast_entry_outputs": {
+      "count": 88,
+      "sha256": "a4be6462c70bdd4723c24ac1d6a28cb9571f13ab3543162cd10296d7221db136"
+    },
+    "forecast_publications": {
+      "count": 2,
+      "sha256": "1733bbf4eca64772a92fe09b8bd8cd6a23cd6352676b8975ef3f561c7bd7e761"
+    },
+    "forecast_runs": {
+      "count": 4,
+      "sha256": "d3d040795f0e8ecb7ce949d8f9350e8e8acc8e5991d42e8b0efb80349f27d312"
+    },
+    "model_manifests": {
+      "count": 1,
+      "sha256": "e11d7f63350b791c9f8f552c902791e3613d09d2ab863f1b2e2b9ca196db9143"
+    },
+    "raw_provider_snapshots": {
+      "count": 1,
+      "sha256": "1e69f8c56e780927ec85d9e68f1a25026440db9ff77d413d2ff08b9061a21bac"
+    },
+    "result_revisions": {
+      "count": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    }
+  },
+  "latency_seconds": {
+    "samples": 100,
+    "concurrency": 1,
+    "p50": 0.03766473100000667,
+    "p95": 0.04007530899997391,
+    "max": 0.0490655819999688
+  },
+  "memory": [
+    {
+      "BlockIO": "0B / 0B",
+      "CPUPerc": "0.15%",
+      "Container": "8525943662a17d2d5d4d66855d4e443ee9bba47ece9a76e7bd9119dbb314fa05",
+      "ID": "8525943662a1",
+      "MemPerc": "26.52%",
+      "MemUsage": "67.89MiB / 256MiB",
+      "Name": "wp13-0d90f52a27-api-1",
+      "NetIO": "1.29MB / 2.21MB",
+      "PIDs": "2"
+    },
+    {
+      "BlockIO": "0B / 86.7MB",
+      "CPUPerc": "0.03%",
+      "Container": "90a9fd82cad4cadb798308642388de22acb8da437cadad74d4ef814a01c73d72",
+      "ID": "90a9fd82cad4",
+      "MemPerc": "9.79%",
+      "MemUsage": "50.13MiB / 512MiB",
+      "Name": "wp13-0d90f52a27-db-1",
+      "NetIO": "2.31MB / 1.46MB",
+      "PIDs": "7"
+    },
+    {
+      "BlockIO": "0B / 0B",
+      "CPUPerc": "0.00%",
+      "Container": "fa444845a5d85c75671f2109586d424093a14feabd8d08395bd03d4c31b94307",
+      "ID": "fa444845a5d8",
+      "MemPerc": "4.47%",
+      "MemUsage": "2.863MiB / 64MiB",
+      "Name": "wp13-0d90f52a27-frontend-1",
+      "NetIO": "510kB / 520kB",
+      "PIDs": "2"
+    }
+  ],
+  "restore_seconds": 16.993358803999968
+}

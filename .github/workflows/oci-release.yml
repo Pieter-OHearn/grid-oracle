@@ -1,7 +1,7 @@
 name: Immutable OCI release
 on:
   pull_request:
-    paths: [deploy/wp13/**, gridoracle/ops/**, scripts/wp13_*, scripts/tests/test_wp13_*, .github/workflows/oci-release.yml]
+    paths: [deploy/wp13/**, gridoracle/ops/**, scripts/wp13_*, scripts/tests/test_wp13_*, docs/operations/wp13/evidence/release.json, .github/workflows/oci-release.yml]
   push:
     tags: ['v*']
 permissions:
@@ -122,3 +122,47 @@ jobs:
             --title "GridOracle $VERSION" \
             --notes "Tested native amd64/arm64 images. Promote only version@digest pins from release.json through a reviewed homelab PR. No deployment is performed." \
             release.json
+  released-staging:
+    # A fresh runner pulls the published indexes; candidate checks alone do not
+    # demonstrate registry-to-runtime installation/recovery.
+    if: >-
+      always() && needs.tests.result == 'success' && needs.images.result == 'success' &&
+      (github.event_name == 'pull_request' || needs.release.result == 'success')
+    needs: [tests, images, release]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {arch: amd64, runner: ubuntu-24.04}
+          - {arch: arm64, runner: ubuntu-24.04-arm}
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - uses: docker/login-action@v3
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Select the published release receipt
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ github.ref_name }}
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            gh release download "$VERSION" --pattern release.json
+          else
+            cp docs/operations/wp13/evidence/release.json release.json
+          fi
+      - name: Install and recover the released digest on a fresh native runner
+        run: python scripts/wp13_drill.py --release-json release.json --output released-drill.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: released-staging-${{ matrix.arch }}
+          path: released-drill.json
