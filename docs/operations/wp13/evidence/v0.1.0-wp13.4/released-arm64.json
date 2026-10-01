@@ -3,9 +3,9 @@
   "mode": "released-digest",
   "architecture": "aarch64",
   "images": {
-    "api": "ghcr.io/pieter-ohearn/gridoracle-api:v0.1.0-wp13.7@sha256:e0a5ecdb40245a7a470cb8e787ce79b3f56000e073c36229d985882e644d6af1",
-    "worker": "ghcr.io/pieter-ohearn/gridoracle-worker:v0.1.0-wp13.7@sha256:5607fc616ff0726d7800e37b73d2c683bb58779fb108c241f17d0e22cb92f1f6",
-    "frontend": "ghcr.io/pieter-ohearn/gridoracle-frontend:v0.1.0-wp13.7@sha256:9ea4e980ad0082187d75362df7037d2e74cb369fb4450c10ac670267d9d1ccbd"
+    "api": "ghcr.io/pieter-ohearn/gridoracle-api:v0.1.0-wp13.4@sha256:4d4ed8b57eb7710654f4bed2bc6d48d3f7cc4e9df7311880c5abb372f5903c68",
+    "worker": "ghcr.io/pieter-ohearn/gridoracle-worker:v0.1.0-wp13.4@sha256:b5d314c17e20e2414d7cb146e740d7487d852606c517a670db5ffdb0bc766a23",
+    "frontend": "ghcr.io/pieter-ohearn/gridoracle-frontend:v0.1.0-wp13.4@sha256:066a427694e565ede515b4f65b38b51c7ca3765615064a55091bc973531e5f7a"
   },
   "checks": [
     "empty pre-ledger recovery comparison succeeds",
@@ -25,7 +25,7 @@
   "schema_upgrade": {
     "from": "empty -> inspected historical baseline",
     "to": "20260929_05",
-    "backup_receipt_sha256": "2fb77228c3970e825079773b6651c86efeecf7a67f320c49da7bbb6a94dcc0f2"
+    "backup_receipt_sha256": "35c0374e75f215eb9319e4976faae358fdb6752c963b957abf94427f2d241abe"
   },
   "backfill": {
     "mode": "synthetic-ledger-only",
@@ -37,13 +37,13 @@
     "revisions": 24,
     "events_concurrent": 1,
     "provider_requests": 0,
-    "reconcile_p95_seconds": 0.008668241000009402,
-    "reconcile_max_seconds": 0.021265288999984477,
-    "peak_rss_mib": 210.55859375,
+    "reconcile_p95_seconds": 0.00874486700001853,
+    "reconcile_max_seconds": 0.02171050300000843,
+    "peak_rss_mib": 210.61328125,
     "backfill_limit": "one event / one worker; production prediction adapter remains blocked"
   },
-  "recovery_receipt_sha256": "10c035324cd5456b95bf6ac26126d56b29522a189524c4d3e0fc5802e50db69d",
-  "bundle_sha256": "8366d247af1dba5fdfbdb4cb7dbfbccbab58fc67127ede6fa2f9b2cc7759e3f3",
+  "recovery_receipt_sha256": "1be4525d937012ea71e9ede45470b6acc52e15b8dc427378b2798d3a90022bd9",
+  "bundle_sha256": "12241b523dad099749a434ad0f49513fe08d3c2ddab768a49bb759b4cddc4275",
   "lineage": {
     "calibrator_manifests": {
       "count": 1,
@@ -89,44 +89,44 @@
   "latency_seconds": {
     "samples": 100,
     "concurrency": 1,
-    "p50": 0.03855019899998524,
-    "p95": 0.04185947599998485,
-    "max": 0.05125402400000212
+    "p50": 0.03892752799998789,
+    "p95": 0.041611600000010185,
+    "max": 0.051437700000008135
   },
   "memory": [
     {
       "BlockIO": "0B / 0B",
       "CPUPerc": "0.15%",
-      "Container": "fa8571f27e120bf04b54a4101623fbb4a64fd1cc529dc5790164d0148eb1299c",
-      "ID": "fa8571f27e12",
-      "MemPerc": "27.36%",
-      "MemUsage": "70.05MiB / 256MiB",
-      "Name": "wp13-2f947d198d-api-1",
+      "Container": "06f2c4f435d7f79d316a813e472b0c66d3753a49baca97ecd087afa656399977",
+      "ID": "06f2c4f435d7",
+      "MemPerc": "27.30%",
+      "MemUsage": "69.9MiB / 256MiB",
+      "Name": "wp13-5d6708e082-api-1",
       "NetIO": "1.29MB / 2.23MB",
       "PIDs": "2"
     },
     {
-      "BlockIO": "65.5kB / 87.4MB",
-      "CPUPerc": "0.02%",
-      "Container": "361fe3d57322f761bdecdf74d4e680c1567c2110e1a4f4d71fddc5186587c17d",
-      "ID": "361fe3d57322",
-      "MemPerc": "9.90%",
-      "MemUsage": "50.67MiB / 512MiB",
-      "Name": "wp13-2f947d198d-db-1",
+      "BlockIO": "65.5kB / 87.3MB",
+      "CPUPerc": "0.40%",
+      "Container": "759bbb2e87ddb05ac18d86b095898b24353e0b783cadf4f6baa900ef776ab4e8",
+      "ID": "759bbb2e87dd",
+      "MemPerc": "9.94%",
+      "MemUsage": "50.91MiB / 512MiB",
+      "Name": "wp13-5d6708e082-db-1",
       "NetIO": "2.35MB / 1.49MB",
       "PIDs": "7"
     },
     {
       "BlockIO": "0B / 0B",
-      "CPUPerc": "0.00%",
-      "Container": "462602227e470187154bff96e15c182a1bb6d5c3b7c842f00d14cbca2d1f7fe7",
-      "ID": "462602227e47",
-      "MemPerc": "4.43%",
-      "MemUsage": "2.836MiB / 64MiB",
-      "Name": "wp13-2f947d198d-frontend-1",
+      "CPUPerc": "1.18%",
+      "Container": "c5fc38e7b5acbd67da71ad6925df963f5a51e95e39f5fe622cd90fe74f595901",
+      "ID": "c5fc38e7b5ac",
+      "MemPerc": "4.81%",
+      "MemUsage": "3.078MiB / 64MiB",
+      "Name": "wp13-5d6708e082-frontend-1",
       "NetIO": "514kB / 525kB",
       "PIDs": "2"
     }
   ],
-  "restore_seconds": 20.155575461000012
+  "restore_seconds": 21.11645315299998
 }

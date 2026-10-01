@@ -8,10 +8,10 @@ the review/fix task. DevOps owns platform changes and activation evidence.
 ## Corrected current candidate
 
 `release.json` contains actual GHCR multi-platform version@digest pins for
-[prerelease v0.1.0-wp13.4](https://github.com/Pieter-OHearn/grid-oracle/releases/tag/v0.1.0-wp13.4),
-source `9e726efa1ffac737bc35c645e6d52841a0205a3a`, rebased onto main
+[prerelease v0.1.0-wp13.7](https://github.com/Pieter-OHearn/grid-oracle/releases/tag/v0.1.0-wp13.7),
+source `1942bb859a13e532c7ade24de203a38186705500`, rebased onto main
 `897ff95772c822f3fac5c08d38357c0a9dd51f36` (WP12 PR #107 integration).
-[Release run 36884062642](https://github.com/Pieter-OHearn/grid-oracle/actions/runs/36884062642)
+[Release run 36906440683](https://github.com/Pieter-OHearn/grid-oracle/actions/runs/36906440683)
 passed all tests, both native builds/drills, immutable release assembly and
 both fresh-runner pulls/restore drills. `native-{amd64,arm64}.json` records
 candidate validation; `released-{amd64,arm64}.json` records actual GHCR pulls.
@@ -26,8 +26,8 @@ all ten lineage table hashes, 88 forecast output hashes, model-bundle closure
 and identical saved public responses. Replacement runtime mounts are distinct
 from the recovery-set mounts. New receipts use streaming recovery format v2.
 
-Local rebased validation: Python 3.12.14, locked uv 0.12.19, 499 backend tests
-passed with one existing optional skip, including twelve targeted ops tests;
+Local rebased validation: Python 3.12.14, locked uv 0.12.19, 518 backend tests
+passed with one existing optional skip, including twelve targeted ops tests and nineteen release tests;
 Bun 1.4.2, twenty dashboard tests, typecheck/lint/build; Ruff/format/whitespace
 passed. The twelve ops tests include v1 compatibility, actual live-mount
 corruption, null pre-ledger comparison, missing-ledger preflight, legacy
@@ -38,8 +38,8 @@ Released-digest observations (100 GETs, one client, synthetic fixture):
 
 | Native host | GET p95 | Restore including negative live-mount check | Worker peak RSS |
 | --- | --- | --- | --- |
-| amd64 | 43.49 ms | 22.17 s | 222.34 MiB |
-| arm64 | 41.61 ms | 21.12 s | 210.61 MiB |
+| amd64 | 43.53 ms | 22.07 s | 220.58 MiB |
+| arm64 | 41.86 ms | 20.16 s | 210.56 MiB |
 
 Serving memory samples are about 70 MiB API/256 MiB cap, 51 MiB DB/512 MiB cap
 and 3 MiB frontend/64 MiB cap. Worker cap is 768 MiB; tools cap is 256 MiB.
@@ -83,3 +83,33 @@ activation dependencies. Synthetic or same-disk evidence does not satisfy
 those production gates. Large v1 recovery inventories retain their original
 algorithm and need adequate memory or their original pinned tools image;
 new v2 receipts avoid whole-table materialization.
+
+## Release-pipeline presentation and tag evidence
+
+The owner requested pipeline-created tags, changelog notes and package descriptions.
+The manual entry point takes a shared SemVer version on main, fixes its source SHA,
+tests it and creates an annotated tag before publication. The same helper created
+staging tag `.7`; disposable bare-remote tests verify exact source/refusal behavior.
+GitHub manual dispatch itself becomes available after default-branch integration;
+it was not invoked on an unmerged feature branch and no merge was performed.
+
+`release-notes.md` is the actual published `.7` body: image links/descriptions,
+three digest pins, commit changelog and `.4`→`.7` comparison. GitHub merged-PR
+notes are preserved; unmerged staging ranges get a commit-list fallback.
+Default baseline is the last actually published release, excluding failed tags
+and drafts. `image-metadata.json` contains the three actual raw OCI indexes'
+descriptions, versions, source revisions and native platforms. Native publication
+also checked that all six OCI config IDs equal their tested Docker candidates.
+Actionlint (including shellcheck), Ruff/format/whitespace, full backend/dashboard
+checks and both candidate/released recovery matrices passed on `.7` source.
+
+Previous `.4` receipt/reports are retained in `v0.1.0-wp13.4/`. It already fixes
+the five recovery findings, but has no image descriptions or release changelog.
+Failed `.5` (run 36904435107) built/tested both architectures but Docker-format
+manifest lists dropped index annotations; the metadata gate stopped publication
+of a GitHub release. `failed-v5-api-index.json` preserves its raw diagnostic.
+`.6` (run 36905334727) was cancelled after discovering the same known export issue.
+Neither tag was reused or counted as a successful release. `.7` uses OCI registry
+export from the verified build cache and checks annotations from raw manifests.
+A tiny local scratch-image probe independently confirmed config-hash equality;
+only its two owned image references were removed afterward.

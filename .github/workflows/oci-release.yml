@@ -9,7 +9,7 @@ on:
         required: true
         type: string
       notes_start_tag:
-        description: 'Optional changelog start tag; GitHub selects the baseline when empty'
+        description: 'Optional changelog start tag; defaults to the last published release'
         required: false
         type: string
   push:
