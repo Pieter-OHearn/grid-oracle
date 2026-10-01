@@ -117,12 +117,10 @@ def main():
             for child in ("artifacts", "recovery"):
                 (directory / child).mkdir(mode=0o777)
                 (directory / child).chmod(0o777)
-            password = uuid.uuid4().hex
             (directory / "bundle.json").write_text("{}")
             (directory / "bundle.json").chmod(0o666)
-            (directory / "password").write_text(password)
             (directory / "url").write_text(
-                f"postgresql://gridoracle_admin:{password}@db:5432/gridoracle"
+                "postgresql://gridoracle_admin@db:5432/gridoracle"
             )
             values = {
                 "API_IMAGE": images["api"],
@@ -132,7 +130,6 @@ def main():
                 "BUNDLE": str(directory / "bundle.json"),
                 "RECOVERY": str(directory / "recovery"),
                 "DATABASE_URL_FILE": str(directory / "url"),
-                "POSTGRES_PASSWORD_FILE": str(directory / "password"),
                 "BUNDLE_SHA256": "0" * 64,
                 "SEASON": "2022",
                 "API_PORT": str(free_port()),
@@ -178,7 +175,7 @@ def main():
                 "--no-deps",
                 *mounts,
                 "-e",
-                f"FIXTURE_IMAGE={images['api']}",
+                f"FIXTURE_IMAGE={images['worker']}",
                 "tools",
                 *command,
                 fixture=writable,
@@ -424,6 +421,7 @@ def main():
         recovered, values2, _ = configs[1]
         # Content-addressed files are owned 0600 by UID10001 on Linux. Copy
         # with that same UID, never weaken production artifact permissions.
+        shutil.rmtree(recovered / "recovery")  # empty, owned by the host runner
         run(
             "docker",
             "run",
@@ -442,10 +440,10 @@ def main():
             "-v",
             f"{directory / 'recovery'}:/source:ro",
             "-v",
-            f"{recovered / 'recovery'}:/target",
+            f"{recovered}:/target",
             images["api"],
             "-c",
-            "import shutil; shutil.copytree('/source','/target',dirs_exist_ok=True)",
+            "import shutil; shutil.copytree('/source','/target/recovery')",
         )
         values2["ARTIFACTS"] = str(recovered / "recovery/artifacts")
         values2["BUNDLE"] = str(recovered / "recovery/bundle.json")

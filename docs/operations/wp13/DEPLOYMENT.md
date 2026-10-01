@@ -104,8 +104,8 @@ capabilities, no-new-privileges and PID caps. Docker socket and host filesystem
 are never mounted. Artifacts/bundle are read-only to serving; ingestion needs a
 separately reviewed writer mount and the same immutable store. DB state is the
 only writable serving mount. Production uses separate API-reader, worker and
-migration/admin credentials; staging's synthetic DB uses one disposable admin
-credential and is not the production secrets design.
+migration/admin credentials; staging's synthetic DB uses trust authentication on its isolated private
+network and is not the production secrets design.
 
 `gridoracle.ops.runtime scheduler --season YYYY` does not claim jobs;
 `worker` does not reconcile a calendar. PostgreSQL session advisory locks allow

@@ -22,7 +22,7 @@
   "schema_upgrade": {
     "from": "empty -> inspected historical baseline",
     "to": "20260929_05",
-    "backup_receipt_sha256": "e307951161c499fc7958464173f5ffb1741215ebc940d57750cc72a02fa1ca00"
+    "backup_receipt_sha256": "055760e713dd33fb99b183af151b85483000aef8e7e09eb5eb2180a194fd6197"
   },
   "backfill": {
     "mode": "synthetic-ledger-only",
@@ -34,13 +34,13 @@
     "revisions": 24,
     "events_concurrent": 1,
     "provider_requests": 0,
-    "reconcile_p95_seconds": 0.003609875000002205,
-    "reconcile_max_seconds": 0.016129709000001213,
-    "peak_rss_mib": 207.69140625,
+    "reconcile_p95_seconds": 0.004022416999987399,
+    "reconcile_max_seconds": 0.011295124999946893,
+    "peak_rss_mib": 207.765625,
     "backfill_limit": "one event / one worker; production prediction adapter remains blocked"
   },
-  "recovery_receipt_sha256": "7bc3ca5ab38e6964d896b2fbe34e86a5cb93e4116c860399f1307b89930ed1a8",
-  "bundle_sha256": "b2b3bff8bdff96dae4f3ccc0b6934f444a541dc9d4a1b27157c72ea85c0da736",
+  "recovery_receipt_sha256": "694e387422d28c55ff0688dde95799eb62d1032ff5e5b414c412dfa5d4344c15",
+  "bundle_sha256": "9193c4186312821be62ddbd1aa9eeaca283236fad105b08c49781af2889f4f1a",
   "lineage": {
     "calibrator_manifests": {
       "count": 1,
@@ -86,44 +86,44 @@
   "latency_seconds": {
     "samples": 100,
     "concurrency": 1,
-    "p50": 0.019615166005678475,
-    "p95": 0.02352795796468854,
-    "max": 0.029141833074390888
+    "p50": 0.019659915938973427,
+    "p95": 0.021434707916341722,
+    "max": 0.030673832981847227
   },
   "memory": [
     {
       "BlockIO": "0B / 0B",
-      "CPUPerc": "0.31%",
-      "Container": "39a3e0e8dde9c7e0a420bcb89bbf2bd7d12a874d2efd5ea3feacbe52adf03a38",
-      "ID": "39a3e0e8dde9",
-      "MemPerc": "26.64%",
-      "MemUsage": "68.2MiB / 256MiB",
-      "Name": "wp13-f96389c3bd-api-1",
+      "CPUPerc": "0.22%",
+      "Container": "71303dfacb2a12beaf796b3e55d9e47589de79cca19f8dd5ca98b0cff4aaf70f",
+      "ID": "71303dfacb2a",
+      "MemPerc": "26.59%",
+      "MemUsage": "68.08MiB / 256MiB",
+      "Name": "wp13-9d1f902c55-api-1",
       "NetIO": "1.29MB / 2.21MB",
       "PIDs": "2"
     },
     {
-      "BlockIO": "38.6MB / 86.3MB",
+      "BlockIO": "0B / 86.3MB",
       "CPUPerc": "0.03%",
-      "Container": "be9f08bcdef9e250e7317d84c234c909586cc7714bb69b4b2ed49beda5943563",
-      "ID": "be9f08bcdef9",
-      "MemPerc": "16.04%",
-      "MemUsage": "82.14MiB / 512MiB",
-      "Name": "wp13-f96389c3bd-db-1",
-      "NetIO": "2.32MB / 1.46MB",
+      "Container": "2c2d67b4861c56ea87f935ce7628391d4550a0fa91e4e793bf190273029b8354",
+      "ID": "2c2d67b4861c",
+      "MemPerc": "9.46%",
+      "MemUsage": "48.45MiB / 512MiB",
+      "Name": "wp13-9d1f902c55-db-1",
+      "NetIO": "2.31MB / 1.45MB",
       "PIDs": "7"
     },
     {
       "BlockIO": "0B / 0B",
       "CPUPerc": "0.00%",
-      "Container": "e8acee796eea9ec87f644f9c71f8ec94bfc2b10727d17296c98c5235dfc8a0d0",
-      "ID": "e8acee796eea",
+      "Container": "eea93974d2856abc66d5363b9eb3a66e488f6a6c2776abd97bfbfe21f2bb5fe0",
+      "ID": "eea93974d285",
       "MemPerc": "3.94%",
       "MemUsage": "2.523MiB / 64MiB",
-      "Name": "wp13-f96389c3bd-frontend-1",
+      "Name": "wp13-9d1f902c55-frontend-1",
       "NetIO": "511kB / 521kB",
       "PIDs": "2"
     }
   ],
-  "restore_seconds": 17.547719833091833
+  "restore_seconds": 16.883076041005552
 }
