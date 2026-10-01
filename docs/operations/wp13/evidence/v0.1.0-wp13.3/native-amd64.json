@@ -1,31 +1,28 @@
 {
   "passed": true,
-  "mode": "released-digest",
+  "mode": "candidate",
   "architecture": "x86_64",
   "images": {
-    "api": "ghcr.io/pieter-ohearn/gridoracle-api:v0.1.0-wp13.4@sha256:4d4ed8b57eb7710654f4bed2bc6d48d3f7cc4e9df7311880c5abb372f5903c68",
-    "worker": "ghcr.io/pieter-ohearn/gridoracle-worker:v0.1.0-wp13.4@sha256:b5d314c17e20e2414d7cb146e740d7487d852606c517a670db5ffdb0bc766a23",
-    "frontend": "ghcr.io/pieter-ohearn/gridoracle-frontend:v0.1.0-wp13.4@sha256:066a427694e565ede515b4f65b38b51c7ca3765615064a55091bc973531e5f7a"
+    "api": "gridoracle-api:candidate",
+    "worker": "gridoracle-worker:candidate",
+    "frontend": "gridoracle-frontend:candidate"
   },
   "checks": [
-    "empty pre-ledger recovery comparison succeeds",
     "backup-before-migration + explicit empty initialization + Alembic upgrade",
     "migration refuses a stale schema backup",
-    "migration rejects a removed revision ledger before DDL",
     "repeat schema upgrade with a fresh backup is idempotent",
     "native worker image and bounded single-event ledger backfill",
     "non-root read-only API/frontend serve 22-entry published fixture",
     "separate private metrics listener works; public listener cannot proxy operations/admin",
     "restart serves identical saved forecast with training/providers absent",
     "DB/API have no published port; frontend binds loopback only",
-    "compare rejects corrupt runtime mount with an intact backup",
     "new environment restore verifies all lineage/output hashes, bundle and identical public response"
   ],
   "fixture": "synthetic WP11 saved forecasts; no model-quality or training claim",
   "schema_upgrade": {
     "from": "empty -> inspected historical baseline",
     "to": "20260929_05",
-    "backup_receipt_sha256": "bed3e94ed80c7f64069096dd2ba5a52356b3795f573c775c6125540ea185f278"
+    "backup_receipt_sha256": "27ef2d509d71960db2532543b86b3118690bf4bea28e6c12e993182190fef0b6"
   },
   "backfill": {
     "mode": "synthetic-ledger-only",
@@ -37,13 +34,13 @@
     "revisions": 24,
     "events_concurrent": 1,
     "provider_requests": 0,
-    "reconcile_p95_seconds": 0.00879240500000833,
-    "reconcile_max_seconds": 0.020018265000004476,
-    "peak_rss_mib": 222.33984375,
+    "reconcile_p95_seconds": 0.05252394900000468,
+    "reconcile_max_seconds": 0.05621645800002284,
+    "peak_rss_mib": 222.87890625,
     "backfill_limit": "one event / one worker; production prediction adapter remains blocked"
   },
-  "recovery_receipt_sha256": "921f7c8f22e9b5908a081e078d2de0bb8a2f9949145124b1c94ca6824af07c46",
-  "bundle_sha256": "12241b523dad099749a434ad0f49513fe08d3c2ddab768a49bb759b4cddc4275",
+  "recovery_receipt_sha256": "cb2fdeb8677b63c261b35a28a083d16bad5e8ed979cba54a6ce6f2ca40e6fc95",
+  "bundle_sha256": "9193c4186312821be62ddbd1aa9eeaca283236fad105b08c49781af2889f4f1a",
   "lineage": {
     "calibrator_manifests": {
       "count": 1,
@@ -63,15 +60,15 @@
     },
     "forecast_entry_outputs": {
       "count": 88,
-      "sha256": "d0709795ef98350b5a9d4219ddb25f4166b0198e8f9c7ceb0c99f0a04a42620f"
+      "sha256": "a4be6462c70bdd4723c24ac1d6a28cb9571f13ab3543162cd10296d7221db136"
     },
     "forecast_publications": {
       "count": 2,
-      "sha256": "6ffcb42e5b9483925644ee6f25f04121b9ffeb8a3c85b0ec69d46cc6be329e1c"
+      "sha256": "1733bbf4eca64772a92fe09b8bd8cd6a23cd6352676b8975ef3f561c7bd7e761"
     },
     "forecast_runs": {
       "count": 4,
-      "sha256": "dae93c96dab4364cc7b68a6073edef36c57b62730b90f4b18a2d3c7d345b01a3"
+      "sha256": "d3d040795f0e8ecb7ce949d8f9350e8e8acc8e5991d42e8b0efb80349f27d312"
     },
     "model_manifests": {
       "count": 1,
@@ -89,44 +86,44 @@
   "latency_seconds": {
     "samples": 100,
     "concurrency": 1,
-    "p50": 0.03819747599999346,
-    "p95": 0.04349150699999882,
-    "max": 0.056410077999998975
+    "p50": 0.03795492099999365,
+    "p95": 0.04380729799999017,
+    "max": 0.06004024400002095
   },
   "memory": [
     {
       "BlockIO": "0B / 0B",
       "CPUPerc": "0.17%",
-      "Container": "66eea934d788919da43c92db006534d433282308939096fa8af0147ac935bc20",
-      "ID": "66eea934d788",
-      "MemPerc": "27.58%",
-      "MemUsage": "70.59MiB / 256MiB",
-      "Name": "wp13-08bc0ab27f-api-1",
-      "NetIO": "1.29MB / 2.23MB",
+      "Container": "3eabf4049d692186d3d72d4b589e1d1d372f502da08d71fb41a00b7d7755fe03",
+      "ID": "3eabf4049d69",
+      "MemPerc": "26.83%",
+      "MemUsage": "68.68MiB / 256MiB",
+      "Name": "wp13-56a8ead4c8-api-1",
+      "NetIO": "1.29MB / 2.21MB",
       "PIDs": "2"
     },
     {
-      "BlockIO": "102kB / 87.6MB",
-      "CPUPerc": "3.33%",
-      "Container": "179ef6bafb94460479b4f45300fccffbc7dc5ea7e5ea46e87ca219ac58872ce2",
-      "ID": "179ef6bafb94",
-      "MemPerc": "9.97%",
-      "MemUsage": "51.04MiB / 512MiB",
-      "Name": "wp13-08bc0ab27f-db-1",
-      "NetIO": "2.35MB / 1.49MB",
+      "BlockIO": "0B / 87MB",
+      "CPUPerc": "0.02%",
+      "Container": "8cf1a83595046c3bfccae4f3d178ac746fb0f54644c6f8142eeed8667c014c82",
+      "ID": "8cf1a8359504",
+      "MemPerc": "9.79%",
+      "MemUsage": "50.12MiB / 512MiB",
+      "Name": "wp13-56a8ead4c8-db-1",
+      "NetIO": "2.31MB / 1.46MB",
       "PIDs": "7"
     },
     {
       "BlockIO": "0B / 0B",
-      "CPUPerc": "2.55%",
-      "Container": "d46016fab5a0653299b4887cf8bf4530cd7f661e01b141ec9e26c2d14073748d",
-      "ID": "d46016fab5a0",
-      "MemPerc": "4.80%",
-      "MemUsage": "3.07MiB / 64MiB",
-      "Name": "wp13-08bc0ab27f-frontend-1",
-      "NetIO": "514kB / 525kB",
+      "CPUPerc": "2.50%",
+      "Container": "cbb6662e9380b660db7566a5258ffb690b20ee32194da03d783916c9b43321db",
+      "ID": "cbb6662e9380",
+      "MemPerc": "4.86%",
+      "MemUsage": "3.109MiB / 64MiB",
+      "Name": "wp13-56a8ead4c8-frontend-1",
+      "NetIO": "510kB / 521kB",
       "PIDs": "2"
     }
   ],
-  "restore_seconds": 22.173689357
+  "restore_seconds": 18.73685063900001
 }

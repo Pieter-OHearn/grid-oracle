@@ -18,5 +18,6 @@ approval or integration. Homelab changes are outside the corrected assignment.
 
 The released `.3` images predate these corrections. They remain historical
 artifacts and must not be promoted as the corrected candidate. The replacement
-release and both native candidate/released recovery reports are recorded in
-`evidence/README.md` and `docs/workplans/WP13.md` after validation.
+`v0.1.0-wp13.4` on rebased source `9e726efa1ffac737bc35c645e6d52841a0205a3a`
+passed both native candidate and released-digest recovery reports (12 checks
+each) in run 36884062642. See `evidence/README.md` and the WP13 state record.

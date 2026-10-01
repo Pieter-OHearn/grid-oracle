@@ -87,7 +87,7 @@ draft is historical context only; this task makes no further homelab changes.
 
 This repository delivers the application-side inputs:
 
-- `evidence/release.json`: released `v0.1.0-wp13.3`, source revision and exact
+- `evidence/release.json`: released `v0.1.0-wp13.4`, source revision and exact
   multi-platform API/worker/frontend version@digest pins. Scheduler uses the
   worker pin. DevOps copies these immutable pins into its reviewed manifest.
 - `deploy/wp13/Dockerfile` and `gridoracle/ops/runtime.py`: image users and
@@ -284,4 +284,7 @@ Recovery compares actual live mounts, supports pre-ledger rollback targets and
 rejects removed migration ledgers. New v2 lineage inventories stream within
 the tools memory budget; v1 reading retains historical hash semantics.
 The old `.3` release is historical and must not be promoted as the corrected
-candidate. Current corrected release/evidence is listed after validation below.
+candidate. Corrected release `v0.1.0-wp13.4`, source `9e726efa1ffac737bc35c645e6d52841a0205a3a`,
+passed twelve candidate and twelve released-digest checks on both architectures
+in [run 36884062642](https://github.com/Pieter-OHearn/grid-oracle/actions/runs/36884062642).
+The current receipt/reports are in `evidence/`; prior `.3` reports are archived.

@@ -1,93 +1,85 @@
 # WP13 validation evidence
 
-Read `../DEPLOYMENT.md`, `../MODEL_BUNDLE.md` and `../RECOVERY.md` with these
-machine-readable reports. All local tests use disposable synthetic data and
-owned temporary resources. No production database, infrastructure change or
-public exposure occurred.
+Read `../DEPLOYMENT.md`, `../MODEL_BUNDLE.md`, `../RECOVERY.md` and
+`../REVIEW.md` alongside these reports. Tests use disposable synthetic data;
+no production deployment, public exposure or homelab modification occurred in
+the review/fix task. DevOps owns platform changes and activation evidence.
 
-- `capacity.json`: read-only SSH host/RAM/load/storage measurement, with UTC
-  capture time and raw output; primary ARM Pi vs AMD64 Proxmox and separate HDD.
-- `base-images.json`: public registry index digests and native architectures.
-- `local-candidate.json`: pre-release local ARM64 install/upgrade, stale-backup
-  rejection, repeat upgrade, bounded ledger work, restart with no training host
-  or provider, network boundaries, memory/latency and new-environment restore.
-  This report is explicitly candidate validation, not a GHCR release receipt.
+## Corrected current candidate
 
-Local environment: macOS ARM64, Docker Linux VM ~7.75 GiB, Python 3.12.14,
-uv 0.12.19, Bun 1.4.2. Full native release validation passed 484 backend tests with one existing
-optional backend skip; the suite includes six targeted recovery/bundle tests.
-Dashboard: 16 tests, ESLint/typecheck/build pass. Ruff/format/whitespace pass.
-The release workflow repeats the full checks and native image drill on AMD64
-and ARM64 before publishing. Release `v0.1.0-wp13.3` succeeded in
-[run 36866480857](https://github.com/Pieter-OHearn/grid-oracle/actions/runs/36866480857).
+`release.json` contains actual GHCR multi-platform version@digest pins for
+[prerelease v0.1.0-wp13.4](https://github.com/Pieter-OHearn/grid-oracle/releases/tag/v0.1.0-wp13.4),
+source `9e726efa1ffac737bc35c645e6d52841a0205a3a`, rebased onto main
+`897ff95772c822f3fac5c08d38357c0a9dd51f36` (WP12 PR #107 integration).
+[Release run 36884062642](https://github.com/Pieter-OHearn/grid-oracle/actions/runs/36884062642)
+passed all tests, both native builds/drills, immutable release assembly and
+both fresh-runner pulls/restore drills. `native-{amd64,arm64}.json` records
+candidate validation; `released-{amd64,arm64}.json` records actual GHCR pulls.
 
-Observed failures were fixed, not converted into successes: normal Docker
-client credential/metadata context timed out; an isolated client config with
-the same runtime succeeded. YAML flow-list tmpfs options needed quotes. The
-synthetic fixture writer needed its own writable override, while serving stays
-read-only. An internal-only Docker network does not provide a reliable host
-port path on this runtime; only frontend attaches to the edge network, with
-loopback staging publication. API/DB remain private. The bounded ledger probe
-uses a declared simulated time, not wall-clock provider work.
+Each report passes twelve checks: initial empty/pre-ledger comparison; backup
+before bootstrap/schema upgrade to `20260929_05`; stale-schema rejection;
+removed-ledger rejection before DDL; fresh repeated upgrade; native scientific
+libraries/bounded ledger backfill; non-root read-only serving; private metrics;
+offline saved-forecast restart; unpublished DB/API and loopback frontend;
+corrupt live artifact rejection with intact backup; new-volume restore with
+all ten lineage table hashes, 88 forecast output hashes, model-bundle closure
+and identical saved public responses. Replacement runtime mounts are distinct
+from the recovery-set mounts. New receipts use streaming recovery format v2.
 
-The measured HDD backup path, production secret/role creation, real bundle,
-representative loaded-host measurements, app/DB trace spans and public ingress
-are production release prerequisites; they are never represented by synthetic
-or same-disk local test evidence.
+Local rebased validation: Python 3.12.14, locked uv 0.12.19, 499 backend tests
+passed with one existing optional skip, including twelve targeted ops tests;
+Bun 1.4.2, twenty dashboard tests, typecheck/lint/build; Ruff/format/whitespace
+passed. The twelve ops tests include v1 compatibility, actual live-mount
+corruption, null pre-ledger comparison, missing-ledger preflight, legacy
+EVALUATE blocking and a 24 MiB lineage memory regression with peak Python
+allocation below 8 MiB. Full native release checks repeat these suites.
 
-Native CI first built both architectures successfully, then exposed host UID
-copy/cleanup failures for application-owned 0600 artifacts on Linux. The drill
-now copies with the same non-root UID in a network-disabled tools container and
-only relaxes synthetic temporary directories for owned cleanup. Failed runs
-36864322438 / prerelease v0.1.0-wp13.1 are retained as superseded diagnostics;
-no failed version is reused or represented as a released image.
+Released-digest observations (100 GETs, one client, synthetic fixture):
 
-The second Linux copy attempt found metadata ownership on an existing host-owned
-destination. The final copy creates its own target directory under the permitted
-fixture parent, so files and directories have the application UID throughout.
-CodeQL also flagged generated fixture passwords written to temporary files.
-The synthetic-only DB now uses trust authentication on the internal unpublished
-network; no fixture password exists. Production SOPS/password-file separation
-in the homelab proposal remains required. No alert was dismissed or suppressed.
-
-- `release.json`: actual GHCR multi-platform index pins for prerelease
-  `v0.1.0-wp13.3`, source `d22b650d221c256ef41a077d1eef1d52a8323b7e`,
-  [published receipt](https://github.com/Pieter-OHearn/grid-oracle/releases/tag/v0.1.0-wp13.3).
-- `native-amd64.json` / `native-arm64.json`: successful nine-check native
-  candidate reports from that release run. Both include full lineage/output
-  and bundle hashes, saved-forecast restart, network checks and measurements.
-- `local-released-disk-full.json`: failed released-digest attempt retained as
-  diagnostic evidence. Registry pulls worked, but the shared local Docker VM
-  reached 100% of its 59 GiB disk and PostgreSQL could not write its init file.
-  No unrelated images/build caches were pruned. Fresh native CI runners perform
-  released-digest acceptance; this failed report is never counted as passed.
-
-The final workflow-only follow-up verifies pulled released digests on fresh
-native runners and does not change the source packaged in the `.3` images.
-It uses the committed release receipt on PRs and the just-published receipt on
-future tag runs, with read-only registry permission for this verification job.
-
-- `released-amd64.json` / `released-arm64.json`: **passed** fresh-runner
-  installation/recovery from the actual `.3` version@digest indexes in
-  [run 36867960802](https://github.com/Pieter-OHearn/grid-oracle/actions/runs/36867960802)
-  on validation source `e79360df8ac98094072a261429b5ab43519d55d5`.
-  Each passed all nine checks and restored all ten lineage tables, 88 forecast
-  output hashes, two publication records and the pinned model bundle. Training
-  machines/providers were absent; exact saved forecast responses survived
-  restart and a new-environment restore.
-
-Released-digest observations (100 GETs, one client, synthetic fixtures):
-
-| Native host | GET p95 | Restore | Worker peak RSS |
+| Native host | GET p95 | Restore including negative live-mount check | Worker peak RSS |
 | --- | --- | --- | --- |
-| amd64 | 31.84 ms | 18.1 s | 223.2 MiB |
-| arm64 | 38.68 ms | 17.04 s | 210.54 MiB |
+| amd64 | 43.49 ms | 22.17 s | 222.34 MiB |
+| arm64 | 41.61 ms | 21.12 s | 210.61 MiB |
 
+Serving memory samples are about 70 MiB API/256 MiB cap, 51 MiB DB/512 MiB cap
+and 3 MiB frontend/64 MiB cap. Worker cap is 768 MiB; tools cap is 256 MiB.
 These are fresh GitHub runner measurements, not loaded homelab or real-data
-inference SLOs. Each report records the exact three image pins, schema revision,
-receipt/bundle hashes, per-table hashes and memory caps/usage. Backfill remains
-one worker/event; the measured workload is a 24-revision synthetic ledger
-probe, with no provider requests or production prediction throughput claim.
-Only the two released image references actually downloaded by the failed local
-drill were removed afterward; its frontend was never pulled. Existing images,
-volumes and shared build caches were preserved.
+inference SLOs. Backfill is one worker/event with 24 synthetic ledger revisions,
+zero provider requests and no production prediction throughput claim.
+
+## Discovery and retained history
+
+- `capacity.json`: authorized read-only SSH host/RAM/load/storage measurement;
+  primary ARM Pi NVMe and proposed separate AMD64-host HDD.
+- `base-images.json`: pinned public registry indexes and native platforms.
+- `local-candidate.json`: earlier local ARM64 nine-check candidate validation,
+  not current corrected-image or GHCR acceptance.
+- `v0.1.0-wp13.3/`: original receipt and four successful nine-check reports,
+  source `d22b650d221c256ef41a077d1eef1d52a8323b7e`. Runs 36866480857 and
+  36867960802 passed the prior checks. This image predates the five findings
+  and must not be promoted as the corrected candidate.
+- `local-released-disk-full.json`: earlier failed `.3` pull/drill. Registry
+  access worked but the shared 59 GiB Docker VM filled during PG init. Only
+  two own downloaded image references were removed; unrelated images, volumes
+  and shared caches were preserved. Fresh native CI avoids that disk limit.
+
+Failures remain failures: original Docker credential/metadata timeout was
+resolved with an isolated client config. Tmpfs quoting, fixture-only writer
+mounts, Linux UID copy/cleanup and simulated ledger time were corrected.
+Failed `.1`/`.2` tags (runs 36864322438/36865467747) were never reused and
+published no release. CodeQL password-fixture alerts were repaired with trust
+only on the unpublished synthetic DB; production secret separation is required.
+
+During review validation, PR run 36884060650 built the corrected candidates
+successfully but still read the old `.3` receipt. Its released jobs failed on
+the newly added empty/pre-ledger comparison with a missing provenance table,
+confirming the historical defect. It is superseded by the successful `.4`
+release run and the subsequent PR run using the committed `.4` receipt.
+
+The real model bundle, provenance-aware prediction/publication/evaluation
+adapters, physical off-primary transfer/provisioning, representative loaded-host
+measurements, application/DB trace spans and public-ingress policy remain
+activation dependencies. Synthetic or same-disk evidence does not satisfy
+those production gates. Large v1 recovery inventories retain their original
+algorithm and need adequate memory or their original pinned tools image;
+new v2 receipts avoid whole-table materialization.
