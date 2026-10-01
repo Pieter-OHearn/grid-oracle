@@ -422,8 +422,31 @@ def main():
         # Restore from copied archive/artifacts into a new Docker volume and
         # project, without any mount of the original application artifact tree.
         recovered, values2, _ = configs[1]
-        shutil.rmtree(recovered / "recovery")
-        shutil.copytree(directory / "recovery", recovered / "recovery")
+        # Content-addressed files are owned 0600 by UID10001 on Linux. Copy
+        # with that same UID, never weaken production artifact permissions.
+        run(
+            "docker",
+            "run",
+            "--rm",
+            "--network",
+            "none",
+            "--read-only",
+            "--cap-drop",
+            "ALL",
+            "--security-opt",
+            "no-new-privileges:true",
+            "--user",
+            "10001:10001",
+            "--entrypoint",
+            "python",
+            "-v",
+            f"{directory / 'recovery'}:/source:ro",
+            "-v",
+            f"{recovered / 'recovery'}:/target",
+            images["api"],
+            "-c",
+            "import shutil; shutil.copytree('/source','/target',dirs_exist_ok=True)",
+        )
         values2["ARTIFACTS"] = str(recovered / "recovery/artifacts")
         values2["BUNDLE"] = str(recovered / "recovery/bundle.json")
         values2["BUNDLE_SHA256"] = values["BUNDLE_SHA256"]
@@ -493,7 +516,37 @@ def main():
                     report.setdefault("cleanup_errors", []).append(str(cleanup_error))
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(json.dumps(report, indent=2) + "\n")
-        shutil.rmtree(temporary)
+        # Only synthetic, randomly named drill directories are relaxed for
+        # their host owner's deletion; runtime source mounts remain read-only.
+        try:
+            run(
+                "docker",
+                "run",
+                "--rm",
+                "--network",
+                "none",
+                "--read-only",
+                "--cap-drop",
+                "ALL",
+                "--security-opt",
+                "no-new-privileges:true",
+                "--user",
+                "10001:10001",
+                "--entrypoint",
+                "python",
+                "-v",
+                f"{temporary}:/cleanup",
+                images["api"],
+                "-c",
+                "import os; from pathlib import Path; "
+                "[p.chmod(0o777) for p in Path('/cleanup').rglob('*') "
+                "if p.is_dir() and p.stat().st_uid == os.getuid()]",
+            )
+            shutil.rmtree(temporary)
+        except Exception as cleanup_error:
+            report.setdefault("cleanup_errors", []).append(str(cleanup_error))
+            args.output.write_text(json.dumps(report, indent=2) + "\n")
+            raise
     print(f"Passed {len(report['checks'])} staging/recovery checks")
 
 
