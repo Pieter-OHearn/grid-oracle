@@ -46,8 +46,7 @@ def scheduler_tick(engine, season: int) -> None:
 
 
 def worker_tick(engine) -> bool:
-    from pipeline.orchestration import JobLedger
-    from pipeline.scheduler import _run_durable_job
+    from pipeline.orchestration import EVALUATE, JobBlocked, JobLedger
 
     # The existing handler deliberately blocks unavailable provenance-aware
     # prediction/publication. Never enable the legacy automatic training path.
@@ -57,6 +56,10 @@ def worker_tick(engine) -> bool:
     if job is None:
         return False
     try:
+        if job.kind == EVALUATE:
+            raise JobBlocked("bundle-aware evaluation adapter is not configured")
+        from pipeline.scheduler import _run_durable_job
+
         _run_durable_job(job, engine)
     except Exception as exc:
         ledger.finish(job, "gridoracle-single-worker", exc)

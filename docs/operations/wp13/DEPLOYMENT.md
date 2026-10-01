@@ -274,3 +274,14 @@ GridOracle delivery contract PR #106 is merged as `a79766c`; WP11 PR #105 is
 merged as `1994c6e`. Registry semantics:
 [Docker manifest inspection](https://docs.docker.com/reference/cli/docker/buildx/imagetools/inspect/)
 and [GHCR digest pulls](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry).
+
+## Application review corrections
+
+The owner-requested review and five fixes are recorded in [REVIEW.md](REVIEW.md).
+EVALUATE jobs are blocked until the evaluation adapter accepts the declared
+bundle; the serving worker never invokes the legacy latest-model selector.
+Recovery compares actual live mounts, supports pre-ledger rollback targets and
+rejects removed migration ledgers. New v2 lineage inventories stream within
+the tools memory budget; v1 reading retains historical hash semantics.
+The old `.3` release is historical and must not be promoted as the corrected
+candidate. Current corrected release/evidence is listed after validation below.

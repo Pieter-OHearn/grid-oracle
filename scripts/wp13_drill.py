@@ -224,6 +224,17 @@ def main():
         tool(
             0,
             "-m",
+            "scripts.wp13_recovery",
+            "compare",
+            "--directory",
+            "/recovery",
+            "--receipt-sha256",
+            initial_receipt,
+        )
+        report["checks"].append("empty pre-ledger recovery comparison succeeds")
+        tool(
+            0,
+            "-m",
             "scripts.wp13_migrate",
             "--backup",
             "/recovery",
@@ -276,6 +287,51 @@ def main():
         (directory / "recovery").chmod(0o777)
         dump(0, "gridoracle")
         current_receipt = seal(0)
+        compose(
+            0,
+            "exec",
+            "-T",
+            "db",
+            "psql",
+            "-U",
+            "gridoracle_admin",
+            "-d",
+            "gridoracle",
+            "-c",
+            "ALTER TABLE alembic_version RENAME TO wp13_saved_revision",
+        )
+        try:
+            try:
+                tool(
+                    0,
+                    "-m",
+                    "scripts.wp13_migrate",
+                    "--backup",
+                    "/recovery",
+                    "--receipt-sha256",
+                    current_receipt,
+                )
+            except RuntimeError as error:
+                assert "schema changed since backup" in str(error)
+            else:
+                raise ValueError("missing migration ledger was incorrectly accepted")
+        finally:
+            compose(
+                0,
+                "exec",
+                "-T",
+                "db",
+                "psql",
+                "-U",
+                "gridoracle_admin",
+                "-d",
+                "gridoracle",
+                "-c",
+                "ALTER TABLE wp13_saved_revision RENAME TO alembic_version",
+            )
+        report["checks"].append(
+            "migration rejects a removed revision ledger before DDL"
+        )
         tool(
             0,
             "-m",
@@ -422,6 +478,7 @@ def main():
         # Content-addressed files are owned 0600 by UID10001 on Linux. Copy
         # with that same UID, never weaken production artifact permissions.
         shutil.rmtree(recovered / "recovery")  # empty, owned by the host runner
+        shutil.rmtree(recovered / "artifacts")
         run(
             "docker",
             "run",
@@ -443,10 +500,10 @@ def main():
             f"{recovered}:/target",
             images["api"],
             "-c",
-            "import shutil; shutil.copytree('/source','/target/recovery')",
+            "import shutil; shutil.copytree('/source','/target/recovery'); "
+            "shutil.copytree('/source/artifacts','/target/artifacts'); "
+            "shutil.copyfile('/source/bundle.json','/target/bundle.json')",
         )
-        values2["ARTIFACTS"] = str(recovered / "recovery/artifacts")
-        values2["BUNDLE"] = str(recovered / "recovery/bundle.json")
         values2["BUNDLE_SHA256"] = values["BUNDLE_SHA256"]
         tool(
             1,
@@ -474,6 +531,60 @@ def main():
             "--no-acl",
             "--exit-on-error",
             input=(recovered / "recovery/database.dump").read_bytes(),
+        )
+        # Corrupt only the live replacement tree; the sealed recovery set must
+        # remain valid. This catches accidentally verifying the backup mount.
+        artifact_path = (
+            compose(
+                1,
+                "exec",
+                "-T",
+                "db",
+                "psql",
+                "-U",
+                "gridoracle_admin",
+                "-d",
+                "gridoracle",
+                "-Atc",
+                "SELECT artifact_path FROM raw_provider_snapshots LIMIT 1",
+            )
+            .decode()
+            .strip()
+        )
+        tool(
+            1,
+            "-c",
+            "from pathlib import Path; "
+            f"(Path('/artifacts')/{artifact_path!r}).write_bytes(b'corrupt')",
+            writable=True,
+        )
+        try:
+            try:
+                tool(
+                    1,
+                    "-m",
+                    "scripts.wp13_recovery",
+                    "compare",
+                    "--directory",
+                    "/recovery",
+                    "--receipt-sha256",
+                    receipt,
+                )
+            except RuntimeError as error:
+                assert "restored artifact tree differs" in str(error)
+            else:
+                raise ValueError("corrupt replacement mount was incorrectly accepted")
+        finally:
+            tool(
+                1,
+                "-c",
+                "import shutil; "
+                f"shutil.copyfile('/recovery/artifacts/{artifact_path}', "
+                f"'/artifacts/{artifact_path}')",
+                writable=True,
+            )
+        report["checks"].append(
+            "compare rejects corrupt runtime mount with an intact backup"
         )
         tool(
             1,

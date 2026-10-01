@@ -8,7 +8,12 @@ from pathlib import Path
 
 from sqlalchemy import create_engine, inspect, text
 
-from gridoracle.ops.recovery import inventory, verify_recovery_set
+from gridoracle.ops.recovery import (
+    lineage_inventory,
+    schema_revision,
+    verify_recovery_set,
+    verify_runtime_copy,
+)
 from gridoracle.ops.runtime import configure
 from scripts.db_migrate import upgrade_database
 
@@ -26,16 +31,18 @@ def migrate(directory: Path, receipt_sha256: str, *, bootstrap_empty=False) -> N
         if receipt["database"] != identity:
             raise ValueError("backup belongs to another database")
         tables = inspect(engine).get_table_names()
-        if "alembic_version" in tables:
-            with engine.connect() as conn:
-                revision = conn.execute(
-                    text("SELECT version_num FROM alembic_version")
-                ).scalar_one()
-            if revision != receipt["schema_revision"]:
-                raise ValueError("schema changed since backup; take a new backup")
+        if schema_revision(engine) != receipt["schema_revision"]:
+            raise ValueError("schema changed since backup; take a new backup")
+        artifacts = Path(os.environ["GRIDORACLE_ARTIFACT_ROOT"])
+        verify_runtime_copy(
+            receipt,
+            artifacts,
+            Path(os.environ["GRIDORACLE_BUNDLE_FILE"]),
+            os.environ["GRIDORACLE_BUNDLE_SHA256"],
+        )
         if (
-            receipt["lineage"] is not None
-            and inventory(engine, directory / "artifacts") != receipt["lineage"]
+            lineage_inventory(engine, artifacts, receipt["format"])
+            != receipt["lineage"]
         ):
             raise ValueError("lineage changed since backup; quiesce writers and repeat")
         if not tables:

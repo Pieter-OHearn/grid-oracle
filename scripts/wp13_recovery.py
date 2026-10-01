@@ -11,10 +11,17 @@ import shutil
 from datetime import UTC, datetime
 from pathlib import Path
 
-from sqlalchemy import create_engine, inspect, text
+from sqlalchemy import create_engine, text
 
-from gridoracle.ops.bundle import verify_bundle
-from gridoracle.ops.recovery import file_hash, inventory, verify_recovery_set
+from gridoracle.ops.bundle import verify_bundle, verify_selection
+from gridoracle.ops.recovery import (
+    RECOVERY_FORMAT,
+    file_hash,
+    lineage_inventory,
+    schema_revision,
+    verify_recovery_set,
+    verify_runtime_copy,
+)
 from gridoracle.ops.runtime import configure
 
 
@@ -33,16 +40,8 @@ def seal(directory: Path, artifacts: Path, bundle: Path, bundle_hash: str) -> st
     try:
         with engine.connect() as conn:
             database = conn.execute(text("SELECT current_database()")).scalar_one()
-        tables = inspect(engine).get_table_names()
-        lineage = inventory(engine, artifacts) if "forecast_runs" in tables else None
-        with engine.connect() as conn:
-            revision = (
-                conn.execute(
-                    text("SELECT version_num FROM alembic_version")
-                ).scalar_one()
-                if "alembic_version" in tables
-                else None
-            )
+        lineage = lineage_inventory(engine, artifacts)
+        revision = schema_revision(engine)
         shutil.copytree(artifacts, directory / "artifacts", symlinks=False)
         shutil.copyfile(bundle, directory / "bundle.json")
         files = {
@@ -51,7 +50,7 @@ def seal(directory: Path, artifacts: Path, bundle: Path, bundle_hash: str) -> st
             if p.is_file()
         }
         receipt = {
-            "format": "gridoracle-recovery-v1",
+            "format": RECOVERY_FORMAT,
             "created_at": datetime.now(UTC).isoformat(),
             "database": database,
             "schema_revision": revision,
@@ -64,6 +63,24 @@ def seal(directory: Path, artifacts: Path, bundle: Path, bundle_hash: str) -> st
         return file_hash(directory / "recovery.json")
     finally:
         engine.dispose()
+
+
+def compare(
+    engine,
+    directory: Path,
+    expected_receipt: str,
+    artifacts: Path,
+    bundle: Path,
+    bundle_hash: str,
+) -> None:
+    receipt = verify_recovery_set(directory, expected_receipt)
+    selected = verify_runtime_copy(receipt, artifacts, bundle, bundle_hash)
+    if lineage_inventory(engine, artifacts, receipt["format"]) != receipt["lineage"]:
+        raise ValueError("restored forecast/lineage hashes differ")
+    if schema_revision(engine) != receipt["schema_revision"]:
+        raise ValueError("restored schema revision differs")
+    if receipt["lineage"] is not None:
+        verify_selection(engine, selected)
 
 
 def main():
@@ -85,21 +102,22 @@ def main():
         return
     if not args.receipt_sha256:
         parser.error("verify/compare requires an externally retained --receipt-sha256")
-    receipt = verify_recovery_set(args.directory, args.receipt_sha256)
     if args.action == "compare":
         configure()
         engine = create_engine(os.environ["DATABASE_URL"])
         try:
-            if inventory(engine, args.directory / "artifacts") != receipt["lineage"]:
-                raise ValueError("restored forecast/lineage hashes differ")
-            with engine.connect() as conn:
-                revision = conn.execute(
-                    text("SELECT version_num FROM alembic_version")
-                ).scalar_one()
-            if revision != receipt["schema_revision"]:
-                raise ValueError("restored schema revision differs")
+            compare(
+                engine,
+                args.directory,
+                args.receipt_sha256,
+                Path(os.environ["GRIDORACLE_ARTIFACT_ROOT"]),
+                Path(os.environ["GRIDORACLE_BUNDLE_FILE"]),
+                os.environ["GRIDORACLE_BUNDLE_SHA256"],
+            )
         finally:
             engine.dispose()
+    else:
+        verify_recovery_set(args.directory, args.receipt_sha256)
     print(json.dumps({"status": "verified", "receipt_sha256": args.receipt_sha256}))
 
 

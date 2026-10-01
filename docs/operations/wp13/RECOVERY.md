@@ -41,6 +41,13 @@ but no new backup directory, SSH principal or automated rotation has yet been
 provisioned. Until that path passes an actual transfer/restore, it is a release
 blocker. Logs/traces are not part of the recovery source of truth.
 
+New receipts use `gridoracle-recovery-v2`: primary-key ordered canonical JSON
+row arrays hashed incrementally with 100-row PostgreSQL server-side batches.
+All ten immutable tables retain counts/hashes and artifact/output validation.
+The reader accepts v1 receipts using their original digest-sorted-row algorithm;
+large v1 inventories require adequate memory or their original pinned tools
+image. Do not relabel a v1 receipt as v2 or replace its external hash.
+
 ## Schema upgrade preflight
 
 Inspect the target with the integrated `scripts.db_migrate` dry-run command,
@@ -56,7 +63,8 @@ python -m scripts.wp13_migrate --backup /recovery --receipt-sha256 RECEIPT
 ```
 
 The command verifies receipt/files/bundle, database identity, age <=24 h,
-schema unchanged since backup and immutable lineage unchanged since backup,
+schema unchanged since backup (including a removed revision ledger), actual
+runtime artifact tree/selected bundle and immutable lineage unchanged since backup,
 then upgrades using the integrated inspector/Alembic ledger. A fresh **empty**
 database additionally requires explicit `--bootstrap-empty`, initializing only
 the historical SQL baseline before ledger upgrades; never attach initialization
@@ -65,7 +73,8 @@ refuses to reinitialize nonempty targets and the normal inspector refuses
 unrecognized schemas. Upgrade is not API startup behavior.
 
 For a repeat upgrade after schema changed, take a new backup: the old receipt
-is rejected. Review the migration SQL/expected locks and time budget before a
+is rejected. Changed artifacts or bundle selection also require a new coordinated
+backup. Review the migration SQL/expected locks and time budget before a
 schema-changing promotion. The deployer stops on a nonzero migration; do not
 allow subsequent up/publication. No automatic destructive downgrade exists.
 The existing compose_stack role does **not** quiesce writers; the maintenance
@@ -85,10 +94,12 @@ step is an explicit precondition, not a behavior claimed of the deployer.
 3. Mount the backed-up artifact tree and backed-up bundle in the replacement,
    read-only, with its exact SHA256. Set replacement URL files from SOPS.
    Run `scripts.wp13_recovery compare --directory /recovery
-   --receipt-sha256 RECEIPT` against the replacement. This verifies DB lineage
-   table counts/hashes, each forecast output hash, every stored artifact hash,
+   --receipt-sha256 RECEIPT` against the replacement. This verifies the **configured live** artifact/bundle mounts against the
+   sealed set, then DB lineage table counts/hashes, each forecast output hash, every stored artifact hash,
    selected bundle closure and schema revision. Require the selected bundle's
-   DB bindings before readiness.
+   DB bindings before readiness. Empty/pre-ledger rollback targets compare null
+   schema/lineage without querying missing tables; they need migration before
+   application serving, using their selected historical image contract.
 4. Start API/frontend with jobs disabled. Verify both seasons/horizons,
    publication-only exposure, exact saved forecast responses and private
    metrics/DB separation. Training machines and external providers remain
