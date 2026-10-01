@@ -79,7 +79,7 @@ flowchart LR
 
 ## Execution ledger
 
-The coordinator updates this overview when assigning or integrating work. Detailed, authoritative progress lives in each linked state record; working-branch progress is not integrated completion. WP01–08 are complete. WP09 is active; WP10 is ready to assign; WP13 may begin its limited discovery/design scope after WP01. No dependent implementation is assigned by this status update.
+The coordinator updates this overview when assigning or integrating work. Detailed, authoritative progress lives in each linked state record. WP01–08 and WP10 are integrated and complete. The owner approved WP09 on 2026-10-01 and requested its completion record in PR #104; its `complete` status becomes effective on `main` when that PR merges, with no follow-up tracking PR. WP11 is ready to assign; WP13 may begin its limited discovery/design scope after WP01. No dependent implementation is assigned by this status update.
 
 | Package / state record         | Status     | Start after            | Additional completion gate                           |
 | ------------------------------ | ---------- | ---------------------- | ---------------------------------------------------- |
@@ -91,7 +91,7 @@ The coordinator updates this overview when assigning or integrating work. Detail
 | [WP06](docs/workplans/WP06.md) | `complete` | WP05                   | Integrated as `b9439e7` through PR #99               |
 | [WP07](docs/workplans/WP07.md) | `complete` | WP06                   | Integrated as `32b1f60` through PR #101             |
 | [WP08](docs/workplans/WP08.md) | `complete` | WP06                   | Integrated as `3ad2113` through PR #102             |
-| [WP09](docs/workplans/WP09.md) | `review_ready` | WP03, WP07, WP08  | [PR #104](https://github.com/Pieter-OHearn/grid-oracle/pull/104); review and integration outstanding |
+| [WP09](docs/workplans/WP09.md) | `complete` | WP03, WP07, WP08 | Owner approved `755111d`; effective on [PR #104](https://github.com/Pieter-OHearn/grid-oracle/pull/104) merge to `main`; GitHub supplies the integrated revision |
 | [WP10](docs/workplans/WP10.md) | `complete` | WP02                   | Integrated as `867bdad` through PR #103             |
 | [WP11](docs/workplans/WP11.md) | `ready`    | WP03, WP04, WP10       | Acceptance, review and integration                   |
 | [WP12](docs/workplans/WP12.md) | `waiting`  | WP06, WP09, WP11       | Acceptance, review and integration                   |
@@ -104,7 +104,7 @@ WP13/WP14 include separate start and finish gates. Every package, including thos
 
 ## Exact next action for the next implementation agent
 
-Review the WP09 candidate on [PR #104](https://github.com/Pieter-OHearn/grid-oracle/pull/104) against its branch state and acceptance evidence; integrate it only after review. WP11 is now eligible for assignment because WP03, WP04 and WP10 are integrated. Reserve WP11 and create its isolated branch before implementation. WP12 remains gated on WP09 and WP11 integration. The frozen [v2 protocol](docs/benchmark/v2/PROTOCOL.md) and its metrics and tolerances remain unchanged.
+Merge owner-approved [PR #104](https://github.com/Pieter-OHearn/grid-oracle/pull/104) after its final checks pass. Its merge finalizes WP09 completion; this PR already contains the completion records, and GitHub supplies the exact integrated revision without a follow-up PR. WP11 is eligible for assignment because WP03, WP04 and WP10 are integrated. Reserve WP11 and create its isolated branch before implementation. WP12 still requires WP11 integration as well as the WP09 merge. The frozen [v2 protocol](docs/benchmark/v2/PROTOCOL.md) and its metrics and tolerances remain unchanged.
 
 The model winner, deployment host and public route remain unresolved; their decision gates are specified, so they need not block unrelated ready work.
 
