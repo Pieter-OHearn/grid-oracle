@@ -4,7 +4,7 @@ Formula 1 race prediction platform. Uses machine learning to predict finishing p
 
 ## Continuing development
 
-Start with [PLAN.md](PLAN.md) for the September 2026 repository review and build roadmap. The [ideal state](docs/IDEAL_STATE.md), [workplans](WORKPLANS.md), and [decisions](DECISIONS.md) describe the proposed multi-season product, prediction-engine rebuild, UI redesign and homelab deployment. These are plans; the current application has not yet been rebuilt to match them.
+Start with [PLAN.md](PLAN.md) for the build roadmap and current package status. WP01–11 are complete under the recorded integration conditions: WP01–08 and WP10 are integrated; owner-approved WP09 selection and WP11 public API/frontend completion takes effect on merge of [PR #104](https://github.com/Pieter-OHearn/grid-oracle/pull/104) and [PR #105](https://github.com/Pieter-OHearn/grid-oracle/pull/105). WP12 explanations/scorecards and operations/release gates remain separate work. The [ideal state](docs/IDEAL_STATE.md), [workplans](WORKPLANS.md), and [decisions](DECISIONS.md) define their scope; plans alone are not implementation evidence.
 
 For agent assignments, use the [execution guide and package state records](docs/workplans/README.md). A fresh agent starts at [HANDOFF.md](HANDOFF.md). The owner-approved visual direction is preserved in [the design reference](docs/design/APPROVED_UI.md).
 
