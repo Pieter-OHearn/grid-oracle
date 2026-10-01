@@ -47,6 +47,17 @@ pipeline scheduler. It does not call an F1, weather, or other provider.
    docker compose up --build
    ```
 
+   The one-shot `sample-migrate` service upgrades the dedicated sample database
+   through Alembic before the API starts. It requires the committed demo calendar
+   and never reads an external `DATABASE_URL`. API startup itself does not migrate
+   data. The new public app lists the sample season/event with no published
+   forecast; the legacy sample predictions are deliberately not published.
+
+   Nginx resolves the API through Docker DNS at request time, so the static app
+   can display a retryable error while the API is unavailable and recover when
+   it returns. Real databases continue to use the explicit, backup-gated
+   `scripts.db_migrate` operator command.
+
 3. Access the services:
 
    - **Dashboard:** http://localhost:3000

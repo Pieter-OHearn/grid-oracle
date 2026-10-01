@@ -51,6 +51,24 @@ not run. There is no deployed endpoint, real published forecast or migration/
 backfill performed here. These checks verify the public foundation, not model
 quality, a WP12 scorecard or operational release readiness.
 
+Startup review repairs: [startup.json](startup.json) records eight passing
+checks on a fresh `wp11-startup-check` Compose project/volume. A runtime-only
+override used cached API/Nginx images, disabled DB/API host ports, exposed the
+dashboard on localhost:4311 and mounted this branch's API, migration source,
+Alembic files, Nginx config and compiled assets read-only. The dashboard started
+alone (HTML/deep link 200, API 502), then `compose up --no-build --detach --wait api`
+proved DB health → successful sample migration → healthy API. Season, archive,
+sessions and both absent forecast horizons returned 200. Removing/recreating
+only the test API while reserving its old IP with an idle test container proved
+DNS recovery at a new address with the frontend ID/start time unchanged.
+Migration reran successfully. All test containers and the new volume were
+removed afterwards. Four regression tests live in `api/tests/test_migrate_sample.py`
+so the existing API CI suite executes them. The combined API/scripts suite is
+now 67 tests (45 API, 22 scripts); the 16 frontend tests, lint/typecheck/build,
+Python lint/format and generated-contract check pass. No UI change required
+replacement of the retained screenshots. A new normal Dockerfile build attempt
+still failed on registry metadata; that release limitation remains.
+
 CI dependency repair: the first API CI run failed collection because its minimal
 requirements omitted Alembic. The API development requirements now include the
 already-adopted `1.14.1` pin. A fresh requirements-only environment passed all

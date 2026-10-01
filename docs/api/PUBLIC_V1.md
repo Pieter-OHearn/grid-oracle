@@ -102,6 +102,15 @@ assets. The multi-stage Dockerfile serves `dist` with Nginx on port 3000;
 URLs and immutable caching for hashed assets. Vite development/preview uses the
 same API prefix with a local proxy to 8000. Font licenses accompany the static assets under `/font-licenses/`. No deployment is authorized.
 
+Nginx defers API resolution to Docker DNS (`127.0.0.11`, five-second DNS cache).
+It serves the app when the API is missing and re-resolves a recreated API without
+a frontend restart; the client exposes proxy failures as retryable errors.
+The default Compose sample runs `scripts.migrate_sample` as a separate one-shot
+service after database health and before API startup. This opt-in bridge only
+accepts the committed demo calendar on the dedicated disposable database;
+it does not publish legacy predictions or migrate during API startup.
+Real database upgrades retain the backup-gated operator CLI.
+
 Legacy UI is retained behind build-time `VITE_GRIDORACLE_LEGACY_UI=1`; the old
 backend routes require `GRIDORACLE_LEGACY_API=1` on a private/local operator
 service. Neither is enabled in the public container. The old/new flag exists
