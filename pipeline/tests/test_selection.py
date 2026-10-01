@@ -174,6 +174,29 @@ def test_calibration_rejects_target_corruption_and_outer_rows(frozen):
         fit_winner_calibration(predictions, labels, **kwargs)
 
 
+@pytest.mark.parametrize("block", ["train", "tune", "evaluation"])
+def test_calibration_rejects_modified_fold_boundaries(frozen, block):
+    predictions, labels, kwargs = calibration_case(frozen)
+    changed = deepcopy(kwargs["fold"])
+    if block == "evaluation":
+        changed[block] = changed[block][1:]
+    else:
+        changed[block] += changed["evaluation"]
+        kwargs["fit_races"] += changed["evaluation"]
+    with pytest.raises(ValueError, match="fold differs from registered split"):
+        fit_winner_calibration(predictions, labels, **{**kwargs, "fold": changed})
+
+
+def test_calibration_rejects_modified_fold_and_split_together(frozen):
+    predictions, labels, kwargs = calibration_case(frozen)
+    changed_splits = deepcopy(kwargs["splits"])
+    changed_fold = changed_splits["folds"][0]
+    changed_fold["train"] += changed_fold["evaluation"]
+    kwargs.update(splits=changed_splits, fold=changed_fold, fit_races=changed_fold["train"])
+    with pytest.raises(ValueError, match="split differs from registered lock"):
+        fit_winner_calibration(predictions, labels, **kwargs)
+
+
 def test_adapter_identity_cutoff_and_artifact_hash(frozen):
     frames, _, _, splits, _ = frozen
     rows = ordered_block(frames["pre_weekend"], [splits["folds"][0]["evaluation"][0]])
@@ -343,6 +366,53 @@ def test_wp03_research_storage_is_reproducible_immutable_and_cannot_publish(prov
     assert (
         store_research_output(store, replace(run, idempotency_key="wp09-research-v2"), revised, changed) != identifier
     )
+
+
+def test_wp03_stored_nondefault_forecast_reproduces_from_manifest(provenance):
+    from gridoracle.provenance.store import ProvenanceError
+
+    store, _, _ = provenance
+    field, prediction = example(4, [0.4, 0.3, 0.2, 0.1])
+    prediction["order"] = list(reversed(prediction["order"]))
+    output = coherent_output(field, prediction, {"model_sha256": "a" * 64}, seed=123, per_winner=128)
+    assert coherent_output(field, prediction, output["lineage"])["rank_marginals"] != output["rank_marginals"]
+    run = replace(
+        _run(key="wp09-reproduce-nondefault"),
+        expected_entry_count=len(field.entries),
+        input_manifest={"race_key": field.race},
+    )
+    identifier = store_research_output(store, run, output, field)
+
+    def reproduce(manifest):
+        saved = manifest["wp09_output"]
+        assert digest(saved) == manifest["wp09_output_sha256"] == digest(output)
+        restored_field = Field(**saved["field"])
+        simulation = saved["simulation"]
+        regenerated = coherent_output(
+            restored_field,
+            {"order": saved["order"], "winner": saved["winner"]},
+            saved["lineage"],
+            seed=simulation["seed"],
+            per_winner=simulation["suffix_samples_per_positive_winner"],
+        )
+        assert digest(regenerated) == manifest["wp09_output_sha256"]
+        return {
+            entry: {
+                "win_probability": regenerated["winner"][entry],
+                "conditional_top3_probability": regenerated["conditional_top3"][entry],
+                "conditional_top10_probability": regenerated["conditional_top10"][entry],
+                "rank_marginals": regenerated["rank_marginals"][entry],
+                "field_sha256": regenerated["field_sha256"],
+                "target": regenerated["target"],
+            }
+            for entry in restored_field.entries
+        }
+
+    store.verify_reproduction(identifier, reproduce)
+    assert store_research_output(store, run, output, field) == identifier
+    changed = coherent_output(field, prediction, output["lineage"], seed=124, per_winner=128)
+    with pytest.raises(ProvenanceError):
+        store_research_output(store, run, changed, field)
 
 
 def test_locks_and_retained_source_integrity():

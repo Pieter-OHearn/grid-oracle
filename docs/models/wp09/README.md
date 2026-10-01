@@ -44,8 +44,8 @@ on the same whole race/entry/target cohorts. Incumbent comparison remains N/A.
 
 Winner calibration replays the original bounded power/temperature choices on
 predictions of four earlier, held-out calibration races after fixed weight fits.
-The adapter rejects training/calibration overlap, changed targets, partial blocks
-and late label timestamps. These are out-of-sample forecasts relative to fitted
+The adapter verifies the supplied fold against the locked split and rejects
+training/calibration overlap, changed targets, partial blocks and late label timestamps. These are out-of-sample forecasts relative to fitted
 weights, but the archive's input/entry availability is unverified. Historical
 cutoff markers are preserved verbatim and never replaced with invented dates.
 
@@ -75,8 +75,10 @@ supports it. WP09 does not alter WP03's immutable publication table semantics.
 
 `store_research_output` integrates with WP03 manifests and immutable entry rows;
 it always marks these research runs `legacy_unverified`, which cannot publish.
-It persists complete expected outputs plus field/output hashes and artifact
-lineage, so retries reproduce and entry revisions cannot overwrite old outputs.
+It persists the complete forecast envelope, including simulation algorithm, seed,
+sample count and original predicted order, alongside expected entry outputs and
+field/output hashes. A stored forecast can be reconstructed without guessing
+sampler defaults; retries reproduce and entry revisions cannot overwrite old outputs.
 This is additive code, with no database migration or live database write.
 
 ## Manual selection and rollback

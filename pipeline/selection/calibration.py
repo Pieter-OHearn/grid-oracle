@@ -3,12 +3,18 @@
 from __future__ import annotations
 
 from pipeline.benchmark.artifacts import digest
+from pipeline.benchmark.contracts import verify_inputs
 from pipeline.benchmark.fitting import fit_calibrator
-from pipeline.benchmark.splits import evaluation_start
+from pipeline.benchmark.splits import evaluation_start, fold_by_id
 from pipeline.challengers.decoder import choose_power
 
 
 def fit_winner_calibration(predictions, labels, *, fit_races, fold, dataset, splits, config, powers):
+    verify_inputs(dataset, splits, config)
+    registered = fold_by_id(splits, fold["id"])
+    if fold != registered:
+        raise ValueError("fold differs from registered split")
+    fold = registered
     calibration = set(fold["calibration"])
     if set(predictions) != calibration or set(fit_races) & calibration:
         raise ValueError("calibration requires every held-out calibration race and no training overlap")

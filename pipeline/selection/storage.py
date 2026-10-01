@@ -38,6 +38,8 @@ def store_research_output(store, run, output: dict, field: Field):
         input_manifest={
             **run.input_manifest,
             "wp09_output_sha256": digest(output),
+            # Keep the entire envelope, including sampler settings and predicted order.
+            "wp09_output": output,
             "field": output["field"],
             "lineage": output["lineage"],
             "expected_outputs": {e.entry_key: e.output for e in entries},
