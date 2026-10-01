@@ -1,8 +1,9 @@
 # WP13 deployment and recovery design
 
 WP13 implements application packaging and disposable acceptance tools. The
-runtime stack and service catalog belong to **homelab**, with a separate
-proposal PR. No host provisioning, SOPS change, DNS change, production apply or
+runtime stack and service catalog belong to the **DevOps agent in homelab**.
+The owner clarified that this task prepares only the GridOracle side; do not
+edit the homelab repository or maintain its proposal PR from this task. No host provisioning, SOPS change, DNS change, production apply or
 public exposure is performed by this package. Staging fixtures are synthetic;
 restart/recovery evidence is not forecast-quality evidence.
 
@@ -77,9 +78,52 @@ to the existing policy. Do not change policy or runner hooks for GridOracle.
 Do not merge an active service proposal until production apply is authorized:
 ordinary medium/high merges can trigger automatic deployment when healthy.
 
-The proposal is kept under `homelab/docs/proposals/gridoracle/` until those
-activation conditions hold. It is concrete source for a later service PR,
-not a generated wiki file or an already provisioned runtime stack.
+The DevOps agent owns the platform proposal, its branch/validation/PR lifecycle
+and any later authorized activation. The GridOracle staging Compose file is a
+disposable acceptance fixture, not the production stack. The earlier homelab
+draft is historical context only; this task makes no further homelab changes.
+
+## DevOps handoff: application inputs and platform ownership
+
+This repository delivers the application-side inputs:
+
+- `evidence/release.json`: released `v0.1.0-wp13.3`, source revision and exact
+  multi-platform API/worker/frontend version@digest pins. Scheduler uses the
+  worker pin. DevOps copies these immutable pins into its reviewed manifest.
+- `deploy/wp13/Dockerfile` and `gridoracle/ops/runtime.py`: image users and
+  commands `api`, `worker`, `scheduler --season YYYY`; migration is an explicit
+  `python -m scripts.wp13_migrate` one-shot, never serving startup.
+- `MODEL_BUNDLE.md`: bundle identities/hash closure; runtime expects
+  `GRIDORACLE_ARTIFACT_ROOT`, `GRIDORACLE_BUNDLE_FILE` and externally pinned
+  `GRIDORACLE_BUNDLE_SHA256`. A real approved bundle is still required.
+- `RECOVERY.md` and `scripts/wp13_{migrate,recovery}.py`: quiescence, backup
+  receipt preflight, fresh-schema upgrade and new-environment restore/rollback.
+- `evidence/released-{amd64,arm64}.json` and `scripts/wp13_drill.py`: reproducible
+  released-image staging, offline restart, hash restoration and measured limits.
+
+Production URL files mount read-only as `DATABASE_URL_FILE`; DevOps provisions
+separate credentials and grants. Proposed SOPS slots (names only, no values):
+
+| Slot under `hosts/pi-node-1#gridoracle` | Consumer / permission |
+| --- | --- |
+| `api_database_url` | API reader, SELECT/USAGE only, numeric group10001 |
+| `worker_database_url` | Worker/scheduler ledger and authorized append writes, group10001 |
+| `migration_database_url` | One-shot migration administrator, group10001 |
+| `postgres_password` | PostgreSQL `POSTGRES_PASSWORD_FILE`, group70 |
+
+DevOps owns the actual service manifest, production Compose, secret-slot names
+and values, DB grants, durable paths/permissions, backup transfer/retention,
+network/firewall/DNS/TLS policy, scrape/alerts and deployment verification.
+Placement, ports and ingress below are recommendations to review against its
+current catalog and live telemetry. Only frontend serves public assets/API;
+its private9090 listener provides `/metrics` and `/ready`. API8000 and DB5432
+have no public listener. Jobs remain disabled until their production adapter,
+writer mounts and real model bundle are ready.
+
+GridOracle review can proceed on its tested release/recovery contract. DevOps
+must independently validate its configuration and obtain owner authorization
+for infrastructure activation/public exposure. This task does not message the
+DevOps agent, merge its PR, or modify its repository.
 
 ## Processes, caps and network boundaries
 
@@ -138,8 +182,8 @@ choice of public domain, ingress/tunnel/port forwarding, auth-none reason,
 rate-limit policy, IPv6 and external probe evidence. No admin, DB, metrics,
 OpenAPI or worker ingress can accompany that route.
 
-SOPS slots are named in the homelab proposal. Only the owner/deployer holds age
-keys. Secret URL/password files are declared in `compose.files`, readable only
+Proposed secret slots for DevOps are listed below. Only the owner/deployer
+holds age keys. Secret URL/password files are declared in `compose.files`, readable only
 by the consuming numeric group (0440, group 10001; DB password group 70), with
 private parent directories. Compose's local `uid/gid/mode` fields do not change
 bind-source ownership. Mount secrets read-only; do not print them, put them in
