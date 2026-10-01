@@ -111,7 +111,7 @@ WP13/WP14 include separate start and finish gates. Every package, including thos
 
 ## Exact next action for the next implementation agent
 
-Integrate owner-approved [PR #107](https://github.com/Pieter-OHearn/grid-oracle/pull/107) after its final checks pass and verify its
+Owner will merge approved [PR #107](https://github.com/Pieter-OHearn/grid-oracle/pull/107) after its final checks pass and verify its
 actual GitHub merge revision. Then reserve WP13 with the owner/coordinator and
 create an isolated branch from current `origin/main`; follow its immutable GHCR
 image/model-bundle and reviewed homelab digest-promotion contract. WP14 may begin

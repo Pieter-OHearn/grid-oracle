@@ -46,7 +46,7 @@ promotion contract introduced by PR #106. Integration does not deploy the produc
 
 ## Next Steps
 
-1. Merge owner-approved [PR #107](https://github.com/Pieter-OHearn/grid-oracle/pull/107) after final checks pass; verify its actual GitHub merge revision is on `origin/main`. The completion docs are included in the same PR.
+1. Owner will merge approved [PR #107](https://github.com/Pieter-OHearn/grid-oracle/pull/107) after final checks pass; verify its actual GitHub merge revision is on `origin/main`. The completion docs are included in the same PR.
 2. Reserve WP13 with the owner/coordinator and create an isolated branch. Start capacity/ingress/recovery evidence under its delivery contract. WP14 may start its harness after reservation; final acceptance waits for WP13 integration. WP15 remains waiting for WP13/WP14.
 3. Recheck clean image packaging, native assistive technology/devices and operational recovery under release workplans. The homelab wiki remains read-only; infrastructure mutation and deployment need applicable authorization.
 4. Read `AGENTS.md`, PLAN, DECISIONS, the execution guide and the assigned package before editing. Preserve unrelated `.codex/` and `.ticket-workflow/` work. Package state records and integrated commits establish implementation status.
