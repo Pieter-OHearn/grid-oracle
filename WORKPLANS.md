@@ -1,6 +1,6 @@
 # GridOracle implementation workplans
 
-Scope baseline: 2026-09-28; status reconciled 2026-10-01. WP01–11 are complete: WP01–08 and WP10 are integrated; owner-approved WP09 and WP11 completion takes effect on integration of [PR #104](https://github.com/Pieter-OHearn/grid-oracle/pull/104) and [PR #105](https://github.com/Pieter-OHearn/grid-oracle/pull/105), respectively. Current status and evidence live in [PLAN](PLAN.md) and the package records; the scopes below are specifications, not implementation evidence.
+Scope baseline: 2026-09-28; status reconciled 2026-10-01. WP01–11 are integrated. Owner-approved WP12 explanations and public scorecards are complete on [PR #107](https://github.com/Pieter-OHearn/grid-oracle/pull/107) integration, with review and validation in [WP12](docs/workplans/WP12.md). WP13/WP14 are ready to assign; WP15 still waits for their completion. Current status and evidence live in [PLAN](PLAN.md) and the package records; the scopes below are specifications, not implementation evidence.
 
 Read [PLAN](PLAN.md) first. [DECISIONS](DECISIONS.md) controls adopted choices and open dependencies. Finding IDs refer to [REPOSITORY_REVIEW](docs/REPOSITORY_REVIEW.md). Each package can become several focused pull requests; do not treat a package as a mandate for one large change. [Agent execution guide](docs/workplans/README.md) defines assignment, state transitions and review. Each package has its own durable state record in `docs/workplans/WPxx.md`.
 

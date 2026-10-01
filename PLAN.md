@@ -1,8 +1,13 @@
 # GridOracle build plan
 
-Updated 2026-10-01. **Current state: WP01–11 complete.**
+Updated 2026-10-01. **Current state: WP01–12 complete on WP12 PR #107 integration.**
 
-The owner accepted WP09 and WP11 on 2026-10-01 and explicitly confirmed WP01–11 are done. Their completion entries take effect on integration of [WP09 PR #104](https://github.com/Pieter-OHearn/grid-oracle/pull/104) and [WP11 PR #105](https://github.com/Pieter-OHearn/grid-oracle/pull/105), respectively. Unmerged branches do not unlock dependencies; each PR merge commit is its durable integration identity. No deployment is implied.
+WP09 and WP11 are integrated as `60c5376c5639f7fcab7db38b218ea44d48ec140d`
+and `1994c6e0afbaa3e02c89d3169181e937fa5cca34`. The independent WP12 review
+found no actionable issues at `86bade92`; the owner accepted it on 2026-10-01.
+WP12 completion and dependent consumption take effect only on [PR #107](https://github.com/Pieter-OHearn/grid-oracle/pull/107) merge.
+Its [GitHub merge revision](https://api.github.com/repos/Pieter-OHearn/grid-oracle/pulls/107) (`merge_commit_sha`) is the durable integration identity. An open PR remains
+review-ready and does not unlock dependencies. No deployment is implied.
 
 For assignment prompts, ownership rules and state transitions, read the [agent execution guide](docs/workplans/README.md). Fresh agents start at [HANDOFF](HANDOFF.md).
 
@@ -81,7 +86,7 @@ flowchart LR
 
 ## Execution ledger
 
-The coordinator updates this overview when assigning or integrating work. Detailed progress lives in each linked state record. WP01–11 are complete under the integration conditions above. WP12, WP13 and WP14 are available for assignment once their approved prerequisites are integrated into `main`. This status update does not assign dependent implementation.
+The coordinator updates this overview when assigning or integrating work. Detailed progress lives in each linked state record. WP01–11 are integrated; WP12 is complete on PR #107 integration. WP13 and WP14 are available for assignment. WP14 final acceptance still needs WP13; WP15 waits for WP13/WP14 after WP12 merges. This status update does not assign dependent implementation.
 
 | Package / state record         | Status     | Start after            | Additional completion gate                           |
 | ------------------------------ | ---------- | ---------------------- | ---------------------------------------------------- |
@@ -93,20 +98,27 @@ The coordinator updates this overview when assigning or integrating work. Detail
 | [WP06](docs/workplans/WP06.md) | `complete` | WP05                   | Integrated as `b9439e7` through PR #99               |
 | [WP07](docs/workplans/WP07.md) | `complete` | WP06                   | Integrated as `32b1f60` through PR #101             |
 | [WP08](docs/workplans/WP08.md) | `complete` | WP06                   | Integrated as `3ad2113` through PR #102             |
-| [WP09](docs/workplans/WP09.md) | `complete` | WP03, WP07, WP08 | Owner approved `755111d`; effective on [PR #104](https://github.com/Pieter-OHearn/grid-oracle/pull/104) merge to `main`; GitHub supplies the integrated revision |
+| [WP09](docs/workplans/WP09.md) | `complete` | WP03, WP07, WP08 | Integrated as `60c5376` through PR #104 |
 | [WP10](docs/workplans/WP10.md) | `complete` | WP02                   | Integrated as `867bdad` through PR #103             |
-| [WP11](docs/workplans/WP11.md) | `complete` | WP03, WP04, WP10       | Owner accepted; effective on integration of [PR #105](https://github.com/Pieter-OHearn/grid-oracle/pull/105) |
-| [WP12](docs/workplans/WP12.md) | `ready` | WP06, WP09, WP11 | Start after approved PRs #104/#105 integrate; own acceptance/review/integration remain |
-| [WP13](docs/workplans/WP13.md) | `ready`    | WP01                   | WP03, WP04, WP11 satisfied on PR #105 integration; own acceptance/review/integration remain |
-| [WP14](docs/workplans/WP14.md) | `ready`    | WP04, WP06, WP11       | Start after PR #105 integration; finish requires integrated WP09 and completed WP12/WP13 |
-| [WP15](docs/workplans/WP15.md) | `waiting`  | WP09, WP12, WP13, WP14 | Acceptance, review and integration                   |
+| [WP11](docs/workplans/WP11.md) | `complete` | WP03, WP04, WP10       | Integrated as `1994c6e` through PR #105 |
+| [WP12](docs/workplans/WP12.md) | `complete` on PR #107 merge | WP06, WP09, WP11 | Owner accepted reviewed `86bade92`; [PR #107](https://github.com/Pieter-OHearn/grid-oracle/pull/107) supplies integrated revision |
+| [WP13](docs/workplans/WP13.md) | `ready`    | WP01                   | WP03, WP04, WP11 integrated; own acceptance/review/integration remain |
+| [WP14](docs/workplans/WP14.md) | `ready`    | WP04, WP06, WP11       | WP09 integrated; WP12 satisfied on PR #107 merge; finish still requires integrated WP13 |
+| [WP15](docs/workplans/WP15.md) | `waiting`  | WP09, WP12, WP13, WP14 | WP09 integrated; WP12 satisfied on PR #107 merge; still waits for WP13/WP14 |
 | [WP16](docs/workplans/WP16.md) | `deferred` | WP15                   | Explicitly selected extension and its own acceptance |
 
 WP13/WP14 include separate start and finish gates. Every package, including those with additional dependencies, still requires acceptance, review and integration before `complete`.
 
 ## Exact next action for the next implementation agent
 
-Merge owner-approved [PR #104](https://github.com/Pieter-OHearn/grid-oracle/pull/104) after its final checks pass. Its merge finalizes WP09 completion; this PR already contains the completion records, and GitHub supplies the exact integrated revision without a follow-up PR. WP11 is eligible for assignment because WP03, WP04 and WP10 are integrated. Reserve WP11 and create its isolated branch before implementation. WP12 still requires WP11 integration as well as the WP09 merge. The frozen [v2 protocol](docs/benchmark/v2/PROTOCOL.md) and its metrics and tolerances remain unchanged.
+Integrate owner-approved [PR #107](https://github.com/Pieter-OHearn/grid-oracle/pull/107) after its final checks pass and verify its
+actual GitHub merge revision. Then reserve WP13 with the owner/coordinator and
+create an isolated branch from current `origin/main`; follow its immutable GHCR
+image/model-bundle and reviewed homelab digest-promotion contract. WP14 may begin
+its harness after reservation, but final operational regression evidence requires
+WP13 integration. WP15 remains waiting for WP13/WP14; prospective shadowing needs
+real calendar evidence. The frozen [v2 protocol](docs/benchmark/v2/PROTOCOL.md)
+and its metrics and tolerances remain unchanged.
 
 The model winner, deployment host and public route remain unresolved; their decision gates are specified, so they need not block unrelated ready work.
 
