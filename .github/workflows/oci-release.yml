@@ -1,0 +1,123 @@
+name: Immutable OCI release
+on:
+  pull_request:
+    paths: [deploy/wp13/**, gridoracle/ops/**, scripts/wp13_*, scripts/tests/test_wp13_*, .github/workflows/oci-release.yml]
+  push:
+    tags: ['v*']
+permissions:
+  contents: read
+concurrency:
+  group: oci-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  tests:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with: {version: '0.12.19'}
+      - run: uv sync --frozen --extra api --extra pipeline --group dev
+      - run: uv run --no-sync ruff check gridoracle/ops scripts/wp13_* scripts/tests/test_wp13_*
+      - run: uv run --no-sync ruff format --check gridoracle/ops scripts/wp13_* scripts/tests/test_wp13_*
+      - run: uv run --no-sync python -m pytest api/tests scripts/tests pipeline/tests -q
+      - uses: oven-sh/setup-bun@v2
+        with: {bun-version: '1.4.2'}
+      - working-directory: dashboard
+        run: bun install --frozen-lockfile && bun run test && bun run typecheck && bun run lint && bun run build
+  images:
+    needs: tests
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {arch: amd64, runner: ubuntu-24.04}
+          - {arch: arm64, runner: ubuntu-24.04-arm}
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Choose immutable candidate identity
+        env:
+          REF_NAME: ${{ github.ref_name }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            [[ "$REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.-]+)?$ ]]
+            echo "VERSION=$REF_NAME" >> "$GITHUB_ENV"
+          else
+            echo "VERSION=ci-$GITHUB_SHA" >> "$GITHUB_ENV"
+          fi
+          echo "REGISTRY=ghcr.io/${OWNER,,}" >> "$GITHUB_ENV"
+      - name: Build all native runtime candidates
+        env: {ARCH: '${{ matrix.arch }}'}
+        run: |
+          for role in api worker frontend; do
+            docker buildx build --platform "linux/$ARCH" --target "$role" \
+              --file deploy/wp13/Dockerfile --load \
+              --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
+              --label "org.opencontainers.image.revision=$GITHUB_SHA" \
+              --label "org.opencontainers.image.version=$VERSION" \
+              --tag "gridoracle-$role:candidate" .
+          done
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Native installation, schema upgrade, offline restart and recovery drill
+        run: python scripts/wp13_drill.py --candidate --output drill.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: staging-${{ matrix.arch }}
+          path: drill.json
+      - uses: docker/login-action@v3
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Push verified candidates once per version
+        if: startsWith(github.ref, 'refs/tags/')
+        env: {ARCH: '${{ matrix.arch }}'}
+        run: |
+          for role in api worker frontend; do
+            image="$REGISTRY/gridoracle-$role:$VERSION-$ARCH"
+            if docker manifest inspect "$image" >/dev/null 2>&1; then
+              echo "Refusing an existing version tag: $image" >&2; exit 1
+            fi
+            docker tag "gridoracle-$role:candidate" "$image"
+            docker push "$image"
+          done
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: images
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Assemble immutable indexes and promotion receipt
+        env:
+          OWNER: ${{ github.repository_owner }}
+          VERSION: ${{ github.ref_name }}
+        run: |
+          export REGISTRY="ghcr.io/${OWNER,,}"
+          python scripts/wp13_release.py --version "$VERSION" --output release.json
+      - name: Publish auditable release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ github.ref_name }}
+        run: |
+          prerelease=()
+          [[ "$VERSION" != *-* ]] || prerelease+=(--prerelease)
+          gh release create "$VERSION" --verify-tag "${prerelease[@]}" \
+            --title "GridOracle $VERSION" \
+            --notes "Tested native amd64/arm64 images. Promote only version@digest pins from release.json through a reviewed homelab PR. No deployment is performed." \
+            release.json
