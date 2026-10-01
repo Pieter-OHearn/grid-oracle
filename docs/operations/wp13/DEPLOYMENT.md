@@ -55,15 +55,44 @@ prune historical forecasts or shorten retention.
 
 ## Immutable release and promotion
 
-`.github/workflows/oci-release.yml` owns tests/build/release. Each version tag
-runs backend/frontend checks, builds API, worker and frontend on **native**
+`.github/workflows/oci-release.yml` owns tests/build/release. After integration,
+run **Immutable OCI release** on `main` with an explicit shared `version`
+(`vMAJOR.MINOR.PATCH`, optionally a prerelease such as `v1.2.3-rc.1`).
+There is no automatic version bump: frontend, API and worker share this version.
+The workflow fixes the main source SHA, runs backend/frontend checks, creates an
+annotated Git tag for that tested SHA, then builds/publishes all images.
+A failed release reserves its tag; fix the failure and choose a fresh version.
+Existing owner-pushed version tags remain a supported staging/release trigger.
+Each version tag runs backend/frontend checks, builds API, worker and frontend on **native**
 AMD64 and ARM64 runners, then runs the image-based install/restore drill before
 publishing either architecture. The release job assembles multi-platform GHCR
 indexes and records exact version@digest pins, source revision, architectures
 and workflow run in `release.json`. Version reuse is refused; no `latest` tag
-is produced. The scheduler uses the worker image with a different command.
+is produced. The GitHub release includes generated changelog notes (merged
+changes/contributors and comparison link), a described image/package table with
+all three digest pins, a source link, and the attached receipt. Optional
+`notes_start_tag` sets the changelog baseline; when empty GitHub selects it.
+Each image has its own OCI description label, and the multi-platform index
+repeats it as an annotation for GHCR package pages. Missing index descriptions
+fail release verification. Existing immutable images retain their original
+metadata; descriptions appear on new versions. The scheduler uses the worker
+image with a different command.
 Dependencies use `uv.lock` and `bun.lock`; base versions/index digests and
 registry architecture evidence are in `evidence/base-images.json`.
+
+Manual invocation after this workflow is merged into the default branch:
+
+```text
+gh workflow run oci-release.yml --ref main -f version=v1.2.3
+# Optional explicit changelog range:
+gh workflow run oci-release.yml --ref main -f version=v1.2.3 -f notes_start_tag=v1.2.2
+```
+
+Manual execution from feature branches is rejected. Tag creation uses the
+workflow token and continues within the same run; it does not depend on a
+second tag-push workflow being triggered. PR validation never creates tags,
+publishes images or creates releases. The dispatch UI becomes available only
+after default-branch integration. No merge is performed by this task.
 
 Promotion is a separate reviewed **homelab PR** changing literal image pins in
 `services/gridoracle/docker-compose.yml`, selected bundle hash and provenance
@@ -288,3 +317,8 @@ candidate. Corrected release `v0.1.0-wp13.4`, source `9e726efa1ffac737bc35c645e6
 passed twelve candidate and twelve released-digest checks on both architectures
 in [run 36884062642](https://github.com/Pieter-OHearn/grid-oracle/actions/runs/36884062642).
 The current receipt/reports are in `evidence/`; prior `.3` reports are archived.
+
+Release entry-point/token semantics and presentation were verified against
+[GitHub workflow dispatch documentation](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow),
+[GitHub CLI generated release notes](https://cli.github.com/manual/gh_release_create)
+and [Docker index annotations](https://docs.docker.com/reference/cli/docker/buildx/imagetools/create/).

@@ -2,18 +2,46 @@ name: Immutable OCI release
 on:
   pull_request:
     paths: [deploy/wp13/**, gridoracle/ops/**, scripts/wp13_*, scripts/tests/test_wp13_*, docs/operations/wp13/evidence/release.json, .github/workflows/oci-release.yml]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Shared release version, e.g. v1.2.3 or v1.2.3-rc.1'
+        required: true
+        type: string
+      notes_start_tag:
+        description: 'Optional changelog start tag; GitHub selects the baseline when empty'
+        required: false
+        type: string
   push:
     tags: ['v*']
 permissions:
   contents: read
 concurrency:
-  group: oci-${{ github.ref }}
+  group: oci-${{ inputs.version || github.ref_name }}
   cancel-in-progress: false
 jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.identity.outputs.version }}
+      source: ${{ steps.identity.outputs.source }}
+      publish: ${{ steps.identity.outputs.publish }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Resolve fixed source and shared version
+        id: identity
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          NOTES_START_TAG: ${{ inputs.notes_start_tag }}
+        run: python -m scripts.wp13_release_start prepare
   tests:
+    needs: prepare
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with: {ref: '${{ needs.prepare.outputs.source }}'}
       - uses: astral-sh/setup-uv@v6
         with: {version: '0.12.19'}
       - run: uv sync --frozen --extra api --extra pipeline --group dev
@@ -24,8 +52,29 @@ jobs:
         with: {bun-version: '1.4.2'}
       - working-directory: dashboard
         run: bun install --frozen-lockfile && bun run test && bun run typecheck && bun run lint && bun run build
+  tag:
+    if: github.event_name == 'workflow_dispatch'
+    needs: [prepare, tests]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: '${{ needs.prepare.outputs.source }}'}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Create immutable Git tag for the tested main revision
+        env:
+          RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
+          RELEASE_SOURCE: ${{ needs.prepare.outputs.source }}
+        run: python -m scripts.wp13_release_start create-tag
+      # GITHUB_TOKEN pushes do not start another tag workflow. The current run
+      # continues into image publication, without requiring a PAT or recursion.
   images:
-    needs: tests
+    if: >-
+      always() && needs.prepare.result == 'success' && needs.tests.result == 'success' &&
+      (needs.tag.result == 'success' || needs.tag.result == 'skipped')
+    needs: [prepare, tests, tag]
     strategy:
       fail-fast: false
       matrix:
@@ -38,19 +87,16 @@ jobs:
       packages: write
     steps:
       - uses: actions/checkout@v4
+        with: {ref: '${{ needs.prepare.outputs.source }}'}
       - uses: docker/setup-buildx-action@v3
-      - name: Choose immutable candidate identity
+      - name: Set resolved image identity
         env:
-          REF_NAME: ${{ github.ref_name }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+          SOURCE: ${{ needs.prepare.outputs.source }}
           OWNER: ${{ github.repository_owner }}
         run: |
-          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
-            [[ "$REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.-]+)?$ ]]
-            echo "VERSION=$REF_NAME" >> "$GITHUB_ENV"
-          else
-            echo "VERSION=ci-$GITHUB_SHA" >> "$GITHUB_ENV"
-          fi
-          echo "REGISTRY=ghcr.io/${OWNER,,}" >> "$GITHUB_ENV"
+          printf '%s\n' "VERSION=$VERSION" "SOURCE=$SOURCE" \
+            "REGISTRY=ghcr.io/${OWNER,,}" >> "$GITHUB_ENV"
       - name: Build all native runtime candidates
         env: {ARCH: '${{ matrix.arch }}'}
         run: |
@@ -58,7 +104,7 @@ jobs:
             docker buildx build --platform "linux/$ARCH" --target "$role" \
               --file deploy/wp13/Dockerfile --load \
               --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
-              --label "org.opencontainers.image.revision=$GITHUB_SHA" \
+              --label "org.opencontainers.image.revision=$SOURCE" \
               --label "org.opencontainers.image.version=$VERSION" \
               --tag "gridoracle-$role:candidate" .
           done
@@ -72,13 +118,13 @@ jobs:
           name: staging-${{ matrix.arch }}
           path: drill.json
       - uses: docker/login-action@v3
-        if: startsWith(github.ref, 'refs/tags/')
+        if: github.event_name != 'pull_request' && needs.prepare.outputs.publish == 'true'
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Push verified candidates once per version
-        if: startsWith(github.ref, 'refs/tags/')
+        if: github.event_name != 'pull_request' && needs.prepare.outputs.publish == 'true'
         env: {ARCH: '${{ matrix.arch }}'}
         run: |
           for role in api worker frontend; do
@@ -90,14 +136,17 @@ jobs:
             docker push "$image"
           done
   release:
-    if: startsWith(github.ref, 'refs/tags/')
-    needs: images
+    if: >-
+      always() && needs.prepare.result == 'success' && needs.images.result == 'success' &&
+      github.event_name != 'pull_request' && needs.prepare.outputs.publish == 'true'
+    needs: [prepare, images]
     runs-on: ubuntu-24.04
     permissions:
       contents: write
       packages: write
     steps:
       - uses: actions/checkout@v4
+        with: {ref: '${{ needs.prepare.outputs.source }}'}
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
@@ -107,28 +156,32 @@ jobs:
       - name: Assemble immutable indexes and promotion receipt
         env:
           OWNER: ${{ github.repository_owner }}
-          VERSION: ${{ github.ref_name }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+          RELEASE_SOURCE: ${{ needs.prepare.outputs.source }}
         run: |
           export REGISTRY="ghcr.io/${OWNER,,}"
-          python scripts/wp13_release.py --version "$VERSION" --output release.json
+          python scripts/wp13_release.py --version "$VERSION" --output release.json --notes-output image-notes.md
       - name: Publish auditable release assets
         env:
           GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ github.ref_name }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+          NOTES_START_TAG: ${{ inputs.notes_start_tag }}
         run: |
           prerelease=()
           [[ "$VERSION" != *-* ]] || prerelease+=(--prerelease)
-          gh release create "$VERSION" --verify-tag "${prerelease[@]}" \
+          changelog=()
+          [[ -z "$NOTES_START_TAG" ]] || changelog+=(--notes-start-tag "$NOTES_START_TAG")
+          gh release create "$VERSION" --verify-tag "${prerelease[@]}" "${changelog[@]}" \
             --title "GridOracle $VERSION" \
-            --notes "Tested native amd64/arm64 images. Promote only version@digest pins from release.json through a reviewed homelab PR. No deployment is performed." \
+            --generate-notes --notes-file image-notes.md \
             release.json
   released-staging:
     # A fresh runner pulls the published indexes; candidate checks alone do not
     # demonstrate registry-to-runtime installation/recovery.
     if: >-
-      always() && needs.tests.result == 'success' && needs.images.result == 'success' &&
+      always() && needs.prepare.result == 'success' && needs.tests.result == 'success' && needs.images.result == 'success' &&
       (github.event_name == 'pull_request' || needs.release.result == 'success')
-    needs: [tests, images, release]
+    needs: [prepare, tests, images, release]
     strategy:
       fail-fast: false
       matrix:
@@ -141,6 +194,7 @@ jobs:
       packages: read
     steps:
       - uses: actions/checkout@v4
+        with: {ref: '${{ needs.prepare.outputs.source }}'}
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
       - uses: docker/login-action@v3
@@ -152,9 +206,9 @@ jobs:
       - name: Select the published release receipt
         env:
           GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ github.ref_name }}
+          VERSION: ${{ needs.prepare.outputs.version }}
         run: |
-          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+          if [[ "$GITHUB_EVENT_NAME" != pull_request ]]; then
             gh release download "$VERSION" --pattern release.json
           else
             cp docs/operations/wp13/evidence/release.json release.json
