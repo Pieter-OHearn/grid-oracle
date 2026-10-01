@@ -172,3 +172,53 @@ def test_release_refuses_index_without_description(tmp_path, monkeypatch):
     )
     with pytest.raises(ValueError, match="package description"):
         release.main()
+
+
+def test_staging_changelog_lists_real_commits_and_preserves_compare_link(
+    tmp_path, monkeypatch
+):
+    from scripts.wp13_release_notes import changelog
+
+    subprocess.run(["git", "init", str(tmp_path)], check=True, capture_output=True)
+    monkeypatch.chdir(tmp_path)
+    Path("file").write_text("old")
+    subprocess.run(["git", "add", "file"], check=True)
+    base = [
+        "git",
+        "-c",
+        "user.name=Fixture",
+        "-c",
+        "user.email=fixture@example.invalid",
+        "commit",
+        "-m",
+    ]
+    subprocess.run([*base, "previous"], check=True, capture_output=True)
+    subprocess.run(["git", "tag", "v1.2.2"], check=True)
+    Path("file").write_text("new")
+    subprocess.run(["git", "add", "file"], check=True)
+    subprocess.run(
+        [*base, "feat(ops): add descriptions [staging]"],
+        check=True,
+        capture_output=True,
+    )
+    source = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
+    comparison = (
+        "**Full Changelog**: https://github.com/fixture/repo/compare/v1.2.2...v1.2.3"
+    )
+    notes = changelog(comparison, source, "fixture/repo")
+    assert "add descriptions \\[staging\\]" in notes
+    assert "previous" not in notes
+    assert f"https://github.com/fixture/repo/commit/{source}" in notes
+    assert comparison in notes
+
+
+def test_merged_pr_changelog_is_preserved_without_duplicate_commit_list(monkeypatch):
+    from scripts.wp13_release_notes import changelog
+
+    git = Mock()
+    monkeypatch.setattr(subprocess, "check_output", git)
+    body = (
+        "## What's Changed\n* Fix recovery by @owner in #108\n\n**Full Changelog**: URL"
+    )
+    assert changelog(body, SHA, "fixture/repo") == body
+    git.assert_not_called()

@@ -69,7 +69,8 @@ publishing either architecture. The release job assembles multi-platform GHCR
 indexes and records exact version@digest pins, source revision, architectures
 and workflow run in `release.json`. Version reuse is refused; no `latest` tag
 is produced. The GitHub release includes generated changelog notes (merged
-changes/contributors and comparison link), a described image/package table with
+changes/contributors and comparison link; commit-list fallback for unmerged
+staging ranges), a described image/package table with
 all three digest pins, a source link, and the attached receipt. Optional
 `notes_start_tag` sets the changelog baseline; when empty GitHub selects it.
 Each image has its own OCI description label, and the multi-platform index
