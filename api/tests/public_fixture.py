@@ -21,7 +21,13 @@ from gridoracle.provenance import (
 from scripts.db_migrate import LEGACY_CORE_TABLES, upgrade_database
 
 
-def build_fixture(database_url: str, artifact_dir: Path, *, probabilities=None):
+def build_fixture(
+    database_url: str,
+    artifact_dir: Path,
+    *,
+    probabilities=None,
+    horizon_probabilities=None,
+):
     engine = create_engine(
         database_url,
         connect_args={"check_same_thread": False}
@@ -194,6 +200,8 @@ def build_fixture(database_url: str, artifact_dir: Path, *, probabilities=None):
     for year in (2022, 2026):
         issued = datetime(year, 5, 1, tzinfo=UTC)
         for horizon in ("pre_weekend", "post_qualifying"):
+            if horizon_probabilities and horizon == "post_qualifying":
+                issued = datetime(year, 5, 3, 18, tzinfo=UTC)
             run_id = store.create_forecast_run(
                 ForecastRunInput(
                     race_id=year,
@@ -213,6 +221,8 @@ def build_fixture(database_url: str, artifact_dir: Path, *, probabilities=None):
                 )
             )
             values = probabilities if probabilities is not None else [1 / 22] * 22
+            if horizon_probabilities is not None:
+                values = horizon_probabilities[horizon]
             store.add_entry_outputs(
                 run_id,
                 [

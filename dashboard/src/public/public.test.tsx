@@ -19,6 +19,7 @@ const run: PublishedRun = {
   event_id: 1,
   horizon: 'pre_weekend',
   published_at: '2022-05-01T10:00:00Z',
+  source_name: null,
   provenance: 'verified',
   freshness: {
     state: 'verified_as_of_cutoff',

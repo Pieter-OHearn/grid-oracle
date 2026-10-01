@@ -15,6 +15,9 @@ MODELS = [
     public.SessionIndex,
     public.RunIndex,
     public.ErrorResponse,
+    public.HistoricalPerformance,
+    public.EventPerformance,
+    public.LivePerformance,
 ]
 
 
@@ -56,7 +59,14 @@ def outputs():
         lines.append(f"export interface {name} {{")
         # Defaults serialize in responses, so clients always receive every property.
         for key, value in schema["properties"].items():
-            lines.append(f"  {key}: {ts(value)};")
+            rendered = ts(value)
+            if len(f"  {key}: {rendered};") > 100 and " | " in rendered:
+                lines.append(f"  {key}:")
+                choices = rendered.split(" | ")
+                lines.extend(f"    | {choice}" for choice in choices[:-1])
+                lines.append(f"    | {choices[-1]};")
+            else:
+                lines.append(f"  {key}: {rendered};")
         lines.append("}")
     return {
         ROOT / "dashboard/src/public/contract.ts": "\n".join(lines) + "\n",

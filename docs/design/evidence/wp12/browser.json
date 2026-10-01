@@ -1,0 +1,191 @@
+{
+  "fixture": "WP12 synthetic forecast/correction database; historical metrics are the actual retained WP09 evaluation",
+  "checks": [
+    {
+      "name": "Text headers have readable width instead of the inherited narrow rank column",
+      "passed": true
+    },
+    {
+      "name": "Stored 20% to 25% official win chance gives +5.0 percentage points; zero and unavailable distinct; 22 entries",
+      "passed": true
+    },
+    {
+      "name": "Driver detail retains unknown winner probability and explains unsupported position/retirement outcomes",
+      "passed": true
+    },
+    {
+      "name": "Optional chart remains lazy with accessible full-field table",
+      "passed": true
+    },
+    {
+      "name": "axe WCAG A/AA: forecast comparison light",
+      "passed": true
+    },
+    {
+      "name": "axe WCAG A/AA: forecast comparison dark",
+      "passed": true
+    },
+    {
+      "name": "Missing comparison selection does not fabricate a probability change",
+      "passed": true
+    },
+    {
+      "name": "Historical score equals stored winner loss/hit rate; all 70 races and stored season/round identifiers visible without renumbering",
+      "passed": true
+    },
+    {
+      "name": "axe WCAG A/AA: historical scorecard",
+      "passed": true
+    },
+    {
+      "name": "Separate after-qualifying stored cohort and retained fallback; baseline comparisons preserved",
+      "passed": true
+    },
+    {
+      "name": "Original run/result revision pairs retained; latest unscored correction remains unavailable",
+      "passed": true
+    },
+    {
+      "name": "axe WCAG A/AA: result corrections",
+      "passed": true
+    },
+    {
+      "name": "Unevaluated published horizon never reuses the other horizon score",
+      "passed": true
+    },
+    {
+      "name": "axe WCAG A/AA: methodology",
+      "passed": true
+    },
+    {
+      "name": "axe WCAG A/AA: sources",
+      "passed": true
+    },
+    {
+      "name": "Reflow 390: /seasons/2022/events/2022/field",
+      "passed": true
+    },
+    {
+      "name": "Reflow 390: /seasons/2022/record",
+      "passed": true
+    },
+    {
+      "name": "Reflow 390: /seasons/2022/events/2022/results",
+      "passed": true
+    },
+    {
+      "name": "Reflow 390: /seasons/2022/methodology",
+      "passed": true
+    },
+    {
+      "name": "Reflow 390: /seasons/2022/sources",
+      "passed": true
+    },
+    {
+      "name": "axe WCAG A/AA: mobile forecast 390",
+      "passed": true
+    },
+    {
+      "name": "Reflow 320: /seasons/2022/events/2022/field",
+      "passed": true
+    },
+    {
+      "name": "Reflow 320: /seasons/2022/record",
+      "passed": true
+    },
+    {
+      "name": "Reflow 320: /seasons/2022/events/2022/results",
+      "passed": true
+    },
+    {
+      "name": "Reflow 320: /seasons/2022/methodology",
+      "passed": true
+    },
+    {
+      "name": "Reflow 320: /seasons/2022/sources",
+      "passed": true
+    },
+    {
+      "name": "axe WCAG A/AA: mobile forecast 320",
+      "passed": true
+    },
+    {
+      "name": "Keyboard skip, horizon, results navigation and heading focus",
+      "passed": true
+    },
+    {
+      "name": "Season switching cancels old context without retaining previous roster/scores",
+      "passed": true
+    },
+    {
+      "name": "Changed entry revision suppresses incomparable deltas and preserves original values",
+      "passed": true
+    },
+    {
+      "name": "Performance error shows Retry without retained scores",
+      "passed": true
+    },
+    {
+      "name": "Performance Retry restores original stored revision history",
+      "passed": true
+    }
+  ],
+  "screenshots": [
+    "forecast-comparison.jpg",
+    "forecast-dark.jpg",
+    "historical-scorecard.jpg",
+    "post-qualifying-scorecard.jpg",
+    "result-corrections.jpg",
+    "methodology.jpg",
+    "mobile-390.jpg",
+    "mobile-320.jpg",
+    "evaluation-error.jpg"
+  ],
+  "accessibility": [
+    {
+      "name": "forecast comparison light",
+      "violations": [],
+      "incomplete": []
+    },
+    {
+      "name": "forecast comparison dark",
+      "violations": [],
+      "incomplete": []
+    },
+    {
+      "name": "historical scorecard",
+      "violations": [],
+      "incomplete": []
+    },
+    {
+      "name": "result corrections",
+      "violations": [],
+      "incomplete": []
+    },
+    {
+      "name": "methodology",
+      "violations": [],
+      "incomplete": []
+    },
+    {
+      "name": "sources",
+      "violations": [],
+      "incomplete": []
+    },
+    {
+      "name": "mobile forecast 390",
+      "violations": [],
+      "incomplete": [
+        "color-contrast"
+      ]
+    },
+    {
+      "name": "mobile forecast 320",
+      "violations": [],
+      "incomplete": [
+        "color-contrast"
+      ]
+    }
+  ],
+  "pageErrors": []
+}

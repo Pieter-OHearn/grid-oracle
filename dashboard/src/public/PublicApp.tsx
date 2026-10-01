@@ -16,6 +16,7 @@ import { useQuery } from './query';
 import { eventPath, seasonPath, switchSeasonPath } from './navigation';
 import { FieldTable, ForecastContext, Notice, QueryNotice } from './components';
 import { Panel } from '../design-system/Panel';
+import { DriverDetail, RunComparison, EventResults, Performance, Methodology } from './Trust';
 import '../design-system/tokens.css';
 import './app.css';
 
@@ -49,8 +50,8 @@ function Shell() {
   const destinations = [
     ['weekend', 'Race weekend'],
     ['events', 'Seasons / archive'],
-    ['record', 'Publication history'],
-    ['methodology', 'Data policy'],
+    ['record', 'Track record'],
+    ['methodology', 'Methodology'],
     ['sources', 'Sources'],
   ];
   return (
@@ -323,6 +324,7 @@ function ForecastBody({
             <>
               <ForecastContext run={query.data.run} />
               <FieldTable run={query.data.run} limit={full ? undefined : 5} />
+              <DriverDetail key={query.data.run.run_id} run={query.data.run} />
               {full && (
                 <>
                   <button aria-expanded={chart} onClick={() => setChart(!chart)}>
@@ -344,6 +346,7 @@ function ForecastBody({
             </>
           ))}
       </div>
+      <RunComparison season={season} eventId={eventId} />
     </>
   );
 }
@@ -375,16 +378,14 @@ function EventPage({
             <Link to={seasonPath(Number(season), 'events')}>Season archive</Link> ·{' '}
             <Link to={eventPath(Number(season), query.data.id, sessionView ? '' : 'sessions')}>
               {sessionView ? 'Forecasts' : 'Session schedule'}
+            </Link>{' '}
+            ·{' '}
+            <Link to={eventPath(Number(season), query.data.id, resultsView ? '' : 'results')}>
+              {resultsView ? 'Forecasts' : 'Results and corrections'}
             </Link>
           </p>
           {resultsView ? (
-            <Notice title="Results view unavailable">
-              <p>
-                This public foundation preserves the original event and season. Result presentation
-                is not available yet.
-              </p>
-              <Link to={eventPath(Number(season), query.data.id)}>Open published forecasts</Link>
-            </Notice>
+            <EventResults season={Number(season)} eventId={query.data.id} />
           ) : sessionView ? (
             <Sessions season={Number(season)} eventId={query.data.id} />
           ) : (
@@ -440,30 +441,20 @@ function Sessions({ season, eventId }: { season: number; eventId: number }) {
 function Policy({ sources = false }: { sources?: boolean }) {
   return (
     <>
-      <Heading title={sources ? 'Sources' : 'Data policy'} />
-      <Panel title={sources ? 'Source availability' : 'Two immutable horizons'}>
-        <div className="go-panel-body">
-          {sources ? (
-            <p>
-              Provider availability is recorded with each immutable forecast. A missing or
-              unverified timestamp is shown as unknown. No historical archive depth or live provider
-              completeness is implied by an indexed season.
-            </p>
-          ) : (
-            <>
-              <p>
-                Pre-weekend snapshots use information available before the first competitive
-                session. After-qualifying snapshots require verified final qualifying and grid
-                information before race start.
-              </p>
-              <p>
-                Missing probabilities, names and timestamps remain unknown. Published historical
-                snapshots retain their original horizon and cutoff.
-              </p>
-            </>
-          )}
-        </div>
-      </Panel>
+      <Heading title={sources ? 'Sources' : 'Methodology'} />
+      <Methodology sources={sources} />
+    </>
+  );
+}
+function Record() {
+  const { season } = useParams();
+  return (
+    <>
+      <Heading
+        title="Track record"
+        note="Stored historical diagnostics and live-issued prospective evidence, with separate information boundaries."
+      />
+      <Performance season={Number(season)} />
     </>
   );
 }
@@ -493,7 +484,7 @@ export default function PublicApp() {
           <Route path="events/:eventId/field" element={<EventPage full />} />
           <Route path="events/:eventId/sessions" element={<EventPage sessionView />} />
           <Route path="events/:eventId/results" element={<EventPage resultsView />} />
-          <Route path="record" element={<SeasonEvents history />} />
+          <Route path="record" element={<Record />} />
           <Route path="methodology" element={<Policy />} />
           <Route path="sources" element={<Policy sources />} />
           <Route path="*" element={<NotFound />} />

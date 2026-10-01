@@ -8,15 +8,18 @@ from api.schemas.public import (
     ErrorResponse,
     Event,
     EventIndex,
+    EventPerformance,
     ForecastSelection,
+    HistoricalPerformance,
     Horizon,
+    LivePerformance,
     PublishedRun,
     RunIndex,
     Season,
     SeasonIndex,
     SessionIndex,
 )
-from api.services import public
+from api.services import public, trust
 
 router = APIRouter(
     prefix="/api/v1",
@@ -91,3 +94,22 @@ def legacy_race(race_id: int, db: Session = Depends(get_db)):
     return public.project_event(
         db, public.require_event(db, rows[0]["season"], race_id)
     )
+
+
+@router.get("/performance/historical", response_model=HistoricalPerformance)
+def historical_performance():
+    return trust.historical()
+
+
+@router.get("/seasons/{season}/performance", response_model=LivePerformance)
+def live_performance(season: int, horizon: Horizon, db: Session = Depends(get_db)):
+    return trust.live(db, season, horizon)
+
+
+@router.get(
+    "/seasons/{season}/events/{event_id}/performance", response_model=EventPerformance
+)
+def event_performance(
+    season: int, event_id: int, horizon: Horizon, db: Session = Depends(get_db)
+):
+    return trust.event_performance(db, season, event_id, horizon)
