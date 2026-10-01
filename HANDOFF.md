@@ -2,35 +2,34 @@
 
 ## Goal
 
-Build a public, season-reusable F1 forecasting product with transparent pre-weekend and post-qualifying probabilities. Accuracy takes priority over model type. Serve on initially free homelab infrastructure, with separate experiments on the owner's 5060-equipped PC or M1 Mac when their capabilities are verified.
+Build a public, season-reusable F1 forecasting product with transparent pre-weekend and post-qualifying probabilities. Accuracy takes priority over model type. Initially use free data and homelab infrastructure, with separately authorized research compute and deployment.
 
 ## Current Progress
 
-Review and planning are complete; application implementation has **not** started. The owner approved the latest dashboard design on 2026-09-28. Start with [PLAN](PLAN.md), [agent execution guide](docs/workplans/README.md) and the assigned package's state record. **WP01 is the next ready package.** PLAN and the records carry live status; this handoff is an entry point.
+WP01–11 are complete as confirmed by the owner on 2026-10-01. WP01–08 and WP10 are integrated; owner-approved WP09 and WP11 completion takes effect when PR #104 and PR #105, respectively, merge into `main`. These branch records do not claim those merges have already happened. [PLAN](PLAN.md) and [WP11](docs/workplans/WP11.md) carry the matching completion entry and integration condition. PR #105's merge commit is the integration identity; no hash is invented before merge.
 
-The review documents 36 findings; WORKPLANS defines 16 packages. The evidence archive contains 40 public responses across 92 races, with a reproducible descriptive qualifying-order baseline on 91 races. Its results are not the current model's score or a validated as-of benchmark. Scope, acceptance, rollback and decision gates are documented.
+WP11 implements the approved WP10 design with season-aware public API resources, publication-only forecasts, generated DTOs, caching/cancellation, historical labels, explicit data/error states, accessible responsive tables and static packaging. Its final application repair is `11cabbfa6448add1e7b914cc19912d0327f1b797` (equivalent to originally tested `5fcf06c`). The owner accepted original reviewed head `b2e7c32`, whose checks pass; the equivalent remotely rebased head is `d584524` before this final documentation commit. Branch: `feature/wp11-season-aware-public-app`; worktree: `/private/tmp/grid-oracle-wp11`; original base: `d0a13d0`; current rebased integration base: `a79766cead5dd90849d5884a86508cab45485e27`. The newer deployment-promotion contract from PR #106 is preserved.
 
-The planning baseline is branch `main`, commit `934c23575d156049af8c3bcd2e28bf9ba91afeec`. Re-check current Git state. Planning documents/reference/state records are local changes, not a committed checkpoint. Existing `.codex/` and `.ticket-workflow/` work predates this package and must be preserved. Before isolated worktree assignment, include only the intended planning changes in the chosen base revision so agents receive them.
+WP09 is owner-approved complete on PR #104, with its measured baseline-retention result and limitations retained. WP12, WP13 and WP14 are ready for assignment once their approved prerequisites integrate; their own completion/release gates remain. None is assigned by this wrap-up. Public model explanations and performance scorecards remain WP12 work.
 
 ## What Worked
 
-- Review-time checks passed: 205 pipeline tests, 25 API tests, three frontend tests, Python lint/format, frontend lint/format/typecheck/build. These are historical checks, not verification of later code. Detailed evidence is in [repository review](docs/REPOSITORY_REVIEW.md).
-- The offline evidence audit reproduced the archived data summary; 40 response hashes were verified. See [evidence instructions](docs/evidence/README.md).
-- The existing stack already includes XGBoost. Repair temporal evaluation, data lineage and immutable publication before comparing replacement models.
-- The owner approved a restrained dashboard with F1 typography/timing-table details. Use [approved UI](docs/design/APPROVED_UI.md), which supersedes the older design reference.
+- WP11 validation: 67 API/script tests, 16 frontend tests, lint/format/typecheck, generated-contract checks and production build. GitHub checks pass at the accepted head.
+- Retained evidence covers a 22-entry field, historical refresh/season switching, 33 browser checks, seven native PostgreSQL contract checks and nine screenshots. Eight additional disposable Compose checks prove migration ordering, frontend startup with no API and proxy recovery after an API IP change without restarting the frontend.
+- Nginx resolves the API through Docker DNS at request time. A separate sample migration service upgrades only the committed disposable demo before API startup; legacy demo predictions remain unpublished.
+- Contracts: [PUBLIC_V1](docs/api/PUBLIC_V1.md), [lineage](docs/provenance/FORECAST_LINEAGE_CONTRACT.md), [season/target](docs/domain/SEASON_AND_TARGET_CONTRACT.md). Evidence: [WP11 captures and reports](docs/design/evidence/wp11/README.md).
+- The owner-approved restrained F1 design remains the UI source of truth. The preserved approval snapshot is unchanged.
 
 ## What Didn't Work
 
-- Existing scores are not trustworthy performance evidence: reverse-time testing, hindsight bootstrap replay, mutable forecasts and score-gap “confidence” are documented defects. No trained artifact/current dataset was available to measure the deployed model.
-- The existing local environment lacked FastAPI. API tests ran successfully in an isolated dependency environment; WP01 must make the supported setup reproducible.
-- The first visual concepts felt too generic. Do not restart with the rejected Journal treatment or ask the owner to approve the same selected identity again.
-- Homelab capacity, public ingress and backups remain unmeasured/unresolved. The wiki is **read-only**, and its contents do not authorize execution or deployment. Exact GPU/VRAM/OS and machine memory also need verification.
+- Clean Docker image builds still time out fetching Nginx registry metadata. Current source/config/assets passed startup/recovery tests using cached exact-version runtimes; a clean image build remains release verification.
+- Historical team colors have no temporal schema contract, so strips remain neutral with date-valid names. Unknown values remain null; no forecast or historical branding is invented.
+- Native screen-reader/device/participant tests and live published-data verification remain release checks. No deployment or real-data migration occurred; all WP11 test services and disposable volumes are removed.
+- Legacy model scores and the archived qualifying baseline are not validated prospective model performance. WP09/WP12 and the later integration/release packages must establish that evidence.
 
 ## Next Steps
 
-1. Read `AGENTS.md`, PLAN, DECISIONS and the execution guide; check current instructions and working tree.
-2. Assign/reserve [WP01](docs/workplans/WP01.md). Follow its acceptance criteria in WORKPLANS and keep its record current. Do not run the legacy bootstrap on a real database.
-3. For non-ticket work, create a conventional branch such as `feature/wpNN-short-description`, `bugfix/wpNN-short-description` or `docs/wpNN-short-description` before editing. Before review, create a focused Conventional Commit, push the branch, and open a ready-for-review GitHub PR to `main`. Record its number, URL and hash. Only then leave the package `review_ready` with checks, evidence, rollback notes and an exact next action. The coordinator records PR review/integration before `complete` and then unlocks dependencies.
-4. Continue through the documented order. WP02 settles targets/season contracts; WP03–06 establish trustworthy history and benchmarks; UI/operations can progress on the documented parallel tracks.
-
-No implementation agent has been launched and no public deployment authorized by this planning handoff.
+1. Merge owner-accepted [WP09 PR #104](https://github.com/Pieter-OHearn/grid-oracle/pull/104) and [WP11 PR #105](https://github.com/Pieter-OHearn/grid-oracle/pull/105) into `main` with required checks passing. Their completion entries then become integrated; verify the GitHub merge revisions before consuming them as prerequisites.
+2. The owner/coordinator may then reserve WP12, WP13 or WP14 in their state records and create isolated branches. Read the delivery contract introduced by PR #106 before operational work.
+3. Recheck clean image packaging, native assistive technology/devices and operational recovery under the later release workplans. The homelab wiki remains read-only; infrastructure mutation and deployment need their applicable authorization.
+4. Read `AGENTS.md`, PLAN, DECISIONS, the execution guide and the assigned package before editing. Preserve unrelated `.codex/` and `.ticket-workflow/` work. Package state records and integrated commits, not old planning prose, establish implementation status.

@@ -1,0 +1,13 @@
+{
+  "database": "Disposable local PostgreSQL 16, synthetic fixture only",
+  "passed": true,
+  "checks": [
+    "Native ruleset/coverage projection",
+    "Date-valid historical alias binding",
+    "Native JSON allowlist and 22-entry probabilities",
+    "Native timezone-aware timestamp serialization",
+    "Unpublished horizon and run remain private",
+    "Latest session revisions",
+    "Cross-season resource isolation"
+  ]
+}

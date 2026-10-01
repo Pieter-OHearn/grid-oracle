@@ -1,8 +1,10 @@
 # Immutable forecast lineage contract
 
 WP03 introduces an additive, append-only storage contract. It does not change
-the legacy `predictions` read path; WP11 is responsible for switching public
-reads after it consumes these records.
+the legacy `predictions` read path by itself. The owner-accepted WP11 foundation
+in [PR #105](https://github.com/Pieter-OHearn/grid-oracle/pull/105) switches public
+reads to these approved publication records when integrated. The public projection
+is documented in [PUBLIC_V1](../api/PUBLIC_V1.md).
 
 ## Artifact manifests
 

@@ -1,0 +1,19 @@
+{
+  "date": "2026-10-01",
+  "project": "wp11-startup-check",
+  "scope": "Disposable local Compose project and new sample volume; no existing service or real database touched",
+  "runtime": "PostgreSQL 16 and cached gridoracle-wp02-api/quro-frontend images; current API/migration source, Nginx config and compiled assets mounted read-only",
+  "nginx_version": "1.28.2",
+  "checks": [
+    {"name": "Frontend starts before API exists", "passed": true, "root_status": 200, "historical_deep_link_status": 200, "api_status": 502},
+    {"name": "PostgreSQL health precedes successful one-shot migration, which precedes API startup", "passed": true},
+    {"name": "Public sample season index", "passed": true, "status": 200, "season": 2024},
+    {"name": "Public sample event archive", "passed": true, "status": 200, "event_id": 1, "published_horizons": 0},
+    {"name": "Both horizons return no_published_forecast without publishing legacy predictions", "passed": true, "status": 200},
+    {"name": "Empty session array", "passed": true, "status": 200},
+    {"name": "Sample migration reruns successfully on API recreation", "passed": true},
+    {"name": "Proxy recovers after API gets a different IP with no frontend restart", "passed": true, "old_api_ip": "172.20.0.4", "new_api_ip": "172.20.0.5", "frontend_identity_and_start_time_unchanged": true, "status": 200}
+  ],
+  "unit_checks": "Four new API-CI regression tests: idempotent upgrade preserves facts, opt-in missing/disabled is refused, another calendar is refused before schema mutation",
+  "clean_image_build": "Registry metadata for nginx:1.28.2-alpine still fails with DeadlineExceeded/context deadline exceeded; cached exact-version runtime verification does not claim a clean image build"
+}

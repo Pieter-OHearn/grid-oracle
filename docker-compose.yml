@@ -21,6 +21,20 @@ services:
       timeout: 5s
       retries: 5
 
+  sample-migrate:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    environment:
+      # This service is deliberately tied to the disposable Compose database,
+      # rather than an operator-supplied DATABASE_URL.
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      GRIDORACLE_SAMPLE_DATA: "1"
+    command: ["python", "-m", "scripts.migrate_sample"]
+    depends_on:
+      db:
+        condition: service_healthy
+
   api:
     build:
       context: .
@@ -33,6 +47,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      sample-migrate:
+        condition: service_completed_successfully
     healthcheck:
       test:
         [

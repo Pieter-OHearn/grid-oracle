@@ -1,0 +1,32 @@
+.go-public select {
+  max-width: 100%;
+}
+.go-public .go-topbar > span {
+  overflow-wrap: anywhere;
+}
+.go-public main {
+  overflow-wrap: anywhere;
+}
+.go-public .go-session-list {
+  padding-left: 20px;
+}
+.go-public .go-session-list li {
+  margin-bottom: 16px;
+}
+.go-public .go-chart {
+  padding: 18px;
+  min-width: 0;
+}
+.go-public .go-event-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+}
+.go-public h1:focus,
+.go-public main:focus {
+  outline: 3px solid var(--go-accent);
+  outline-offset: 3px;
+}
+.go-public .go-panel:focus-within {
+  overflow: visible;
+}

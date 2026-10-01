@@ -1,26 +1,8 @@
-import type { CSSProperties, ReactNode } from 'react';
+import type { CSSProperties } from 'react';
 import { change, horizonLabels, percentage, sampleTiming, total } from './sample';
 import type { DataState, Entry, Horizon, Journey } from './sample';
 
-export function Panel({
-  title,
-  children,
-  note,
-}: {
-  title: string;
-  children: ReactNode;
-  note?: string;
-}) {
-  return (
-    <section className="go-panel">
-      <header className="go-panel-heading">
-        <h2>{title}</h2>
-        {note && <p className="go-muted">{note}</p>}
-      </header>
-      {children}
-    </section>
-  );
-}
+export { Panel } from './Panel';
 export function SampleNotice() {
   return (
     <p className="go-sample">Design reference · Synthetic sample data · Not a real forecast</p>
