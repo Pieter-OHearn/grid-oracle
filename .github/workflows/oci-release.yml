@@ -1,0 +1,231 @@
+name: Immutable OCI release
+on:
+  pull_request:
+    paths: [deploy/wp13/**, gridoracle/ops/**, scripts/wp13_*, scripts/tests/test_wp13_*, docs/operations/wp13/evidence/release.json, .github/workflows/oci-release.yml]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Stable shared release version, e.g. v1.2.3 (main only)'
+        required: true
+        type: string
+      notes_start_tag:
+        description: 'Optional changelog start tag; defaults to the last published release'
+        required: false
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: oci-${{ inputs.version || github.ref_name }}
+  cancel-in-progress: false
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.identity.outputs.version }}
+      source: ${{ steps.identity.outputs.source }}
+      publish: ${{ steps.identity.outputs.publish }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Resolve fixed source and shared version
+        id: identity
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          NOTES_START_TAG: ${{ inputs.notes_start_tag }}
+        run: python -m scripts.wp13_release_start prepare
+  tests:
+    needs: prepare
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: '${{ needs.prepare.outputs.source }}'}
+      - uses: astral-sh/setup-uv@v6
+        with: {version: '0.12.19'}
+      - run: uv sync --frozen --extra api --extra pipeline --group dev
+      - run: uv run --no-sync ruff check gridoracle/ops scripts/wp13_* scripts/tests/test_wp13_*
+      - run: uv run --no-sync ruff format --check gridoracle/ops scripts/wp13_* scripts/tests/test_wp13_*
+      - run: uv run --no-sync python -m pytest api/tests scripts/tests pipeline/tests -q
+      - uses: oven-sh/setup-bun@v2
+        with: {bun-version: '1.4.2'}
+      - working-directory: dashboard
+        run: bun install --frozen-lockfile && bun run test && bun run typecheck && bun run lint && bun run build
+  tag:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && needs.prepare.outputs.publish == 'true'
+    needs: [prepare, tests]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: '${{ needs.prepare.outputs.source }}'}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Create immutable Git tag for the tested main revision
+        env:
+          RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
+          RELEASE_SOURCE: ${{ needs.prepare.outputs.source }}
+        run: python -m scripts.wp13_release_start create-tag
+      # Tag pushes do not trigger this workflow. The current main run continues
+      # into publication after the native candidate checks.
+  images:
+    if: >-
+      always() && needs.prepare.result == 'success' && needs.tests.result == 'success' &&
+      (needs.tag.result == 'success' || needs.tag.result == 'skipped')
+    needs: [prepare, tests, tag]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {arch: amd64, runner: ubuntu-24.04}
+          - {arch: arm64, runner: ubuntu-24.04-arm}
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: '${{ needs.prepare.outputs.source }}'}
+      - uses: docker/setup-buildx-action@v3
+      - name: Set resolved image identity
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+          SOURCE: ${{ needs.prepare.outputs.source }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          printf '%s\n' "VERSION=$VERSION" "SOURCE=$SOURCE" \
+            "REGISTRY=ghcr.io/${OWNER,,}" >> "$GITHUB_ENV"
+      - name: Build all native runtime candidates
+        env: {ARCH: '${{ matrix.arch }}'}
+        run: |
+          for role in api worker frontend; do
+            docker buildx build --platform "linux/$ARCH" --target "$role" \
+              --file deploy/wp13/Dockerfile --load \
+              --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
+              --label "org.opencontainers.image.revision=$SOURCE" \
+              --label "org.opencontainers.image.version=$VERSION" \
+              --tag "gridoracle-$role:candidate" .
+          done
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Native installation, schema upgrade, offline restart and recovery drill
+        run: python scripts/wp13_drill.py --candidate --output drill.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: staging-${{ matrix.arch }}
+          path: drill.json
+      - uses: docker/login-action@v3
+        if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && needs.prepare.outputs.publish == 'true'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Push verified candidates once per version
+        if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && needs.prepare.outputs.publish == 'true'
+        env: {ARCH: '${{ matrix.arch }}'}
+        run: |
+          for role in api worker frontend; do
+            image="$REGISTRY/gridoracle-$role:$VERSION-$ARCH"
+            if docker manifest inspect "$image" >/dev/null 2>&1; then
+              echo "Refusing an existing version tag: $image" >&2; exit 1
+            fi
+            # Docker's load/push exporter uses Docker media types, which drop
+            # index annotations. Export OCI from the same verified build cache.
+            docker buildx build --platform "linux/$ARCH" --target "$role" \
+              --file deploy/wp13/Dockerfile --provenance=false \
+              --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
+              --label "org.opencontainers.image.revision=$SOURCE" \
+              --label "org.opencontainers.image.version=$VERSION" \
+              --output type=image,push=true,oci-mediatypes=true --tag "$image" .
+            docker pull "$image"
+            candidate_id=$(docker image inspect --format '{{.Id}}' "gridoracle-$role:candidate")
+            published_id=$(docker image inspect --format '{{.Id}}' "$image")
+            [[ "$candidate_id" == "$published_id" ]] || {
+              echo "Published OCI config differs from tested candidate: $role" >&2; exit 1;
+            }
+          done
+  release:
+    if: >-
+      always() && needs.prepare.result == 'success' && needs.images.result == 'success' &&
+      github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && needs.prepare.outputs.publish == 'true'
+    needs: [prepare, images]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: '${{ needs.prepare.outputs.source }}', fetch-depth: 0}
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Assemble immutable indexes and promotion receipt
+        env:
+          OWNER: ${{ github.repository_owner }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+          RELEASE_SOURCE: ${{ needs.prepare.outputs.source }}
+        run: |
+          export REGISTRY="ghcr.io/${OWNER,,}"
+          python scripts/wp13_release.py --version "$VERSION" --output release.json --notes-output image-notes.md
+      - name: Publish auditable release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+          NOTES_START_TAG: ${{ inputs.notes_start_tag }}
+        run: |
+          python -m scripts.wp13_release_notes --receipt release.json \
+            --repository "$GITHUB_REPOSITORY" --start-tag "$NOTES_START_TAG" \
+            --output release-notes.md
+          gh release create "$VERSION" --verify-tag \
+            --title "GridOracle $VERSION" \
+            --notes-file release-notes.md \
+            release.json
+  released-staging:
+    # A fresh runner pulls the published indexes; candidate checks alone do not
+    # demonstrate registry-to-runtime installation/recovery.
+    if: >-
+      always() && needs.prepare.result == 'success' && needs.tests.result == 'success' && needs.images.result == 'success' &&
+      (github.event_name == 'pull_request' || needs.release.result == 'success')
+    needs: [prepare, tests, images, release]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {arch: amd64, runner: ubuntu-24.04}
+          - {arch: arm64, runner: ubuntu-24.04-arm}
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: '${{ needs.prepare.outputs.source }}'}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - uses: docker/login-action@v3
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Select the published release receipt
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" != pull_request ]]; then
+            gh release download "$VERSION" --pattern release.json
+          else
+            cp docs/operations/wp13/evidence/release.json release.json
+          fi
+      - name: Install and recover the released digest on a fresh native runner
+        run: python scripts/wp13_drill.py --release-json release.json --output released-drill.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: released-staging-${{ matrix.arch }}
+          path: released-drill.json

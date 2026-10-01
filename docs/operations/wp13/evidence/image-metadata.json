@@ -1,0 +1,67 @@
+{
+  "version": "v0.1.0-wp13.7",
+  "source_revision": "1942bb859a13e532c7ade24de203a38186705500",
+  "workflow_run": "36906440683",
+  "images": {
+    "api": {
+      "pin": "ghcr.io/pieter-ohearn/gridoracle-api:v0.1.0-wp13.7@sha256:e0a5ecdb40245a7a470cb8e787ce79b3f56000e073c36229d985882e644d6af1",
+      "mediaType": "application/vnd.oci.image.index.v1+json",
+      "annotations": {
+        "org.opencontainers.image.description": "GridOracle backend API serving published Formula 1 forecasts and provenance.",
+        "org.opencontainers.image.revision": "1942bb859a13e532c7ade24de203a38186705500",
+        "org.opencontainers.image.source": "https://github.com/Pieter-OHearn/grid-oracle",
+        "org.opencontainers.image.version": "v0.1.0-wp13.7"
+      },
+      "platforms": [
+        {
+          "architecture": "amd64",
+          "os": "linux"
+        },
+        {
+          "architecture": "arm64",
+          "os": "linux"
+        }
+      ]
+    },
+    "worker": {
+      "pin": "ghcr.io/pieter-ohearn/gridoracle-worker:v0.1.0-wp13.7@sha256:5607fc616ff0726d7800e37b73d2c683bb58779fb108c241f17d0e22cb92f1f6",
+      "mediaType": "application/vnd.oci.image.index.v1+json",
+      "annotations": {
+        "org.opencontainers.image.description": "GridOracle background worker and scheduler for bounded forecast jobs.",
+        "org.opencontainers.image.revision": "1942bb859a13e532c7ade24de203a38186705500",
+        "org.opencontainers.image.source": "https://github.com/Pieter-OHearn/grid-oracle",
+        "org.opencontainers.image.version": "v0.1.0-wp13.7"
+      },
+      "platforms": [
+        {
+          "architecture": "amd64",
+          "os": "linux"
+        },
+        {
+          "architecture": "arm64",
+          "os": "linux"
+        }
+      ]
+    },
+    "frontend": {
+      "pin": "ghcr.io/pieter-ohearn/gridoracle-frontend:v0.1.0-wp13.7@sha256:9ea4e980ad0082187d75362df7037d2e74cb369fb4450c10ac670267d9d1ccbd",
+      "mediaType": "application/vnd.oci.image.index.v1+json",
+      "annotations": {
+        "org.opencontainers.image.description": "GridOracle web dashboard for Formula 1 forecasts, results and provenance.",
+        "org.opencontainers.image.revision": "1942bb859a13e532c7ade24de203a38186705500",
+        "org.opencontainers.image.source": "https://github.com/Pieter-OHearn/grid-oracle",
+        "org.opencontainers.image.version": "v0.1.0-wp13.7"
+      },
+      "platforms": [
+        {
+          "architecture": "amd64",
+          "os": "linux"
+        },
+        {
+          "architecture": "arm64",
+          "os": "linux"
+        }
+      ]
+    }
+  }
+}

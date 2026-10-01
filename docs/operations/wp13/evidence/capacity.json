@@ -1,0 +1,21 @@
+{
+  "measured_at": "2026-10-01T12:28:29.573351+00:00",
+  "method": "read-only SSH; no host configuration or data modified",
+  "samples": {
+    "pi-node-1": {
+      "exit_code": 0,
+      "stdout": "pi-node-1\naarch64\n 14:28:30 up 31 days, 20:56,  1 user,  load average: 0.42, 0.45, 0.54\n               total        used        free      shared  buff/cache   available\nMem:      8454602752  3618226176   345260032   243007488  5094309888  4836376576\nSwap:     2147467264   499449856  1648017408\nFilesystem        1B-blocks        Used    Available Use% Mounted on\n/dev/nvme0n1p2 984539095040 64966397952 879254007808   7% /\nNAME          SIZE TYPE MOUNTPOINTS\nloop0           2G loop \nzram0           2G disk [SWAP]\nnvme0n1     931.5G disk \n\u251c\u2500nvme0n1p1   512M part /boot/firmware\n\u2514\u2500nvme0n1p2   931G part /\n--procs-- -----------------------memory---------------------- ---swap-- -----io---- -system-- ----------cpu----------\n   r    b         swpd         free         buff        cache   si   so    bi    bo   in   cs  us  sy  id  wa  st  gu\n   1    0       487744       336368       326560      4648352    0    0     4   128 2123    9   8   2  90   0   0   0\n   0    0       487744       347264       326560      4648560    0    0     0   440 3134 5171   6   0  92   1   0   0\n   1    0       487744       320160       326560      4648560    0    0     0     0 1566 2953   8   1  92   0   0   0\n   0    0       487744       315904       326560      4648560    0    0     0     0 1030 1772   9   0  91   0   0   0\n   0    0       487744       313472       326560      4648560    0    0     0     0 4119 8139   4   2  95   0   0   0\n   0    0       487744       324224       326560      4648560    0    0     0     0 1437 2466   2   1  96   2   0   0\n",
+      "stderr": ""
+    },
+    "pve-node-1": {
+      "exit_code": 0,
+      "stdout": "pve\nx86_64\n 14:28:35 up 31 days, 20:56,  1 user,  load average: 0.35, 0.24, 0.26\n               total        used        free      shared  buff/cache   available\nMem:     16535830528 12651405312  1409499136    58458112  2892537856  3884425216\nSwap:     8589930496  4287741952  4302188544\nFilesystem         1B-blocks          Used    Available Use% Mounted on\n/dev/sda1      1967845998592 1517351129088 350458204160  82% /mnt/pve/media-hdd\nName             Type     Status     Total (KiB)      Used (KiB) Available (KiB)        %\nlocal             dir     active        98497780         7574936        85873296    7.69%\nlocal-lvm     lvmthin     active       365760512        82661875       283098636   22.60%\nmedia-hdd         dir     active      1921724608      1481788212       342244340   77.11%\n",
+      "stderr": ""
+    },
+    "storage": {
+      "exit_code": 0,
+      "stdout": "storage\n               total        used        free      shared  buff/cache   available\nMem:       536870912    37127168   201605120       61440   298200064   499743744\nSwap:      536870912    19632128   517238784\nFilesystem         1B-blocks          Used    Available Use% Mounted on\n/dev/sda1      1967845998592 1517351129088 350458204160  82% /srv/media\n/dev/sda1      1967845998592 1517351129088 350458204160  82% /srv/photos\nTARGET     SOURCE                       FSTYPE\n/srv/media /dev/sda1[/media-data/media] ext4\n# /etc/exports: the access control list for filesystems which may be exported\n#\t\tto NFS clients.  See exports(5).\n#\n# Example for NFSv2 and NFSv3:\n# /srv/homes       hostname1(rw,sync,no_subtree_check) hostname2(ro,sync,no_subtree_check)\n#\n# Example for NFSv4:\n# /srv/nfs4        gss/krb5i(rw,sync,fsid=0,crossmnt,no_subtree_check)\n# /srv/nfs4/homes  gss/krb5i(rw,sync,no_subtree_check)\n#\n/srv/media 192.168.40.11(rw,sync,no_subtree_check,no_root_squash) 192.168.40.12(rw,sync,no_subtree_check,no_root_squash)\n/srv/photos 192.168.30.10(rw,sync,no_subtree_check,no_root_squash)\n",
+      "stderr": ""
+    }
+  }
+}
