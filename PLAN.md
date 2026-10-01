@@ -93,7 +93,7 @@ The coordinator updates this overview when assigning or integrating work. Detail
 | [WP06](docs/workplans/WP06.md) | `complete` | WP05                   | Integrated as `b9439e7` through PR #99               |
 | [WP07](docs/workplans/WP07.md) | `complete` | WP06                   | Integrated as `32b1f60` through PR #101             |
 | [WP08](docs/workplans/WP08.md) | `complete` | WP06                   | Integrated as `3ad2113` through PR #102             |
-| [WP09](docs/workplans/WP09.md) | `complete` | WP03, WP07, WP08 | Owner accepted; effective on integration of [PR #104](https://github.com/Pieter-OHearn/grid-oracle/pull/104) |
+| [WP09](docs/workplans/WP09.md) | `complete` | WP03, WP07, WP08 | Owner approved `755111d`; effective on [PR #104](https://github.com/Pieter-OHearn/grid-oracle/pull/104) merge to `main`; GitHub supplies the integrated revision |
 | [WP10](docs/workplans/WP10.md) | `complete` | WP02                   | Integrated as `867bdad` through PR #103             |
 | [WP11](docs/workplans/WP11.md) | `complete` | WP03, WP04, WP10       | Owner accepted; effective on integration of [PR #105](https://github.com/Pieter-OHearn/grid-oracle/pull/105) |
 | [WP12](docs/workplans/WP12.md) | `ready` | WP06, WP09, WP11 | Start after approved PRs #104/#105 integrate; own acceptance/review/integration remain |
@@ -106,7 +106,7 @@ WP13/WP14 include separate start and finish gates. Every package, including thos
 
 ## Exact next action for the next implementation agent
 
-Integrate the owner-accepted [WP09 PR #104](https://github.com/Pieter-OHearn/grid-oracle/pull/104) and [WP11 PR #105](https://github.com/Pieter-OHearn/grid-oracle/pull/105) into `main` with required checks passing. Verify their merge revisions, then reserve WP12, WP13 or WP14 with the owner/coordinator; all remain unassigned. The clean registry-based image build, native assistive-technology/device checks and deployment/recovery evidence remain release verification. The frozen [v2 protocol](docs/benchmark/v2/PROTOCOL.md), metrics and tolerances remain unchanged.
+Merge owner-approved [PR #104](https://github.com/Pieter-OHearn/grid-oracle/pull/104) after its final checks pass. Its merge finalizes WP09 completion; this PR already contains the completion records, and GitHub supplies the exact integrated revision without a follow-up PR. WP11 is eligible for assignment because WP03, WP04 and WP10 are integrated. Reserve WP11 and create its isolated branch before implementation. WP12 still requires WP11 integration as well as the WP09 merge. The frozen [v2 protocol](docs/benchmark/v2/PROTOCOL.md) and its metrics and tolerances remain unchanged.
 
 The model winner, deployment host and public route remain unresolved; their decision gates are specified, so they need not block unrelated ready work.
 

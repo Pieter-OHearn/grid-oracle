@@ -1,0 +1,124 @@
+FFF.F                                                                    [100%]
+=================================== FAILURES ===================================
+___________ test_calibration_rejects_modified_fold_boundaries[train] ___________
+
+frozen = ({'post_qualifying':       season  round  ... qualifying_position qualifying_normalized_position
+0       2022      1  ...['uniform', 'standings', 'recent_form']}, 'block_races': 4, 'bootstrap_replicates': 2000, 'calibration_bins': 10, ...})
+block = 'train'
+
+    @pytest.mark.parametrize("block", ["train", "tune", "evaluation"])
+    def test_calibration_rejects_modified_fold_boundaries(frozen, block):
+        predictions, labels, kwargs = calibration_case(frozen)
+        changed = deepcopy(kwargs["fold"])
+        if block == "evaluation":
+            changed[block] = changed[block][1:]
+        else:
+            changed[block] += changed["evaluation"]
+            kwargs["fit_races"] += changed["evaluation"]
+>       with pytest.raises(ValueError, match="fold differs from registered split"):
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+pipeline/tests/test_selection.py:186: Failed
+___________ test_calibration_rejects_modified_fold_boundaries[tune] ____________
+
+frozen = ({'post_qualifying':       season  round  ... qualifying_position qualifying_normalized_position
+0       2022      1  ...['uniform', 'standings', 'recent_form']}, 'block_races': 4, 'bootstrap_replicates': 2000, 'calibration_bins': 10, ...})
+block = 'tune'
+
+    @pytest.mark.parametrize("block", ["train", "tune", "evaluation"])
+    def test_calibration_rejects_modified_fold_boundaries(frozen, block):
+        predictions, labels, kwargs = calibration_case(frozen)
+        changed = deepcopy(kwargs["fold"])
+        if block == "evaluation":
+            changed[block] = changed[block][1:]
+        else:
+            changed[block] += changed["evaluation"]
+            kwargs["fit_races"] += changed["evaluation"]
+>       with pytest.raises(ValueError, match="fold differs from registered split"):
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+pipeline/tests/test_selection.py:186: Failed
+________ test_calibration_rejects_modified_fold_boundaries[evaluation] _________
+
+frozen = ({'post_qualifying':       season  round  ... qualifying_position qualifying_normalized_position
+0       2022      1  ...['uniform', 'standings', 'recent_form']}, 'block_races': 4, 'bootstrap_replicates': 2000, 'calibration_bins': 10, ...})
+block = 'evaluation'
+
+    @pytest.mark.parametrize("block", ["train", "tune", "evaluation"])
+    def test_calibration_rejects_modified_fold_boundaries(frozen, block):
+        predictions, labels, kwargs = calibration_case(frozen)
+        changed = deepcopy(kwargs["fold"])
+        if block == "evaluation":
+            changed[block] = changed[block][1:]
+        else:
+            changed[block] += changed["evaluation"]
+            kwargs["fit_races"] += changed["evaluation"]
+>       with pytest.raises(ValueError, match="fold differs from registered split"):
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+pipeline/tests/test_selection.py:186: Failed
+________ test_wp03_stored_nondefault_forecast_reproduces_from_manifest _________
+
+provenance = (<gridoracle.provenance.store.ImmutableProvenanceStore object at 0x119624ce0>, Engine(sqlite:////private/var/folders/x...red_nondefault_fo0/wp03.sqlite), <gridoracle.provenance.artifacts.ContentAddressedArtifactStore object at 0x1196b3b90>)
+
+    def test_wp03_stored_nondefault_forecast_reproduces_from_manifest(provenance):
+        from gridoracle.provenance.store import ProvenanceError
+    
+        store, _, _ = provenance
+        field, prediction = example(4, [0.4, 0.3, 0.2, 0.1])
+        prediction["order"] = list(reversed(prediction["order"]))
+        output = coherent_output(field, prediction, {"model_sha256": "a" * 64}, seed=123, per_winner=128)
+        assert coherent_output(field, prediction, output["lineage"])["rank_marginals"] != output["rank_marginals"]
+        run = replace(
+            _run(key="wp09-reproduce-nondefault"),
+            expected_entry_count=len(field.entries),
+            input_manifest={"race_key": field.race},
+        )
+        identifier = store_research_output(store, run, output, field)
+    
+        def reproduce(manifest):
+            saved = manifest["wp09_output"]
+            assert digest(saved) == manifest["wp09_output_sha256"] == digest(output)
+            restored_field = Field(**saved["field"])
+            simulation = saved["simulation"]
+            regenerated = coherent_output(
+                restored_field,
+                {"order": saved["order"], "winner": saved["winner"]},
+                saved["lineage"],
+                seed=simulation["seed"],
+                per_winner=simulation["suffix_samples_per_positive_winner"],
+            )
+            assert digest(regenerated) == manifest["wp09_output_sha256"]
+            return {
+                entry: {
+                    "win_probability": regenerated["winner"][entry],
+                    "conditional_top3_probability": regenerated["conditional_top3"][entry],
+                    "conditional_top10_probability": regenerated["conditional_top10"][entry],
+                    "rank_marginals": regenerated["rank_marginals"][entry],
+                    "field_sha256": regenerated["field_sha256"],
+                    "target": regenerated["target"],
+                }
+                for entry in restored_field.entries
+            }
+    
+>       store.verify_reproduction(identifier, reproduce)
+
+pipeline/tests/test_selection.py:411: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+gridoracle/provenance/store.py:563: in verify_reproduction
+    candidate = reproduce(_loaded_json(run["input_manifest"]))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+manifest = {'expected_outputs': {'entry:00': {'conditional_top10_probability': 1.0, 'conditional_top3_probability': 0.9296875, 'f...eage': {'model_sha256': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'}, 'race_key': '2026:7', ...}
+
+    def reproduce(manifest):
+>       saved = manifest["wp09_output"]
+E       KeyError: 'wp09_output'
+
+pipeline/tests/test_selection.py:387: KeyError
+=========================== short test summary info ============================
+FAILED pipeline/tests/test_selection.py::test_calibration_rejects_modified_fold_boundaries[train]
+FAILED pipeline/tests/test_selection.py::test_calibration_rejects_modified_fold_boundaries[tune]
+FAILED pipeline/tests/test_selection.py::test_calibration_rejects_modified_fold_boundaries[evaluation]
+FAILED pipeline/tests/test_selection.py::test_wp03_stored_nondefault_forecast_reproduces_from_manifest
+4 failed, 1 passed, 30 deselected in 3.98s

@@ -1,0 +1,10 @@
+uv run --group dev ruff check api/ pipeline/ scripts/
+All checks passed!
+uv run --group dev ruff format --check api/ pipeline/ scripts/
+118 files already formatted
+cd dashboard && bun run format:check && bun run lint && bun run typecheck
+$ prettier --check .
+Checking formatting...
+All matched files use Prettier code style!
+$ eslint .
+$ tsc --noEmit

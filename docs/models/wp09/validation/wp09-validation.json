@@ -1,0 +1,101 @@
+[
+  {
+    "name": "clean-repeat",
+    "command": [
+      "/tmp/gridoracle-wp08-venv/bin/python",
+      "-m",
+      "pipeline.selection",
+      "--output",
+      "/tmp/wp09-clean"
+    ],
+    "exit_code": 0,
+    "seconds": 55.83208066702355,
+    "log": "/tmp/wp09-clean-repeat.log"
+  },
+  {
+    "name": "wp07-training",
+    "command": [
+      "/tmp/gridoracle-wp08-venv/bin/python",
+      "-m",
+      "pipeline.challengers",
+      "--output",
+      "/tmp/wp09-wp07-repro"
+    ],
+    "exit_code": 0,
+    "seconds": 75.18057516694535,
+    "log": "/tmp/wp09-wp07-training.log"
+  },
+  {
+    "name": "wp08-training",
+    "command": [
+      "/tmp/gridoracle-wp08-venv/bin/python",
+      "-m",
+      "pipeline.custom_model.experiment",
+      "--output",
+      "/tmp/wp09-wp08-repro",
+      "--backend",
+      "cpu"
+    ],
+    "exit_code": 0,
+    "seconds": 19.27390925004147,
+    "log": "/tmp/wp09-wp08-training.log"
+  },
+  {
+    "name": "make-check",
+    "command": [
+      "make",
+      "check"
+    ],
+    "exit_code": 0,
+    "seconds": 6.013155208900571,
+    "log": "/tmp/wp09-make-check.log"
+  },
+  {
+    "name": "make-test",
+    "command": [
+      "make",
+      "test"
+    ],
+    "exit_code": 0,
+    "seconds": 26.133917790954,
+    "log": "/tmp/wp09-make-test.log"
+  },
+  {
+    "name": "dashboard-build",
+    "command": [
+      "bun",
+      "run",
+      "--cwd",
+      "dashboard",
+      "build"
+    ],
+    "exit_code": 0,
+    "seconds": 2.843931333045475,
+    "log": "/tmp/wp09-dashboard-build.log"
+  },
+  {
+    "name": "wp08-retention",
+    "command": [
+      "/tmp/gridoracle-wp08-venv/bin/python",
+      "-m",
+      "docs.research.wp08.verify_artifacts"
+    ],
+    "exit_code": 0,
+    "seconds": 1.0884535419754684,
+    "log": "/tmp/wp09-wp08-retention.log"
+  },
+  {
+    "name": "wp09-acceptance",
+    "command": [
+      "/tmp/gridoracle-wp08-venv/bin/python",
+      "-m",
+      "pytest",
+      "pipeline/tests/test_selection.py",
+      "-q",
+      "--junitxml=/tmp/wp09-acceptance.xml"
+    ],
+    "exit_code": 0,
+    "seconds": 2.3157571660121903,
+    "log": "/tmp/wp09-wp09-acceptance.log"
+  }
+]
