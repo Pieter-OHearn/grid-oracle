@@ -1,0 +1,110 @@
+# Disposable local acceptance stack. Runtime Compose belongs to homelab.
+# Provide released version@sha256 pins in an explicit env file. No builds here.
+x-runtime: &runtime
+  read_only: true
+  user: "10001:10001"
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  tmpfs: ["/tmp:size=64m,mode=1777"]
+  pids_limit: 128
+  environment: &environment
+    DATABASE_URL_FILE: /run/secrets/database_url
+    GRIDORACLE_ARTIFACT_ROOT: /artifacts
+    GRIDORACLE_BUNDLE_FILE: /bundle/bundle.json
+    GRIDORACLE_BUNDLE_SHA256: ${BUNDLE_SHA256:?provide selected bundle hash}
+  secrets: [database_url]
+  volumes:
+    - ${ARTIFACTS:?provide offline artifact directory}:/artifacts:ro
+    - ${BUNDLE:?provide selected bundle file}:/bundle/bundle.json:ro
+  networks: [private]
+services:
+  db:
+    image: postgres:16.15-alpine3.23@sha256:621a761097839bdb50207afd6b87a72f38e2d718dd46c3d744828d8917c4f1e0
+    user: "70:70"
+    environment:
+      POSTGRES_USER: gridoracle_admin
+      POSTGRES_DB: gridoracle
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    secrets: [postgres_password]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    tmpfs: ["/var/run/postgresql:uid=70,gid=70"]
+    networks: [private]
+    mem_limit: 512m
+    cpus: 0.5
+    healthcheck:
+      test: [CMD, pg_isready, -U, gridoracle_admin, -d, gridoracle]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+  api:
+    <<: *runtime
+    image: ${API_IMAGE:?released version and digest required}
+    mem_limit: 256m
+    cpus: 0.5
+    depends_on:
+      db: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, python, -m, gridoracle.ops.runtime, ready]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+  worker:
+    <<: *runtime
+    image: ${WORKER_IMAGE:?released version and digest required}
+    command: [worker]
+    mem_limit: 768m
+    cpus: 0.75
+    profiles: [jobs]
+    healthcheck:
+      test: [CMD, python, -m, gridoracle.ops.runtime, check]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+  scheduler:
+    <<: *runtime
+    image: ${WORKER_IMAGE:?released version and digest required}
+    command: [scheduler, --season, "${SEASON:?explicit season required}"]
+    mem_limit: 256m
+    cpus: 0.25
+    profiles: [jobs]
+    healthcheck:
+      test: [CMD, python, -m, gridoracle.ops.runtime, check]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+  frontend:
+    image: ${FRONTEND_IMAGE:?released version and digest required}
+    user: "101:101"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    tmpfs: ["/tmp:size=32m,mode=1777"]
+    pids_limit: 64
+    mem_limit: 64m
+    cpus: 0.25
+    ports: ["127.0.0.1:${FRONTEND_PORT:-13000}:3000"]
+    networks: [private, edge]
+    healthcheck:
+      test: [CMD, wget, -q, -O, /dev/null, http://127.0.0.1:3000/health]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+  tools:
+    <<: *runtime
+    image: ${API_IMAGE:?released version and digest required}
+    entrypoint: [python]
+    profiles: [tools]
+    mem_limit: 256m
+    cpus: 0.5
+    volumes:
+      - ${ARTIFACTS}:/artifacts:ro
+      - ${BUNDLE}:/bundle/bundle.json:ro
+      - ${RECOVERY:?provide backup directory}:/recovery
+secrets:
+  database_url: {file: "${DATABASE_URL_FILE:?provide local test URL secret}"}
+  postgres_password: {file: "${POSTGRES_PASSWORD_FILE:?provide local test password}"}
+networks:
+  private: {internal: true}
+  edge: {}
+volumes:
+  pgdata:
