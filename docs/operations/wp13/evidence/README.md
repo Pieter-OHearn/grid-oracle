@@ -66,3 +66,28 @@ The final workflow-only follow-up verifies pulled released digests on fresh
 native runners and does not change the source packaged in the `.3` images.
 It uses the committed release receipt on PRs and the just-published receipt on
 future tag runs, with read-only registry permission for this verification job.
+
+- `released-amd64.json` / `released-arm64.json`: **passed** fresh-runner
+  installation/recovery from the actual `.3` version@digest indexes in
+  [run 36867960802](https://github.com/Pieter-OHearn/grid-oracle/actions/runs/36867960802)
+  on validation source `e79360df8ac98094072a261429b5ab43519d55d5`.
+  Each passed all nine checks and restored all ten lineage tables, 88 forecast
+  output hashes, two publication records and the pinned model bundle. Training
+  machines/providers were absent; exact saved forecast responses survived
+  restart and a new-environment restore.
+
+Released-digest observations (100 GETs, one client, synthetic fixtures):
+
+| Native host | GET p95 | Restore | Worker peak RSS |
+| --- | --- | --- | --- |
+| amd64 | 31.84 ms | 18.1 s | 223.2 MiB |
+| arm64 | 38.68 ms | 17.04 s | 210.54 MiB |
+
+These are fresh GitHub runner measurements, not loaded homelab or real-data
+inference SLOs. Each report records the exact three image pins, schema revision,
+receipt/bundle hashes, per-table hashes and memory caps/usage. Backfill remains
+one worker/event; the measured workload is a 24-revision synthetic ledger
+probe, with no provider requests or production prediction throughput claim.
+Only the two released image references actually downloaded by the failed local
+drill were removed afterward; its frontend was never pulled. Existing images,
+volumes and shared build caches were preserved.

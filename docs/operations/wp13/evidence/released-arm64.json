@@ -1,0 +1,129 @@
+{
+  "passed": true,
+  "mode": "released-digest",
+  "architecture": "aarch64",
+  "images": {
+    "api": "ghcr.io/pieter-ohearn/gridoracle-api:v0.1.0-wp13.3@sha256:fea750f2b804f6fab8c73bd79d19d91911ae5a6b33b126a328a26077f58e45b7",
+    "worker": "ghcr.io/pieter-ohearn/gridoracle-worker:v0.1.0-wp13.3@sha256:c76ad19c6b892da380325e19a1d7132384364c5986d254be4719e6ee97901bbc",
+    "frontend": "ghcr.io/pieter-ohearn/gridoracle-frontend:v0.1.0-wp13.3@sha256:754aa928a1fbc2e73c1e4ce382e1c81ecd9b814944b1da3957b590259868870e"
+  },
+  "checks": [
+    "backup-before-migration + explicit empty initialization + Alembic upgrade",
+    "migration refuses a stale schema backup",
+    "repeat schema upgrade with a fresh backup is idempotent",
+    "native worker image and bounded single-event ledger backfill",
+    "non-root read-only API/frontend serve 22-entry published fixture",
+    "separate private metrics listener works; public listener cannot proxy operations/admin",
+    "restart serves identical saved forecast with training/providers absent",
+    "DB/API have no published port; frontend binds loopback only",
+    "new environment restore verifies all lineage/output hashes, bundle and identical public response"
+  ],
+  "fixture": "synthetic WP11 saved forecasts; no model-quality or training claim",
+  "schema_upgrade": {
+    "from": "empty -> inspected historical baseline",
+    "to": "20260929_05",
+    "backup_receipt_sha256": "cafd6e7fb4ba9a202c0ad2b63bb57bbe40f6f516b3252af0a1141526f1cbda78"
+  },
+  "backfill": {
+    "mode": "synthetic-ledger-only",
+    "native_libraries": {
+      "xgboost": "3.2.0",
+      "pyarrow": "23.0.1",
+      "sklearn": "1.8.0"
+    },
+    "revisions": 24,
+    "events_concurrent": 1,
+    "provider_requests": 0,
+    "reconcile_p95_seconds": 0.007868407000046318,
+    "reconcile_max_seconds": 0.019538919999945392,
+    "peak_rss_mib": 210.53515625,
+    "backfill_limit": "one event / one worker; production prediction adapter remains blocked"
+  },
+  "recovery_receipt_sha256": "5abecb4d163167ef4bb2a265ca27869f99c343fc6a35adc8e0ad2fd15b5e00ba",
+  "bundle_sha256": "d9e2bd56efb92e563193dcea2f66f76971021d9c585f3a45366916ccab48b9b2",
+  "lineage": {
+    "calibrator_manifests": {
+      "count": 1,
+      "sha256": "806c23616004fdddf91b98bd14adfad8f7a568997a1898b6847a575aa77e4e54"
+    },
+    "dataset_manifests": {
+      "count": 1,
+      "sha256": "6a96a8660e2ab606899722ea84c5b76fd174244293b9e37b0a4cf3083acff08b"
+    },
+    "evaluation_runs": {
+      "count": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "feature_snapshots": {
+      "count": 1,
+      "sha256": "1949515592a32ad5875a9606449aceb5e729fd6efd3e91d8fdf7528eaccbb4aa"
+    },
+    "forecast_entry_outputs": {
+      "count": 88,
+      "sha256": "a4be6462c70bdd4723c24ac1d6a28cb9571f13ab3543162cd10296d7221db136"
+    },
+    "forecast_publications": {
+      "count": 2,
+      "sha256": "1733bbf4eca64772a92fe09b8bd8cd6a23cd6352676b8975ef3f561c7bd7e761"
+    },
+    "forecast_runs": {
+      "count": 4,
+      "sha256": "d3d040795f0e8ecb7ce949d8f9350e8e8acc8e5991d42e8b0efb80349f27d312"
+    },
+    "model_manifests": {
+      "count": 1,
+      "sha256": "e11d7f63350b791c9f8f552c902791e3613d09d2ab863f1b2e2b9ca196db9143"
+    },
+    "raw_provider_snapshots": {
+      "count": 1,
+      "sha256": "1e69f8c56e780927ec85d9e68f1a25026440db9ff77d413d2ff08b9061a21bac"
+    },
+    "result_revisions": {
+      "count": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    }
+  },
+  "latency_seconds": {
+    "samples": 100,
+    "concurrency": 1,
+    "p50": 0.03638916500005962,
+    "p95": 0.038679884999965,
+    "max": 0.04781501100001151
+  },
+  "memory": [
+    {
+      "BlockIO": "0B / 0B",
+      "CPUPerc": "0.15%",
+      "Container": "c16fe1671a6a74aaff459f53d75ccf6252559800978592ac9b6a62923a1fb61e",
+      "ID": "c16fe1671a6a",
+      "MemPerc": "26.71%",
+      "MemUsage": "68.39MiB / 256MiB",
+      "Name": "wp13-0a1b55f88a-api-1",
+      "NetIO": "1.29MB / 2.21MB",
+      "PIDs": "2"
+    },
+    {
+      "BlockIO": "65.5kB / 87.3MB",
+      "CPUPerc": "1.58%",
+      "Container": "36166b65fe6d2955e2a40401db1de6c4ee6e651e42750acede62296df4f3a24b",
+      "ID": "36166b65fe6d",
+      "MemPerc": "9.93%",
+      "MemUsage": "50.83MiB / 512MiB",
+      "Name": "wp13-0a1b55f88a-db-1",
+      "NetIO": "2.31MB / 1.46MB",
+      "PIDs": "7"
+    },
+    {
+      "BlockIO": "0B / 0B",
+      "CPUPerc": "0.00%",
+      "Container": "1d25d33b7f1e87984c0ed7d0dcd1052906a7be47a2bde4a04870e4372a9f4ef4",
+      "ID": "1d25d33b7f1e",
+      "MemPerc": "4.69%",
+      "MemUsage": "3MiB / 64MiB",
+      "Name": "wp13-0a1b55f88a-frontend-1",
+      "NetIO": "510kB / 520kB",
+      "PIDs": "2"
+    }
+  ],
+  "restore_seconds": 17.035725110000044
+}

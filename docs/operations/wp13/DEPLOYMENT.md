@@ -148,6 +148,50 @@ API reader gets SELECT/USAGE only; worker gets append/ledger writes; migration
 owns DDL; backup principal reads dumps only. Schema/bootstrap and role creation
 are maintenance actions reviewed separately from serving startup.
 
+## Public-ingress proposal for owner review (O03)
+
+The existing homelab uses private Pi-hole/Tailscale names and has no public
+records or WAN forward for these services. Recommended future public name:
+`forecasts.pieterohearn.com`, distinct from the private SSO preview. Proposed
+transport is one owner-applied WAN TCP443 forward to pi-node-2 **port8444**,
+a new isolated Traefik `gridoracle-public` TLS entry point. Port8443 already
+belongs to the agents entry point and must not be reused. Port8444 is not in
+the inspected catalog; live conflict and external firewall checks remain
+activation gates. Do not forward the shared private `websecure` entry point.
+
+Only the GridOracle Host router attaches to this new entry point, with the
+existing DNS-01 certificate resolver, frontend8090 as sole backend, no SSO
+for the approved public saved-forecast GETs, and a dedicated rate limit of
+20 requests/second with burst40 plus an initial simultaneous-request cap32.
+Nginx still proxies only `/api/v1/` reads; admin/DB/metrics/readiness never get
+a public backend. Unknown Host/SNI must have no router. No HTTP80 forward is
+needed for DNS-01 issuance. Owner must approve the DNS A/forward, forwarding
+feasibility (including ISP/CGNAT), unauthenticated-read reason and abuse budget;
+if forwarding is unavailable, return for a separately reviewed tunnel design.
+Do not add a public AAAA until equivalent IPv6 firewall and external denial
+probes pass. Do not change existing private-service DNS or routers.
+
+The activation PR must include the new entry point/Compose listener,
+GridOracle-only router, rate-limit/concurrency rules, authoritative catalog
+and owner-applied gateway policy. Probe from outside the LAN: the intended
+hostname serves saved forecasts over valid TLS; arbitrary private-service
+Host/SNI, DB5432, API8000, private ops18090, readiness/admin/metrics and any
+unapproved IPv6 path do not expose those services. Verify the private SSO
+preview separately. This is a concrete recommendation awaiting owner review,
+not public-routing authorization or a tested WAN configuration.
+
+## Package-local answers to open platform questions
+
+| Question | Proposed resolution | Remaining activation gate |
+| --- | --- | --- |
+| O02 placement/storage | Measured pi-node-1 ARM NVMe; 832 MiB serving /1,856 MiB with jobs caps | Owner placement approval and representative loaded-host headroom |
+| O03 public ingress/access | Private SSO preview; future `forecasts.pieterohearn.com` on isolated TLS8444 entry point | Owner public-domain/forward policy and external IPv4/IPv6 probes |
+| O04 off-primary retention/owner | Proxmox physical HDD dedicated path, 7 daily/4 weekly/3 monthly, Pieter as restore owner | Restricted principal/quota provisioning and actual off-disk transfer/restore |
+
+These recommendations resolve WP13's design choices without changing shared
+DECISIONS or claiming owner adoption. Production release remains gated on the
+listed conditions; synthetic staging evidence cannot discharge them.
+
 ## Existing observability
 
 Vector already ships Docker/journald logs to VictoriaLogs (90 days /50 GiB).
