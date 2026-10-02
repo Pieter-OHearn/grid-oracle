@@ -1,0 +1,66 @@
+{
+  "passed": true,
+  "fixture_lineage": {
+    "format": "wp14-fixture-lineage-v1",
+    "weekend_sha256": "4b2f5a5871de9d7574bdc0dc1a73539f4055b09146ef485996673f89a1b84937",
+    "archive": "docs/evidence/jolpica-2022-2025.tar.gz",
+    "archive_sha256": "23df6387eecb0266cfa028c43569d71e73cdfb25366900e177eec4d000db94f9",
+    "recordings": {
+      "2022-results-0.json": "545424231206080742645c24f95c1f61f55fa13d1063389e084b120590e2bd73",
+      "2022-qualifying-0.json": "a59264a8f9c10b6ac1d8aea3a9d4bf6ccf8a2700568161db3e3ac8a2e539545d"
+    },
+    "provider": "Jolpica-F1",
+    "retrieved_at": "2026-09-28 (archive retrieval; availability at race time unknown)",
+    "license": "CC BY-NC-SA 4.0",
+    "attribution": "docs/evidence/README.md#attribution-and-license",
+    "changes": "Two unmodified response members replayed; weekend.json independently authored synthetic 22-entry sprint/season-opening scenario; not real 2026 data",
+    "benchmark_lock_sha256": "fa55bee0b5abe02f3f48bc8f9971a558f69f62dd2e49f5647ca8710c9b9dc8bb"
+  },
+  "runs": {
+    "pre_weekend": "f2b8f07eb20fead13baa6285f976bb85b571334114d191aa2d7c50b2a5027502",
+    "post_qualifying": "e752b7e66135cfd3e7df843de4987615a1ca2bc4fe2b4ad79c249cbd545b75db"
+  },
+  "lineage": {
+    "raw_provider_snapshots": {
+      "count": 3,
+      "sha256": "9ae6a9fad7dd316520cf6c686f43945eab622b3111cb0b3dbb9b9cd377593677"
+    },
+    "dataset_manifests": {
+      "count": 1,
+      "sha256": "88a6c09ac96b242367516f474a04a54d1231dbd3dfe1711d6393be0ae47add67"
+    },
+    "feature_snapshots": {
+      "count": 4,
+      "sha256": "6bac17bd8f632bd59ce61cf3be54e82f150e4de5267ac76f9471357d1a9c8dd8"
+    },
+    "model_manifests": {
+      "count": 1,
+      "sha256": "8f20d2c3e8520f8830bbaddc4479524ca5f6a048ff42cfa34dbc00ae77fde6b2"
+    },
+    "calibrator_manifests": {
+      "count": 1,
+      "sha256": "f1fd602f7ed2bcd2c01eddcc20d5fdfb092e9196061fa3c21ecb8ef4e2f9cb98"
+    },
+    "forecast_runs": {
+      "count": 3,
+      "sha256": "e91eac80b60f5d682c1bb4fabb2ec88fcecbed19e59c04cf1550855ddf6c5b0c"
+    },
+    "forecast_entry_outputs": {
+      "count": 66,
+      "sha256": "dedd3ec2b403f456aaa82dd6f116805aa1301592c8c30cec7799d448f065df42"
+    },
+    "forecast_publications": {
+      "count": 3,
+      "sha256": "7256e9ec5bf97c6ef3c1933eb3155277fb4fa59abc2ab017c053d46157e6afe5"
+    },
+    "result_revisions": {
+      "count": 2,
+      "sha256": "3ec85f72020c2061a199531f8acd68ba31964a5bbe4cd19a4e67e001cd8eb641"
+    },
+    "evaluation_runs": {
+      "count": 2,
+      "sha256": "0a8824981b4c3ed5eb746d70e1f1a5af6a37c972cc5eb2d173fd37f4b8015436"
+    }
+  },
+  "scope": "synthetic test adapter; real PostgreSQL + ledger + baseline + public API; production adapter remains blocked"
+}

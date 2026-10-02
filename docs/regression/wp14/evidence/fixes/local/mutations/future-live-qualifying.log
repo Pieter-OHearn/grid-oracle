@@ -1,0 +1,76 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+__ test_future_sources_results_and_newer_model_cannot_change_issued_forecast ___
+
+replay = <scripts.regression.replay.WeekendReplay object at 0x11be930b0>
+
+    def test_future_sources_results_and_newer_model_cannot_change_issued_forecast(replay):
+        replay.complete()
+        expected_predictions = dict(replay.predictions)
+        saved = replay.public()
+        before = {k: v for k, v in replay.hashes().items() if k.startswith("forecast_")}
+        replay.fixture["entries"][0]["standings"] = 22
+        replay.fixture["entries"][0]["qualifying"] = 22
+        with replay.engine.begin() as conn:
+            conn.execute(
+                text("UPDATE qualifying_results SET grid_position=22 WHERE driver_id=1")
+            )
+            conn.execute(
+                text(
+                    "INSERT INTO model_versions (id,name,trained_at,training"
+                    "_races_count) VALUES (99,'newest invalid','2030-01-01',"
+                    "999)"
+                )
+            )
+        replay.now = time("2026-05-05T16:00:00+00:00")
+        raw = replay._artifact("providers/future", replay.fixture)
+        replay.store.record_raw_snapshot(
+            snapshot_id="future",
+            provider="synthetic future",
+            retrieved_at=replay.now,
+            source_available_at=replay.now,
+            **raw,
+        )
+        replay.result(correction=True)
+        replay.evaluate()
+        prior_post = replay.public("post_qualifying")
+        for horizon in replay.runs:
+    
+            def reproduce(_manifest, horizon=horizon):
+                prediction = replay.predict(horizon, persist=False)
+                assert prediction["order"] == expected_predictions[horizon]["order"]
+                assert prediction["winner"] == pytest.approx(
+                    expected_predictions[horizon]["winner"], abs=1e-14
+                )
+                return {entry.entry_key: entry.output for entry in replay.outputs[horizon]}
+    
+>           replay.store.verify_reproduction(replay.runs[horizon], reproduce)
+
+scripts/tests/test_wp14_postgres.py:329: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+gridoracle/provenance/store.py:563: in verify_reproduction
+    candidate = reproduce(_loaded_json(run["input_manifest"]))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+_manifest = {'field_revision': 1, 'synthetic': True, 'weather': {'availability': 'unavailable', 'rain_probability': None}}
+horizon = 'post_qualifying'
+
+    def reproduce(_manifest, horizon=horizon):
+        prediction = replay.predict(horizon, persist=False)
+>       assert prediction["order"] == expected_predictions[horizon]["order"]
+E       AssertionError: assert ['entry:20260...:202607', ...] == ['entry:20260...:202606', ...]
+E         
+E         At index 1 diff: 'entry:202603' != 'entry:202601'
+E         Use -v to get more diff
+
+scripts/tests/test_wp14_postgres.py:323: AssertionError
+=============================== warnings summary ===============================
+../../../../../../private/tmp/grid-oracle-wp13/.venv/lib/python3.12/site-packages/starlette/testclient.py:40
+  /private/tmp/grid-oracle-wp13/.venv/lib/python3.12/site-packages/starlette/testclient.py:40: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = typing.Callable[[], typing.ContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /private/tmp/wp14-fixes-evidence/mutations-final/future-live-qualifying.xml -
+=========================== short test summary info ============================
+FAILED scripts/tests/test_wp14_postgres.py::test_future_sources_results_and_newer_model_cannot_change_issued_forecast
+1 failed, 1 warning in 2.57s

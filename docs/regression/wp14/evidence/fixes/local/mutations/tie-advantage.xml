@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="2.122" timestamp="2026-10-02T00:11:16.796243+02:00" hostname="Pieters-MacBook-Pro.local"><testcase classname="scripts.tests.test_wp14_postgres" name="test_season_opening_ties_never_favor_identity" time="0.494"><failure message="assert False&#10; +  where False = all(&lt;generator object test_season_opening_ties_never_favor_identity.&lt;locals&gt;.&lt;genexpr&gt; at 0x11c66ab20&gt;)">replay = &lt;scripts.regression.replay.WeekendReplay object at 0x11b86a450&gt;
+
+    def test_season_opening_ties_never_favor_identity(replay):
+        replay.drain()
+        values = list(replay.predictions["pre_weekend"]["winner"].values())
+        assert len(values) == 22
+&gt;       assert all(p == pytest.approx(1 / 22, abs=1e-14) for p in values)
+E       assert False
+E        +  where False = all(&lt;generator object test_season_opening_ties_never_favor_identity.&lt;locals&gt;.&lt;genexpr&gt; at 0x11c66ab20&gt;)
+
+scripts/tests/test_wp14_postgres.py:254: AssertionError</failure></testcase></testsuite></testsuites>

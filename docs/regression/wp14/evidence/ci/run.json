@@ -1,0 +1,37 @@
+{
+  "run_id": 36928093746,
+  "run_url": "https://github.com/Pieter-OHearn/grid-oracle/actions/runs/36928093746",
+  "tested_revision": "bb64f8d8c8ab058859a2cac00ded2603e8532d62",
+  "pull_request": 110,
+  "pull_request_url": "https://github.com/Pieter-OHearn/grid-oracle/pull/110",
+  "is_draft": false,
+  "acceptance": "both native jobs and artifact contents verified",
+  "artifacts": [
+    {
+      "name": "wp14-amd64-1",
+      "id": 11195610027,
+      "digest": "sha256:a9e15831299dc6ec16660ff634af42388fbf5eea720177e977ced4e5a0ff86aa",
+      "size_bytes": 4356156
+    },
+    {
+      "name": "wp14-arm64-1",
+      "id": 11195550276,
+      "digest": "sha256:16ed91045c374e976a68f27695fbb8cfad008d8a0d6ae3a97a47f2749c9b2920",
+      "size_bytes": 19402
+    }
+  ],
+  "retention_days": 30,
+  "receipt_sha256": {
+    "amd64/browser.json": "6f3a4a4bf6e1de69dc3258e4b12252b5e59e01eb50c82646fa0e7b38de794783",
+    "amd64/coverage.json": "9629973c4ae999e9379c43e943a33bf00031e5b7c5554edb246685337a114d32",
+    "amd64/mutations.json": "93e8fa4d38ef5ac66c8bf84c71ca7cb600bf803997d61e2ff1b3f37e4557390f",
+    "amd64/native.json": "cf1a81b208bb87a6e14c19a1d3cf26786bef34030b958ecb0e7e9591667a2799",
+    "amd64/postgres.xml": "41a3746be8d967217839728094d80a27a3823b92e5b989f15c9efb2b2d6f85c9",
+    "amd64/replay.json": "677c90ed22a5c0f0f4fb1325801831685dc5307c2b6f6b7e41caaa89108e231a",
+    "arm64/coverage.json": "57328aac2aa9cfa7ddee80c7710fd1c48f3335b405254fca8d7290d93d407c6b",
+    "arm64/mutations.json": "93e8fa4d38ef5ac66c8bf84c71ca7cb600bf803997d61e2ff1b3f37e4557390f",
+    "arm64/native.json": "03aeaa7e500a96bd2d768c945482588e1e042aa29b179e0f14a8fe6c72d2397a",
+    "arm64/postgres.xml": "acc3be9d18dcb053dd21ecb4dbd4b073a6883f0c0be541a215f0b46bb495218c",
+    "startup-failure.txt": "fa985919e581fa06c95dd2cc23fd920141c7f99a1349b65b89e69d52afda3a7b"
+  }
+}

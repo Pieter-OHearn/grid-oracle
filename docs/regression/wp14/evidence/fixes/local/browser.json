@@ -1,0 +1,169 @@
+{
+  "passed": true,
+  "checks": [
+    {
+      "name": "Deep-link refresh serves persisted 22-entry field across both horizons",
+      "passed": true
+    },
+    {
+      "name": "Displayed field has actual stored equal season-opening baseline probabilities",
+      "passed": true
+    },
+    {
+      "name": "Keyboard skip and horizon controls work on persisted forecast",
+      "passed": true
+    },
+    {
+      "name": "Computed log(22) score remains tied to original result; unscored correction is explicit",
+      "passed": true
+    },
+    {
+      "name": "Season rollover binds new-season reference; unpublished comparison remains unavailable with no delta",
+      "passed": true
+    },
+    {
+      "name": "Actual delayed HTTP response displays loading without retained rows",
+      "passed": true
+    },
+    {
+      "name": "Real HTTP 503 is distinct from unpublished; keyboard Retry restores identical last-good forecast",
+      "passed": true
+    },
+    {
+      "name": "Full-field semantic table and reflow at 390",
+      "passed": true
+    },
+    {
+      "name": "Full-field semantic table and reflow at 320",
+      "passed": true
+    },
+    {
+      "name": "All browser requests stay on loopback; no provider network or page exceptions",
+      "passed": true
+    }
+  ],
+  "accessibility": [
+    {
+      "name": "published comparison light",
+      "violations": [],
+      "incomplete": []
+    },
+    {
+      "name": "published comparison dark",
+      "violations": [],
+      "incomplete": []
+    },
+    {
+      "name": "results and correction",
+      "violations": [],
+      "incomplete": []
+    },
+    {
+      "name": "unpublished horizon",
+      "violations": [],
+      "incomplete": []
+    },
+    {
+      "name": "API outage",
+      "violations": [],
+      "incomplete": []
+    },
+    {
+      "name": "mobile forecast 390",
+      "violations": [],
+      "incomplete": []
+    },
+    {
+      "name": "mobile forecast 320",
+      "violations": [],
+      "incomplete": []
+    }
+  ],
+  "errors": [],
+  "requests": [
+    "http://127.0.0.1:4174/seasons/2026/events/2026/field",
+    "http://127.0.0.1:4174/assets/index-njRn5K6j.js",
+    "http://127.0.0.1:4174/assets/index-CukveZyX.css",
+    "http://127.0.0.1:4174/assets/Inter-VF2RPR_K.ttf",
+    "http://127.0.0.1:4174/assets/BarlowCondensed-Medium-kxnlQoDx.ttf",
+    "http://127.0.0.1:4174/assets/IBMPlexMono-Regular-C5_jWxVG.ttf",
+    "http://127.0.0.1:4174/api/v1/seasons/2026/events/2026",
+    "http://127.0.0.1:4174/api/v1/seasons",
+    "http://127.0.0.1:4174/api/v1/seasons/2026/events/2026/runs",
+    "http://127.0.0.1:4174/api/v1/seasons/2026/events/2026/forecast?horizon=pre_weekend",
+    "http://127.0.0.1:4174/seasons/2026/events/2026/field",
+    "http://127.0.0.1:4174/assets/index-njRn5K6j.js",
+    "http://127.0.0.1:4174/assets/index-CukveZyX.css",
+    "http://127.0.0.1:4174/assets/Inter-VF2RPR_K.ttf",
+    "http://127.0.0.1:4174/assets/BarlowCondensed-Medium-kxnlQoDx.ttf",
+    "http://127.0.0.1:4174/assets/IBMPlexMono-Regular-C5_jWxVG.ttf",
+    "http://127.0.0.1:4174/api/v1/seasons/2026/events/2026",
+    "http://127.0.0.1:4174/api/v1/seasons",
+    "http://127.0.0.1:4174/api/v1/seasons/2026/events/2026/runs",
+    "http://127.0.0.1:4174/api/v1/seasons/2026/events/2026/forecast?horizon=pre_weekend",
+    "http://127.0.0.1:4174/api/v1/seasons/2026/events/2026/forecast?horizon=post_qualifying",
+    "http://127.0.0.1:4174/seasons/2026/events/2026/results",
+    "http://127.0.0.1:4174/assets/index-njRn5K6j.js",
+    "http://127.0.0.1:4174/assets/index-CukveZyX.css",
+    "http://127.0.0.1:4174/assets/Inter-VF2RPR_K.ttf",
+    "http://127.0.0.1:4174/assets/BarlowCondensed-Medium-kxnlQoDx.ttf",
+    "http://127.0.0.1:4174/assets/IBMPlexMono-Regular-C5_jWxVG.ttf",
+    "http://127.0.0.1:4174/api/v1/seasons/2026/events/2026",
+    "http://127.0.0.1:4174/api/v1/seasons",
+    "http://127.0.0.1:4174/api/v1/seasons/2026/events/2026/performance?horizon=pre_weekend",
+    "http://127.0.0.1:4174/api/v1/seasons/2027/events",
+    "http://127.0.0.1:4174/seasons/2027/events/2027?horizon=post_qualifying",
+    "http://127.0.0.1:4174/assets/index-njRn5K6j.js",
+    "http://127.0.0.1:4174/assets/index-CukveZyX.css",
+    "http://127.0.0.1:4174/assets/Inter-VF2RPR_K.ttf",
+    "http://127.0.0.1:4174/assets/BarlowCondensed-Medium-kxnlQoDx.ttf",
+    "http://127.0.0.1:4174/assets/IBMPlexMono-Regular-C5_jWxVG.ttf",
+    "http://127.0.0.1:4174/api/v1/seasons/2027/events/2027",
+    "http://127.0.0.1:4174/api/v1/seasons",
+    "http://127.0.0.1:4174/api/v1/seasons/2027/events/2027/runs",
+    "http://127.0.0.1:4174/api/v1/seasons/2027/events/2027/forecast?horizon=post_qualifying",
+    "http://127.0.0.1:4174/seasons/2026/events/2026/field",
+    "http://127.0.0.1:4174/assets/index-njRn5K6j.js",
+    "http://127.0.0.1:4174/assets/index-CukveZyX.css",
+    "http://127.0.0.1:4174/assets/Inter-VF2RPR_K.ttf",
+    "http://127.0.0.1:4174/assets/BarlowCondensed-Medium-kxnlQoDx.ttf",
+    "http://127.0.0.1:4174/assets/IBMPlexMono-Regular-C5_jWxVG.ttf",
+    "http://127.0.0.1:4174/api/v1/seasons/2026/events/2026",
+    "http://127.0.0.1:4174/api/v1/seasons",
+    "http://127.0.0.1:4174/api/v1/seasons/2026/events/2026/runs",
+    "http://127.0.0.1:4174/api/v1/seasons/2026/events/2026/forecast?horizon=pre_weekend",
+    "http://127.0.0.1:4174/seasons/2026/events/2026/field",
+    "http://127.0.0.1:4174/assets/index-njRn5K6j.js",
+    "http://127.0.0.1:4174/assets/index-CukveZyX.css",
+    "http://127.0.0.1:4174/assets/Inter-VF2RPR_K.ttf",
+    "http://127.0.0.1:4174/assets/BarlowCondensed-Medium-kxnlQoDx.ttf",
+    "http://127.0.0.1:4174/assets/IBMPlexMono-Regular-C5_jWxVG.ttf",
+    "http://127.0.0.1:4174/api/v1/seasons/2026/events/2026",
+    "http://127.0.0.1:4174/api/v1/seasons",
+    "http://127.0.0.1:4174/api/v1/seasons",
+    "http://127.0.0.1:4174/api/v1/seasons/2026/events/2026",
+    "http://127.0.0.1:4174/api/v1/seasons/2026/events/2026/runs",
+    "http://127.0.0.1:4174/api/v1/seasons/2026/events/2026/forecast?horizon=pre_weekend",
+    "http://127.0.0.1:4174/seasons/2026/events/2026/field",
+    "http://127.0.0.1:4174/assets/index-njRn5K6j.js",
+    "http://127.0.0.1:4174/assets/index-CukveZyX.css",
+    "http://127.0.0.1:4174/assets/Inter-VF2RPR_K.ttf",
+    "http://127.0.0.1:4174/assets/BarlowCondensed-Medium-kxnlQoDx.ttf",
+    "http://127.0.0.1:4174/assets/IBMPlexMono-Regular-C5_jWxVG.ttf",
+    "http://127.0.0.1:4174/api/v1/seasons/2026/events/2026",
+    "http://127.0.0.1:4174/api/v1/seasons",
+    "http://127.0.0.1:4174/api/v1/seasons/2026/events/2026/runs",
+    "http://127.0.0.1:4174/api/v1/seasons/2026/events/2026/forecast?horizon=pre_weekend",
+    "http://127.0.0.1:4174/seasons/2026/events/2026/field",
+    "http://127.0.0.1:4174/assets/index-njRn5K6j.js",
+    "http://127.0.0.1:4174/assets/index-CukveZyX.css",
+    "http://127.0.0.1:4174/assets/Inter-VF2RPR_K.ttf",
+    "http://127.0.0.1:4174/assets/BarlowCondensed-Medium-kxnlQoDx.ttf",
+    "http://127.0.0.1:4174/assets/IBMPlexMono-Regular-C5_jWxVG.ttf",
+    "http://127.0.0.1:4174/api/v1/seasons/2026/events/2026",
+    "http://127.0.0.1:4174/api/v1/seasons",
+    "http://127.0.0.1:4174/api/v1/seasons/2026/events/2026/runs",
+    "http://127.0.0.1:4174/api/v1/seasons/2026/events/2026/forecast?horizon=pre_weekend"
+  ],
+  "limits": "Synthetic replay with real PG/API/built React. Automated Chromium/axe only; no assistive-technology/device or public-ingress claim."
+}

@@ -1,0 +1,62 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+__ test_feature_retry_reuses_partially_committed_observation[post_qualifying] __
+
+replay = <scripts.regression.replay.WeekendReplay object at 0x11b692de0>
+horizon = 'post_qualifying'
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x11b692660>
+
+    @pytest.mark.parametrize("horizon", ["pre_weekend", "post_qualifying"])
+    def test_feature_retry_reuses_partially_committed_observation(
+        replay, horizon, monkeypatch
+    ):
+        if horizon == "post_qualifying":
+            replay.drain()
+            saved = replay.public()
+            replay.now = time("2026-05-02T15:30:00+00:00")
+        captured_at = replay.now
+        original = replay.store.record_feature_snapshot
+        failed = False
+    
+        def after_raw_commit(**kwargs):
+            nonlocal failed
+            if not failed:
+                failed = True
+                raise requests.Timeout(
+                    "interrupted after raw commit, before feature commit"
+                )
+            return original(**kwargs)
+    
+        monkeypatch.setattr(replay.store, "record_feature_snapshot", after_raw_commit)
+        replay.drain()
+        assert failed
+        raw_before = replay.hashes()["raw_provider_snapshots"]
+        replay.fixture["entries"][0]["standings"] = 22
+        replay.fixture["entries"][0]["qualifying"] = 22
+        if horizon == "post_qualifying":
+            with replay.engine.begin() as conn:
+                conn.execute(
+                    text("UPDATE qualifying_results SET grid_position=22 WHERE driver_id=1")
+                )
+        replay.now += timedelta(seconds=16)
+        replay.drain()
+        feature_job = next(
+            job for job in weekend_graph(replay.event) if job.kind == f"{horizon}.feature"
+        )
+>       assert replay.ledger.status(feature_job.key) == "succeeded"
+E       AssertionError: assert 'pending' == 'succeeded'
+E         
+E         - succeeded
+E         + pending
+
+scripts/tests/test_wp14_postgres.py:475: AssertionError
+=============================== warnings summary ===============================
+../../../../../../private/tmp/grid-oracle-wp13/.venv/lib/python3.12/site-packages/starlette/testclient.py:40
+  /private/tmp/grid-oracle-wp13/.venv/lib/python3.12/site-packages/starlette/testclient.py:40: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = typing.Callable[[], typing.ContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /private/tmp/wp14-fixes-evidence/mutations-final/recaptured-snapshot.xml -
+=========================== short test summary info ============================
+FAILED scripts/tests/test_wp14_postgres.py::test_feature_retry_reuses_partially_committed_observation[post_qualifying]
+1 failed, 1 warning in 2.36s

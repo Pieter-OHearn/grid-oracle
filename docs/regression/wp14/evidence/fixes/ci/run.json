@@ -1,0 +1,41 @@
+{
+  "run_id": 36933787762,
+  "run_url": "https://github.com/Pieter-OHearn/grid-oracle/actions/runs/36933787762",
+  "tested_revision": "46d866a6a5d8b95d2bba671769cee5052424ac94",
+  "event": "push",
+  "created_at": "2026-10-01T22:14:00Z",
+  "updated_at": "2026-10-01T22:18:51Z",
+  "pull_request": 110,
+  "pull_request_url": "https://github.com/Pieter-OHearn/grid-oracle/pull/110",
+  "is_draft": false,
+  "acceptance": "both native jobs and downloaded source-bound artifact contents verified: 39 PG cases, six Python controls, two image checks per architecture; AMD64 ten browser checks/seven axe audits/one keyboard control",
+  "artifacts": [
+    {
+      "name": "wp14-arm64-1",
+      "id": 11197442074,
+      "digest": "sha256:10c5b3dadf204dce2f44c6d016dd7dd71bf5d5e74f3faae951696305f19ffc93",
+      "size_in_bytes": 26768
+    },
+    {
+      "name": "wp14-amd64-1",
+      "id": 11197342583,
+      "digest": "sha256:6c1cffed477d57b390aa243d1c02f7c3d1642c0367e4db6ca544d54d8fed44ac",
+      "size_in_bytes": 6645058
+    }
+  ],
+  "retention_days": 30,
+  "receipt_sha256": {
+    "amd64/browser-mutations/browser.json": "6b4e0b1a93d169084ea49af25f47cb4e065e457fdce26ebcb6f23937d02831ca",
+    "amd64/browser-mutations/mutations.json": "66db4afa0467faf0016213caabe9335a376077b6ab3356d11d936ed1e1d725ed",
+    "amd64/browser.json": "affe6ef7caa4aa0652137aa5ffbe17c0a3e1465b3f59d6daddd5e3ede6a21375",
+    "amd64/coverage.json": "3b932489d87f7cd9d9976a58125c97acea7514c7c089a019faf91b8bc4b7cdb5",
+    "amd64/mutations.json": "87b0479ca0e7f0ace55b71b3ec1f3c9edb0f4d5760616d84f91c9c4fbb050bae",
+    "amd64/native.json": "cf1a81b208bb87a6e14c19a1d3cf26786bef34030b958ecb0e7e9591667a2799",
+    "amd64/postgres.xml": "e74c3fd2dedbce8d7680a00a78ea44f926e9d2a62027d35a00036202d168f957",
+    "amd64/replay.json": "f68d3d2d3c7578ff190674cf76869f9b7fdaca3111471b7a0ca8d97920294ee5",
+    "arm64/coverage.json": "d0f1391f0a2b6271cc1fafaf5b57e4e88c58985c1174eeea21e81030a472c90c",
+    "arm64/mutations.json": "87b0479ca0e7f0ace55b71b3ec1f3c9edb0f4d5760616d84f91c9c4fbb050bae",
+    "arm64/native.json": "03aeaa7e500a96bd2d768c945482588e1e042aa29b179e0f14a8fe6c72d2397a",
+    "arm64/postgres.xml": "ecee75f08c1e7d187483282a365c6b1fd4550451e661b7477912ed86919d7c10"
+  }
+}

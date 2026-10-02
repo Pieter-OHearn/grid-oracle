@@ -1,0 +1,21 @@
+{
+  "passed": true,
+  "host": "arm64",
+  "checks": [
+    {
+      "role": "api",
+      "pin": "ghcr.io/pieter-ohearn/gridoracle-api:v0.1.0-wp13.7@sha256:e0a5ecdb40245a7a470cb8e787ce79b3f56000e073c36229d985882e644d6af1",
+      "architecture": "arm64",
+      "runtime_architecture": "aarch64",
+      "passed": true
+    },
+    {
+      "role": "worker",
+      "pin": "ghcr.io/pieter-ohearn/gridoracle-worker:v0.1.0-wp13.7@sha256:5607fc616ff0726d7800e37b73d2c683bb58779fb108c241f17d0e22cb92f1f6",
+      "architecture": "arm64",
+      "runtime_architecture": "aarch64",
+      "passed": true
+    }
+  ],
+  "limits": "Pinned WP13 images only; no build, deployment, live provider, CUDA/MPS or performance qualification"
+}

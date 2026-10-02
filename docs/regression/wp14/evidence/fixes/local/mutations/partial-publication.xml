@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="2.567" timestamp="2026-10-02T00:11:11.381688+02:00" hostname="Pieters-MacBook-Pro.local"><testcase classname="scripts.tests.test_wp14_postgres" name="test_partial_publish_keeps_last_good" time="0.617"><failure message="Failed: DID NOT RAISE &lt;class 'gridoracle.provenance.store.ProvenanceError'&gt;">replay = &lt;scripts.regression.replay.WeekendReplay object at 0x11bdce690&gt;
+
+    def test_partial_publish_keeps_last_good(replay):
+        replay.drain()
+        saved = replay.public()
+        staged = replay.store.create_forecast_run(
+            replace(
+                replay.inputs["pre_weekend"],
+                horizon="post_qualifying",
+                idempotency_key="partial",
+            )
+        )
+        replay.store.add_entry_outputs(
+            staged, [ForecastEntry("entry:202601", {"win_probability": 1})]
+        )
+&gt;       with pytest.raises(ProvenanceError, match="incomplete field"):
+E       Failed: DID NOT RAISE &lt;class 'gridoracle.provenance.store.ProvenanceError'&gt;
+
+scripts/tests/test_wp14_postgres.py:270: Failed</failure></testcase></testsuite></testsuites>

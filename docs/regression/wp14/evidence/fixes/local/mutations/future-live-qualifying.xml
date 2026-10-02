@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="2.572" timestamp="2026-10-02T00:11:21.936670+02:00" hostname="Pieters-MacBook-Pro.local"><testcase classname="scripts.tests.test_wp14_postgres" name="test_future_sources_results_and_newer_model_cannot_change_issued_forecast" time="0.961"><failure message="AssertionError: assert ['entry:20260...:202607', ...] == ['entry:20260...:202606', ...]&#10;  &#10;  At index 1 diff: 'entry:202603' != 'entry:202601'&#10;  Use -v to get more diff">replay = &lt;scripts.regression.replay.WeekendReplay object at 0x11be930b0&gt;
+
+    def test_future_sources_results_and_newer_model_cannot_change_issued_forecast(replay):
+        replay.complete()
+        expected_predictions = dict(replay.predictions)
+        saved = replay.public()
+        before = {k: v for k, v in replay.hashes().items() if k.startswith("forecast_")}
+        replay.fixture["entries"][0]["standings"] = 22
+        replay.fixture["entries"][0]["qualifying"] = 22
+        with replay.engine.begin() as conn:
+            conn.execute(
+                text("UPDATE qualifying_results SET grid_position=22 WHERE driver_id=1")
+            )
+            conn.execute(
+                text(
+                    "INSERT INTO model_versions (id,name,trained_at,training"
+                    "_races_count) VALUES (99,'newest invalid','2030-01-01',"
+                    "999)"
+                )
+            )
+        replay.now = time("2026-05-05T16:00:00+00:00")
+        raw = replay._artifact("providers/future", replay.fixture)
+        replay.store.record_raw_snapshot(
+            snapshot_id="future",
+            provider="synthetic future",
+            retrieved_at=replay.now,
+            source_available_at=replay.now,
+            **raw,
+        )
+        replay.result(correction=True)
+        replay.evaluate()
+        prior_post = replay.public("post_qualifying")
+        for horizon in replay.runs:
+    
+            def reproduce(_manifest, horizon=horizon):
+                prediction = replay.predict(horizon, persist=False)
+                assert prediction["order"] == expected_predictions[horizon]["order"]
+                assert prediction["winner"] == pytest.approx(
+                    expected_predictions[horizon]["winner"], abs=1e-14
+                )
+                return {entry.entry_key: entry.output for entry in replay.outputs[horizon]}
+    
+&gt;           replay.store.verify_reproduction(replay.runs[horizon], reproduce)
+
+scripts/tests/test_wp14_postgres.py:329: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+gridoracle/provenance/store.py:563: in verify_reproduction
+    candidate = reproduce(_loaded_json(run["input_manifest"]))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+_manifest = {'field_revision': 1, 'synthetic': True, 'weather': {'availability': 'unavailable', 'rain_probability': None}}
+horizon = 'post_qualifying'
+
+    def reproduce(_manifest, horizon=horizon):
+        prediction = replay.predict(horizon, persist=False)
+&gt;       assert prediction["order"] == expected_predictions[horizon]["order"]
+E       AssertionError: assert ['entry:20260...:202607', ...] == ['entry:20260...:202606', ...]
+E         
+E         At index 1 diff: 'entry:202603' != 'entry:202601'
+E         Use -v to get more diff
+
+scripts/tests/test_wp14_postgres.py:323: AssertionError</failure></testcase></testsuite></testsuites>

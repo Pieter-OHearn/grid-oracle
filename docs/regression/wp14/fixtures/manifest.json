@@ -1,0 +1,16 @@
+{
+  "format": "wp14-fixture-lineage-v1",
+  "weekend_sha256": "4b2f5a5871de9d7574bdc0dc1a73539f4055b09146ef485996673f89a1b84937",
+  "archive": "docs/evidence/jolpica-2022-2025.tar.gz",
+  "archive_sha256": "23df6387eecb0266cfa028c43569d71e73cdfb25366900e177eec4d000db94f9",
+  "recordings": {
+    "2022-results-0.json": "545424231206080742645c24f95c1f61f55fa13d1063389e084b120590e2bd73",
+    "2022-qualifying-0.json": "a59264a8f9c10b6ac1d8aea3a9d4bf6ccf8a2700568161db3e3ac8a2e539545d"
+  },
+  "provider": "Jolpica-F1",
+  "retrieved_at": "2026-09-28 (archive retrieval; availability at race time unknown)",
+  "license": "CC BY-NC-SA 4.0",
+  "attribution": "docs/evidence/README.md#attribution-and-license",
+  "changes": "Two unmodified response members replayed; weekend.json independently authored synthetic 22-entry sprint/season-opening scenario; not real 2026 data",
+  "benchmark_lock_sha256": "fa55bee0b5abe02f3f48bc8f9971a558f69f62dd2e49f5647ca8710c9b9dc8bb"
+}

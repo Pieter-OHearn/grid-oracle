@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="2.359" timestamp="2026-10-02T00:11:24.876864+02:00" hostname="Pieters-MacBook-Pro.local"><testcase classname="scripts.tests.test_wp14_postgres" name="test_feature_retry_reuses_partially_committed_observation[post_qualifying]" time="0.774"><failure message="AssertionError: assert 'pending' == 'succeeded'&#10;  &#10;  - succeeded&#10;  + pending">replay = &lt;scripts.regression.replay.WeekendReplay object at 0x11b692de0&gt;
+horizon = 'post_qualifying'
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x11b692660&gt;
+
+    @pytest.mark.parametrize("horizon", ["pre_weekend", "post_qualifying"])
+    def test_feature_retry_reuses_partially_committed_observation(
+        replay, horizon, monkeypatch
+    ):
+        if horizon == "post_qualifying":
+            replay.drain()
+            saved = replay.public()
+            replay.now = time("2026-05-02T15:30:00+00:00")
+        captured_at = replay.now
+        original = replay.store.record_feature_snapshot
+        failed = False
+    
+        def after_raw_commit(**kwargs):
+            nonlocal failed
+            if not failed:
+                failed = True
+                raise requests.Timeout(
+                    "interrupted after raw commit, before feature commit"
+                )
+            return original(**kwargs)
+    
+        monkeypatch.setattr(replay.store, "record_feature_snapshot", after_raw_commit)
+        replay.drain()
+        assert failed
+        raw_before = replay.hashes()["raw_provider_snapshots"]
+        replay.fixture["entries"][0]["standings"] = 22
+        replay.fixture["entries"][0]["qualifying"] = 22
+        if horizon == "post_qualifying":
+            with replay.engine.begin() as conn:
+                conn.execute(
+                    text("UPDATE qualifying_results SET grid_position=22 WHERE driver_id=1")
+                )
+        replay.now += timedelta(seconds=16)
+        replay.drain()
+        feature_job = next(
+            job for job in weekend_graph(replay.event) if job.kind == f"{horizon}.feature"
+        )
+&gt;       assert replay.ledger.status(feature_job.key) == "succeeded"
+E       AssertionError: assert 'pending' == 'succeeded'
+E         
+E         - succeeded
+E         + pending
+
+scripts/tests/test_wp14_postgres.py:475: AssertionError</failure></testcase></testsuite></testsuites>

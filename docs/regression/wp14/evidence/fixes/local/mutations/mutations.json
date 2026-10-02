@@ -1,0 +1,41 @@
+{
+  "passed": true,
+  "mutations": [
+    {
+      "name": "partial-publication",
+      "test": "test_partial_publish_keeps_last_good",
+      "killed": true,
+      "exit_code": 1
+    },
+    {
+      "name": "future-availability",
+      "test": "test_future_availability_is_rejected",
+      "killed": true,
+      "exit_code": 1
+    },
+    {
+      "name": "tie-advantage",
+      "test": "test_season_opening_ties_never_favor_identity",
+      "killed": true,
+      "exit_code": 1
+    },
+    {
+      "name": "unchecked-output-hash",
+      "test": "test_corrupt_stored_output_hash_is_rejected",
+      "killed": true,
+      "exit_code": 1
+    },
+    {
+      "name": "future-live-qualifying",
+      "test": "test_future_sources_results_and_newer_model_cannot_change_issued_forecast",
+      "killed": true,
+      "exit_code": 1
+    },
+    {
+      "name": "recaptured-snapshot",
+      "test": "test_feature_retry_reuses_partially_committed_observation[post_qualifying]",
+      "killed": true,
+      "exit_code": 1
+    }
+  ]
+}
