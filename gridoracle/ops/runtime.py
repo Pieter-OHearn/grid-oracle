@@ -145,8 +145,23 @@ def main() -> None:
                 with writer_gate(engine):
                     if args.role == "scheduler":
                         sync = start - synced_at >= CALENDAR_SECONDS or not synced_at
-                        scheduler_tick(engine, args.season, issuance, sync=sync)
-                        synced_at = start if sync else synced_at
+                        try:
+                            scheduler_tick(engine, args.season, issuance, sync=sync)
+                        except Exception as error:
+                            # A provider outage is logged and retried next tick.
+                            print(
+                                json.dumps(
+                                    {
+                                        "service": "gridoracle-scheduler",
+                                        "level": "error",
+                                        "event": "calendar",
+                                        "error": type(error).__name__,
+                                    }
+                                ),
+                                flush=True,
+                            )
+                        else:
+                            synced_at = start if sync else synced_at
                     else:
                         while worker_tick(engine, issuance) and not stopping:
                             pass

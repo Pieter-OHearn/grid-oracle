@@ -55,10 +55,19 @@ from pipeline.orchestration import (
 )
 
 MODEL_FORMAT = "gridoracle-fixed-baseline-v1"
+
+
 # A past race is caught up only once its classification can have settled.
 RESULTS_AFTER = timedelta(hours=3)
 ROOT = Path(__file__).resolve().parents[2]
 BENCHMARK_CONFIG = ROOT / "docs/benchmark/v2/config.json"
+
+
+def log(event: str, **fields) -> None:
+    print(
+        json.dumps({"service": "gridoracle-issuance", "level": "error", "event": event, **fields}),
+        flush=True,
+    )
 
 
 def load_model(artifact_root: Path, bundle: dict[str, Any]) -> dict[str, Any]:
@@ -468,7 +477,12 @@ class ProductionIssuance:
         for event in events:
             race_id = rounds[event.round_number]
             if event.race_start + RESULTS_AFTER <= now and race_id not in completed:
-                self._ingest_round(race_id, event.season, event.round_number)
+                try:
+                    self._ingest_round(race_id, event.season, event.round_number)
+                except Exception as error:
+                    # One round's catch-up must not stop the calendar; the
+                    # next sync tries again.
+                    log("catch-up", race_id=race_id, error=type(error).__name__, detail=str(error))
         schedules = []
         with self.engine.begin() as conn:
             for event in events:
