@@ -104,7 +104,7 @@ The coordinator updates this overview when assigning or integrating work. Detail
 | [WP12](docs/workplans/WP12.md) | `complete` | WP06, WP09, WP11 | Integrated as `897ff95` through PR #107 |
 | [WP13](docs/workplans/WP13.md) | `complete` | WP01 | Integrated as `6c46d7d` through PR #108 |
 | [WP14](docs/workplans/WP14.md) | `complete` | WP04, WP06, WP11 | Integrated as `36f23f1` through PR #110 |
-| [WP15](docs/workplans/WP15.md) | `active` | WP09, WP12–14 | Part 1 (production issuance) in progress; shadowing is calendar time |
+| [WP15](docs/workplans/WP15.md) | `active` | WP09, WP12–14 | Part 1 integrated as `48baf9f` (#111), released `v0.1.0`; shadowing waits for deployment |
 | [WP16](docs/workplans/WP16.md) | `deferred` | WP15                   | Explicitly selected extension and its own acceptance |
 
 WP13/WP14 include separate start and finish gates. Every package, including those with additional dependencies, still requires acceptance, review and integration before `complete`.
