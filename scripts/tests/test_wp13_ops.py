@@ -349,20 +349,21 @@ def test_large_lineage_inventory_has_bounded_memory(monkeypatch, tmp_path):
     assert peak < 8 * 1024 * 1024
 
 
-def test_worker_blocks_legacy_evaluation_selector(monkeypatch):
-    from types import SimpleNamespace
+def test_worker_runs_bundle_aware_handlers_never_the_legacy_selector(monkeypatch):
     from unittest.mock import Mock
 
-    from gridoracle.ops.runtime import worker_tick
+    from gridoracle.ops.runtime import PROVIDER_ATTEMPTS, worker_tick
     from pipeline import orchestration, scheduler
 
     ledger = Mock()
-    job = SimpleNamespace(kind=orchestration.EVALUATE)
-    ledger.claim_due.return_value = job
+    ledger.run_once.return_value = True
     monkeypatch.setattr(orchestration, "JobLedger", lambda _: ledger)
-    handler = Mock()
-    monkeypatch.setattr(scheduler, "_run_durable_job", handler)
-    assert worker_tick(object())
-    handler.assert_not_called()
-    assert isinstance(ledger.finish.call_args.args[2], orchestration.JobBlocked)
-    assert "bundle-aware evaluation" in str(ledger.finish.call_args.args[2])
+    legacy = Mock()
+    monkeypatch.setattr(scheduler, "_run_durable_job", legacy)
+    issuance = Mock()
+    handlers = {orchestration.EVALUATE: Mock()}
+    issuance.handlers.return_value = handlers
+    assert worker_tick(object(), issuance)
+    _worker, given, attempts = ledger.run_once.call_args.args
+    assert given is handlers and attempts == PROVIDER_ATTEMPTS
+    legacy.assert_not_called()

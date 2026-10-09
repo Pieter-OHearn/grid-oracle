@@ -4,6 +4,7 @@ import json
 import os
 import time
 from collections import Counter
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 from alembic.config import Config
@@ -13,6 +14,7 @@ from sqlalchemy import text
 
 from api.database import engine
 from api.main import create_app
+from gridoracle.ops.backup import backup_metrics
 from gridoracle.ops.bundle import file_digest, verify_selection
 from gridoracle.ops.runtime import bundle_check
 
@@ -109,6 +111,7 @@ def metrics():
                 f'gridoracle_http_duration_seconds_{suffix}{{route="{route}"}} '
                 f"{latency[route, suffix]}"
             )
+    rows.extend(backup_metrics(os.getenv("GRIDORACLE_BACKUP_STATUS_FILE")))
     # Fixed-state labels only: no event, driver, job-key, model or run labels.
     with engine.connect() as conn:
         for state in ("pending", "running", "succeeded", "blocked", "superseded"):
@@ -117,6 +120,18 @@ def metrics():
                 {"state": state},
             ).scalar_one()
             rows.append(f'gridoracle_jobs{{state="{state}"}} {count}')
+        # Due work nobody has claimed: a stopped worker or a held maintenance lock.
+        overdue = conn.execute(
+            text(
+                "SELECT COUNT(*) FROM orchestration_jobs "
+                "WHERE status='pending' AND due_at < :before"
+            ),
+            {"before": datetime.now(UTC) - timedelta(minutes=15)},
+        ).scalar_one()
+    rows += [
+        "# TYPE gridoracle_jobs_overdue gauge",
+        f"gridoracle_jobs_overdue {overdue}",
+    ]
     return PlainTextResponse(
         "\n".join(rows) + "\n", media_type="text/plain; version=0.0.4"
     )

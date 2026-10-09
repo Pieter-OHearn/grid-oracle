@@ -27,13 +27,25 @@ raw/data/feature references in the closure. Copy the **entire** artifact tree
 for recovery, not only the selected model: older forecast lineage remains
 referenced. A bundle change is another reviewed manifest promotion.
 
-WP09 retained the evaluated baseline and explicitly did not create a production
-refit. The WP13 drill therefore uses WP11's **synthetic** model/calibrator/data
-bytes and its saved forecast publications. It proves byte identity, lineage,
-serving and storage recovery; it does not execute these bytes as a trained
-model or claim a production champion. A real selected bundle is a WP14/WP15
-release input. Training machines can remain offline for every public read,
-restart and restore operation.
+WP09 retained the evaluated baselines and explicitly did not create a
+production refit. The production bundle is therefore those fixed fallbacks:
+`standings` pre-weekend and `qualifying` post-qualifying, temperature 4.0,
+identity calibration (`gridoracle-fixed-baseline-v1`). Nothing is fitted; each
+forecast's inputs are the live Jolpica observation frozen in its raw snapshot
+and feature snapshot. It makes no claim of a production champion.
+
+- `python -m gridoracle.ops.production_bundle write --bundles DIR
+  --runtime-image WORKER_PIN --code-revision SOURCE_SHA` writes the closure
+  into the artifact store and `DIR/<sha256>.json`, without a database, and
+  prints the SHA256 to pin. The same inputs always give the same bytes.
+- `python -m gridoracle.ops.production_bundle register` records the bundle's
+  dataset, feature-schema snapshot, model and calibrator manifests (and one
+  `model_versions` row) in the migrated database, then checks the selection.
+  Serving readiness and evaluation need these rows.
+
+The WP13 drill still uses WP11's synthetic bytes; it proves storage recovery,
+not a model. Training machines can remain offline for every public read,
+restart and restore operation. A bundle change is another reviewed promotion.
 
 Tampered JSON, absent dependencies, mismatched model identity/path or persisted
 model/calibrator/data bindings fail before readiness. No pickle loading or

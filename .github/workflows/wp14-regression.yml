@@ -59,6 +59,12 @@ jobs:
         run: |
           uv run --no-sync python -m pytest scripts/tests/test_wp14_postgres.py -q --junitxml=wp14-evidence/postgres.xml 2>&1 | tee wp14-evidence/postgres.log
           uv run --no-sync python -m scripts.wp14_report --junit wp14-evidence/postgres.xml --output wp14-evidence/coverage.json
+      - name: Production issuance, roles, backup and restore on PostgreSQL
+        env:
+          WP15_POSTGRES_URL: ${{ env.WP14_POSTGRES_URL }}
+          WP15_POSTGRES_CONTAINER: ${{ job.services.postgres.id }}
+        run: |
+          uv run --no-sync python -m pytest scripts/tests/test_wp15_postgres.py -q --junitxml=wp14-evidence/wp15-postgres.xml 2>&1 | tee wp14-evidence/wp15-postgres.log
       - name: Intentional known defects must fail the corresponding tests
         run: uv run --no-sync python -m scripts.wp14_mutations --output wp14-evidence/mutations
       - uses: docker/login-action@v3

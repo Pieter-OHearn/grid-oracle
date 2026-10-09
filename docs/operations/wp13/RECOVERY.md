@@ -8,38 +8,39 @@ not homelab measurements or promises of whole-site recovery.
 
 ## Coordinated backup
 
-1. Stop scheduler/worker and any operator publication/backfill writers. Keep
-   public reads running; prohibit another writer until verification completes.
-   Record database name, schema revision, release pins and selected bundle hash.
-2. On the DB service, use the matching PostgreSQL 16 client to write
-   `pg_dump -U gridoracle_admin -Fc --no-owner --no-acl DATABASE` to a **new**
-   backup directory's `database.dump`. Do not copy live PGDATA files.
-3. Run the same released API tools image with its admin URL-file secret and
-   artifact/bundle read mounts:
-   `python -m scripts.wp13_recovery seal --directory /recovery`.
-   This copies the whole content-addressed artifact tree and bundle, verifies
-   every persisted forecast output/artifact hash, and writes `recovery.json`.
-   Capture its printed SHA256 outside the set in the protected backup catalog.
-   A sealed directory cannot be reused. Empty initial installations still need
-   a dump and selected bundle closure, with null pre-ledger schema/lineage.
-4. Transfer the complete set to the approved off-primary physical HDD using
-   the restricted backup principal. Transfer to a temporary directory and
-   rename after verification. Verify `recovery.json` against its external hash
-   and all declared files **on the destination**. No successful-transfer claim
-   may be inferred from a same-disk local copy.
-5. Restore the set into a new isolated database/environment, compare hashes as
-   below, and record verification. Only then record backup success/age, retain
-   according to seven daily/four weekly/three monthly policy, and restart
-   writers. Delete sets only through the backup owner; keep the last verified
-   set and every retained forecast's referenced artifact. Monitor quota/free
-   capacity before retention rotation, not after it.
+The backup sidecar runs `python -m gridoracle.ops.backup loop --root /backups`
+(worker image, administrator URL, artifacts and bundle read-only). Each night,
+and at once whenever no verified set is under 26 hours old, it:
 
-Secrets/age recovery and restricted SSH credentials are provisioned by the
-owner. Keep an offline age-key recovery copy outside the primary disk; never
-place a key in reports. The measured HDD is a separate disk/host from the Pi,
-but no new backup directory, SSH principal or automated rotation has yet been
-provisioned. Until that path passes an actual transfer/restore, it is a release
-blocker. Logs/traces are not part of the recovery source of truth.
+1. Takes the maintenance advisory lock exclusively. Every scheduler and worker
+   tick holds it shared, so running ticks finish and no new tick starts until
+   the set is sealed; public reads keep running.
+2. Writes `pg_dump --format=custom --no-owner --no-acl` (PostgreSQL 16 client,
+   password from the environment) to a new staging directory's
+   `database.dump`. Live PGDATA files are never copied.
+3. Seals the set (`scripts.wp13_recovery.seal`): copies the whole
+   content-addressed artifact tree and the selected bundle, verifies every
+   persisted forecast output and artifact hash, and writes `recovery.json`.
+   Then it releases the lock.
+4. Verifies the staged set against its receipt from disk, moves it into
+   `sets/<UTC time>` (one rename), and only then writes the receipt hash to
+   `receipts/<UTC time>.sha256`. A set name is never reused.
+5. Keeps the newest two sets, verifies every retained set again, and writes
+   `status/status.json`, which the API's `/metrics` reports as
+   `gridoracle_backup_*` gauges. A failed attempt is retried after 30 minutes.
+
+The platform copies the backup directory off the host and keeps the history
+(seven daily, four weekly and at least three monthly sets). No
+successful-transfer claim may be inferred from the local copy: verify a set on
+the destination by restoring it, as below. Delete history only through the
+backup owner; keep the last verified set and every retained forecast's
+referenced artifact.
+
+Secrets and the platform's backup credentials are provisioned by the owner.
+Keep an offline age-key recovery copy outside the primary disk; never place a
+key in reports. Until a set restored from the platform's off-host copy passes
+the comparison below, it is a release blocker. Logs/traces are not part of the
+recovery source of truth.
 
 New receipts use `gridoracle-recovery-v2`: primary-key ordered canonical JSON
 row arrays hashed incrementally with 100-row PostgreSQL server-side batches.
@@ -89,8 +90,9 @@ step is an explicit precondition, not a behavior claimed of the deployer.
    owner-maintained exported image cache with recorded OCI checksums.
 2. Create a new project and **empty** PostgreSQL 16 data directory on new
    storage. Restore with `pg_restore --no-owner --no-acl --exit-on-error`;
-   never use `--clean` on the old production database. Recreate reader/worker
-   roles/grants from reviewed homelab configuration and owner-held SOPS values.
+   never use `--clean` on the old production database. Recreate the reader and
+   worker roles with `python -m gridoracle.ops.roles` from the owner-held URL
+   secrets.
 3. Mount the backed-up artifact tree and backed-up bundle in the replacement,
    read-only, with its exact SHA256. Set replacement URL files from SOPS.
    Run `scripts.wp13_recovery compare --directory /recovery

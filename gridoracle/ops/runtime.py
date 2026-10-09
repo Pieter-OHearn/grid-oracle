@@ -5,12 +5,22 @@ import json
 import os
 import signal
 import time
+from contextlib import contextmanager
 from pathlib import Path
 from urllib.request import urlopen
 
 from sqlalchemy import create_engine, text
 
 from gridoracle.ops.bundle import file_digest, verify_bundle
+
+# A coordinated backup takes this advisory lock exclusively; every scheduler
+# and worker tick holds it shared, so a backup waits for running ticks and no
+# new tick starts until the recovery set is sealed.
+MAINTENANCE_LOCK = 13010
+# The live calendar is read at most this often (Jolpica's hourly budget).
+CALENDAR_SECONDS = 6 * 3600
+# Provider lateness is retried for about nine hours before a job blocks.
+PROVIDER_ATTEMPTS = 40
 
 
 def configure() -> None:
@@ -29,43 +39,48 @@ def bundle_check() -> dict:
     )
 
 
-def scheduler_tick(engine, season: int) -> None:
-    from pipeline.ingest.calendar_sync import (
-        sync_season_calendar,
-        to_orchestration_event,
-    )
-    from pipeline.orchestration import JobLedger
-    from pipeline.scheduler import _active_entries
-
-    ledger = JobLedger(engine)
-    ledger.recover_expired_leases()
-    for event in sync_season_calendar(season, engine):
-        ledger.reconcile(
-            to_orchestration_event(event, _active_entries(engine, event["race_id"]))
+@contextmanager
+def writer_gate(engine):
+    """Hold the maintenance lock shared for one tick (PostgreSQL only)."""
+    if engine.dialect.name != "postgresql":
+        yield
+        return
+    with engine.connect() as conn:
+        conn.execute(
+            text("SELECT pg_advisory_lock_shared(:key)"), {"key": MAINTENANCE_LOCK}
         )
+        try:
+            yield
+        finally:
+            conn.execute(
+                text("SELECT pg_advisory_unlock_shared(:key)"),
+                {"key": MAINTENANCE_LOCK},
+            )
 
 
-def worker_tick(engine) -> bool:
-    from pipeline.orchestration import EVALUATE, JobBlocked, JobLedger
+def provider_client():
+    from pipeline.issuance.jolpica import JolpicaClient
 
-    # The existing handler deliberately blocks unavailable provenance-aware
-    # prediction/publication. Never enable the legacy automatic training path.
+    return JolpicaClient(Path(os.getenv("GRIDORACLE_PROVIDER_ROOT", "/tmp/provider")))
+
+
+def scheduler_tick(engine, season: int, issuance, *, sync: bool) -> None:
+    from pipeline.orchestration import JobLedger
+
     ledger = JobLedger(engine)
-    ledger.recover_expired_leases()
-    job = ledger.claim_due("gridoracle-single-worker")
-    if job is None:
-        return False
-    try:
-        if job.kind == EVALUATE:
-            raise JobBlocked("bundle-aware evaluation adapter is not configured")
-        from pipeline.scheduler import _run_durable_job
+    ledger.recover_expired_leases(PROVIDER_ATTEMPTS)
+    if not sync:
+        return
+    for schedule in issuance.reconcile(season):
+        ledger.reconcile(schedule)
 
-        _run_durable_job(job, engine)
-    except Exception as exc:
-        ledger.finish(job, "gridoracle-single-worker", exc)
-    else:
-        ledger.finish(job, "gridoracle-single-worker")
-    return True
+
+def worker_tick(engine, issuance) -> bool:
+    from pipeline.orchestration import JobLedger
+
+    return JobLedger(engine).run_once(
+        "gridoracle-single-worker", issuance.handlers(), PROVIDER_ATTEMPTS
+    )
 
 
 def main() -> None:
@@ -100,9 +115,15 @@ def main() -> None:
         return
     if args.role == "scheduler" and args.season is None:
         parser.error("scheduler requires an explicit --season")
-    bundle_check()
+    bundle = bundle_check()
     engine = create_engine(os.environ["DATABASE_URL"])
+    from pipeline.issuance.adapter import ProductionIssuance
+
+    issuance = ProductionIssuance(
+        engine, Path(os.environ["GRIDORACLE_ARTIFACT_ROOT"]), bundle, provider_client()
+    )
     stopping = False
+    synced_at = 0.0
 
     def stop(*_):
         nonlocal stopping
@@ -121,10 +142,29 @@ def main() -> None:
                 raise ValueError("runtime role already has an owner")
             while not stopping:
                 start = time.monotonic()
-                if args.role == "scheduler":
-                    scheduler_tick(engine, args.season)
-                else:
-                    worker_tick(engine)
+                with writer_gate(engine):
+                    if args.role == "scheduler":
+                        sync = start - synced_at >= CALENDAR_SECONDS or not synced_at
+                        try:
+                            scheduler_tick(engine, args.season, issuance, sync=sync)
+                        except Exception as error:
+                            # A provider outage is logged and retried next tick.
+                            print(
+                                json.dumps(
+                                    {
+                                        "service": "gridoracle-scheduler",
+                                        "level": "error",
+                                        "event": "calendar",
+                                        "error": type(error).__name__,
+                                    }
+                                ),
+                                flush=True,
+                            )
+                        else:
+                            synced_at = start if sync else synced_at
+                    else:
+                        while worker_tick(engine, issuance) and not stopping:
+                            pass
                 Path("/tmp/heartbeat").touch()
                 print(
                     json.dumps(

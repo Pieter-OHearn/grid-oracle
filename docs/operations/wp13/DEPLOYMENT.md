@@ -29,29 +29,27 @@ Primary paths (homelab catalog must own all of them):
 
 - `/srv/appdata/gridoracle/postgres`: PostgreSQL 16, local NVMe, UID/GID 70.
 - `/srv/appdata/gridoracle/artifacts`: complete content-addressed WP03 tree,
-  including raw snapshots, datasets, features, models and calibrators.
-- `/srv/appdata/gridoracle/bundles`: immutable bundle JSON, pinned by SHA256.
-- `/srv/appdata/gridoracle/backups`: temporary coordinated recovery sets;
-  **not** the durable backup destination.
+  including raw snapshots, datasets, features, models and calibrators. The
+  scheduler and worker write it (provider snapshots and features); serving
+  and tools mount it read-only.
+- `/srv/appdata/gridoracle/bundles`: immutable bundle JSON, named and pinned by
+  SHA256. Only the operator's `production_bundle write` adds a file.
+- A backup directory (homelab: `/srv/backups/gridoracle`) for the backup
+  sidecar's sealed sets, their receipts and its status file.
 
-Off-primary destination proposal: a dedicated directory
-`/mnt/pve/media-hdd/gridoracle-backups` on **pve-node-1**'s physical `/dev/sda1`
-HDD, transferred over restricted SSH to a dedicated backup principal. Read-only
-measurement found 350,458,204,160 available bytes on that disk. The storage
-LXC's existing `/srv/media` and `/srv/photos` exports are application-specific;
-never place GridOracle backups inside either or assume their permissions.
-Creating the new path, restricted SSH access, quota and service ownership is an
-explicit homelab approval/provisioning dependency. No new export was created.
-A same-NVMe directory, Docker volume or storage guest rootfs is not an acceptable
-substitute. This protects primary-disk loss, not whole-site loss.
+Off-primary copies are the platform's job. The backup sidecar seals a
+coordinated set every night into its backup directory and keeps only the
+newest two there; it never pushes anywhere and holds no credential for another
+host. The platform copies that directory off the host (homelab: its backup
+server pulls `/srv/backups/<service>` from each Pi, then keeps a second copy on
+the NAS, with daily, weekly and monthly retention). A same-NVMe directory alone
+is not a backup: until the platform's copy exists and a restore from it has
+passed, the release is blocked.
 
-Initial hard budget: total recoverable DB + artifact set <=2 GiB; backup quota
-40 GiB, with >=15% free on the HDD and no deletion of the last verified set.
-Seven daily, four weekly and three monthly complete sets consume <=28 GiB
-before overhead at that source limit; allow two scratch sets and alert at
-32 GiB. Exceeding source/retention capacity blocks promotion until the owner
-reviews a larger destination or deduplicating backup design. Do not silently
-prune historical forecasts or shorten retention.
+Budget: a recoverable set (database dump plus the whole artifact tree) is
+expected to stay well under 2 GiB this season. Artifacts are content-addressed,
+so successive sets differ mainly in the dump; a deduplicating destination stores
+them cheaply. Do not silently prune historical forecasts or shorten retention.
 
 ## Immutable release and promotion
 
@@ -163,9 +161,15 @@ This repository delivers the application-side inputs:
   `python -m scripts.wp13_migrate` one-shot, never serving startup.
 - `MODEL_BUNDLE.md`: bundle identities/hash closure; runtime expects
   `GRIDORACLE_ARTIFACT_ROOT`, `GRIDORACLE_BUNDLE_FILE` and externally pinned
-  `GRIDORACLE_BUNDLE_SHA256`. A real approved bundle is still required.
-- `RECOVERY.md` and `scripts/wp13_{migrate,recovery}.py`: quiescence, backup
-  receipt preflight, fresh-schema upgrade and new-environment restore/rollback.
+  `GRIDORACLE_BUNDLE_SHA256`. The production bundle is the WP09 fixed
+  baselines, written and registered by `gridoracle.ops.production_bundle`.
+- `pipeline/issuance/`: the production job handlers (live Jolpica
+  observations to published forecasts and evaluations) that the worker runs
+  and the calendar reconciliation that the scheduler runs.
+- `gridoracle.ops.backup` (the backup sidecar), `gridoracle.ops.roles` (the
+  database roles one-off), `RECOVERY.md` and `scripts/wp13_{migrate,recovery}.py`:
+  quiescence, backup receipt preflight, fresh-schema upgrade and
+  new-environment restore/rollback.
 - `evidence/released-{amd64,arm64}.json` and `scripts/wp13_drill.py`: reproducible
   released-image staging, offline restart, hash restoration and measured limits.
 
@@ -176,8 +180,13 @@ separate credentials and grants. Proposed SOPS slots (names only, no values):
 | --- | --- |
 | `api_database_url` | API reader, SELECT/USAGE only, numeric group10001 |
 | `worker_database_url` | Worker/scheduler ledger and authorized append writes, group10001 |
-| `migration_database_url` | One-shot migration administrator, group10001 |
-| `postgres_password` | PostgreSQL `POSTGRES_PASSWORD_FILE`, group70 |
+| `migration_database_url` | The administrator (`POSTGRES_USER`): migration, roles, bundle registration and the backup sidecar, group10001 |
+| `postgres_password` | PostgreSQL `POSTGRES_PASSWORD_FILE`, group70; the same password as in `migration_database_url` |
+
+`gridoracle.ops.roles` creates the reader and worker roles named in their URLs,
+with those URLs' passwords: SELECT for the reader; SELECT, INSERT and UPDATE
+plus sequence use for the worker (the write-once lineage tables refuse updates
+themselves); default privileges extend both to later migrations' tables.
 
 DevOps owns the actual service manifest, production Compose, secret-slot names
 and values, DB grants, durable paths/permissions, backup transfer/retention,
@@ -185,13 +194,31 @@ network/firewall/DNS/TLS policy, scrape/alerts and deployment verification.
 Placement, ports and ingress below are recommendations to review against its
 current catalog and live telemetry. Only frontend serves public assets/API;
 its private9090 listener provides `/metrics` and `/ready`. API8000 and DB5432
-have no public listener. Jobs remain disabled until their production adapter,
-writer mounts and real model bundle are ready.
+have no public listener. The scheduler and worker are ready to run once the
+bundle is registered; they need the artifact store writable and HTTPS egress to
+`api.jolpi.ca` only.
 
 GridOracle review can proceed on its tested release/recovery contract. DevOps
 must independently validate its configuration and obtain owner authorization
 for infrastructure activation/public exposure. This task does not message the
 DevOps agent, merge its PR, or modify its repository.
+
+## Fresh installation order
+
+Each step is an explicit one-shot; none runs at serving startup.
+
+1. Start only PostgreSQL with its password file.
+2. `python -m gridoracle.ops.production_bundle write --bundles BUNDLES
+   --runtime-image WORKER_PIN --code-revision SOURCE_SHA` (tools, artifacts and
+   bundles writable): prints the bundle SHA256 to pin in the deployment.
+3. `pg_dump` the empty database into a new directory and run
+   `python -m scripts.wp13_recovery seal --directory /recovery` against it.
+4. `python -m scripts.wp13_migrate --backup /recovery --receipt-sha256 RECEIPT
+   --bootstrap-empty`.
+5. `python -m gridoracle.ops.roles --api-url-file API_URL --worker-url-file
+   WORKER_URL` as the administrator.
+6. `python -m gridoracle.ops.production_bundle register` with the pinned bundle.
+7. Start the API, frontend, backup sidecar, scheduler and worker.
 
 ## Processes, caps and network boundaries
 
@@ -203,8 +230,10 @@ DevOps agent, merge its PR, or modify its repository.
 | scheduler | 10001:10001 | 256 MiB | 0.25 | Explicit season calendar reconciliation only |
 | worker | 10001:10001 | 768 MiB | 0.75 | Single bounded durable job execution |
 | migrate/tools | 10001:10001 | 256 MiB | 0.5 | One-shot explicit operator work |
+| backup | 10001:10001 | 256 MiB | 0.25 | Nightly coordinated recovery set (worker image, `pg_dump` 16) |
 
-Steady serving caps total 832 MiB. Serving + jobs total 1,856 MiB, with sequential
+Steady serving caps total 832 MiB; with the backup sidecar 1,088 MiB. Serving +
+jobs + backup total 2,112 MiB, with sequential
 maintenance outside that total. The worker image retains the integrated
 pipeline's Linux scientific/CUDA dependencies; no GPU device or accelerator is
 mounted and no training command is exposed by the runtime entry point.
@@ -213,26 +242,30 @@ API dependencies exclude the pipeline/scientific/training stack.
 
 All application roots are read-only, with bounded `/tmp` tmpfs, dropped
 capabilities, no-new-privileges and PID caps. Docker socket and host filesystem
-are never mounted. Artifacts/bundle are read-only to serving; ingestion needs a
-separately reviewed writer mount and the same immutable store. DB state is the
-only writable serving mount. Production uses separate API-reader, worker and
+are never mounted. Artifacts/bundle are read-only to serving and tools; the
+scheduler and worker write the same immutable store (provider snapshots and
+features). DB state is the only writable serving mount. Production uses separate API-reader, worker and
 migration/admin credentials; staging's synthetic DB uses trust authentication on its isolated private
 network and is not the production secrets design.
 
-`gridoracle.ops.runtime scheduler --season YYYY` does not claim jobs;
-`worker` does not reconcile a calendar. PostgreSQL session advisory locks allow
-one process per role. There is no legacy scheduler command, automatic fit,
-startup schema mutation or latest-model selector. The integrated WP04 handlers
-still visibly block feature/predict/publish without their provenance adapter.
-Jobs remain opt-in until that limitation is resolved and tested by integration;
-serving/restoring saved publications works independently.
+`gridoracle.ops.runtime scheduler --season YYYY` reads the live calendar at
+most every six hours, catches up a past race's missing classification, opens an
+event's field once the round before it is classified, and reconciles the
+ledger; it does not claim jobs. `worker` runs the production handlers and does
+not reconcile a calendar. PostgreSQL session advisory locks allow one process
+per role, and every tick holds the maintenance lock shared, so a backup waits
+for running work and holds new work back. There is no legacy scheduler
+command, automatic fit, startup schema mutation or latest-model selector;
+evaluation scores each published run of the bundle against the latest result
+revision. A provider that hasn't published yet is retried for about nine hours
+before a job blocks. Serving/restoring saved publications works independently.
 
 Production networks are `serving` (internal: frontend/API), `database` (internal:
-API/DB/tools/worker/scheduler), and a bounded worker egress network only when
-jobs are authorized. The frontend edge network is routable; API/DB serving networks have no
+API/DB/tools/worker/scheduler/backup), and an egress network for the scheduler
+and worker (HTTPS to `api.jolpi.ca`). The frontend edge network is routable; API/DB serving networks have no
 outbound route. API has no
 published port; PostgreSQL has none. Only frontend backend port 8090 on
-pi-node-1 is catalogued for Traefik/health checks and a separate frontend private-operations listener on port 18090
+pi-node-1 is catalogued for Traefik/health checks and a separate frontend private-operations listener (container port 9090) on host port 18090
 only for Prometheus (host firewall, IPv4/IPv6 and gateway ACL checks required).
 The proposal must allocate these in the authoritative catalog before apply;
 never rely on Docker port binding alone as access control.
@@ -298,7 +331,7 @@ not public-routing authorization or a tested WAN configuration.
 | --- | --- | --- |
 | O02 placement/storage | Measured pi-node-1 ARM NVMe; 832 MiB serving /1,856 MiB with jobs caps | Owner placement approval and representative loaded-host headroom |
 | O03 public ingress/access | Private SSO preview; future `forecasts.pieterohearn.com` on isolated TLS8444 entry point | Owner public-domain/forward policy and external IPv4/IPv6 probes |
-| O04 off-primary retention/owner | Proxmox physical HDD dedicated path, 7 daily/4 weekly/3 monthly, Pieter as restore owner | Restricted principal/quota provisioning and actual off-disk transfer/restore |
+| O04 off-primary retention/owner | Nightly sealed sets in a backup directory the platform copies off the host (homelab: its backup server and a NAS copy), 7 daily/4 weekly/≥3 monthly, Pieter as restore owner | A restore from the platform's off-host copy |
 
 These recommendations resolve WP13's design choices without changing shared
 DECISIONS or claiming owner adoption. Production release remains gated on the
@@ -315,8 +348,12 @@ VictoriaTraces (14 days /20 GiB). Nginx passes traceparent to the API; applicati
 DB spans are not yet instrumented, so this design claims **edge traces only**.
 Do not assume that setting OTEL environment variables instruments Python.
 
-Private `/metrics` emits bounded route/status counters, duration histograms and
-five fixed ledger-state gauges. No season/race/driver/run/model/URL/job IDs or
+Private `/metrics` emits bounded route/status counters, duration histograms,
+five fixed ledger-state gauges, `gridoracle_jobs_overdue` (pending work more than 15
+minutes past due: a stopped worker or a held lock) and, when `GRIDORACLE_BACKUP_STATUS_FILE` names the
+sidecar's status file (mount its directory, not the file: it is replaced
+atomically), `gridoracle_backup_*` gauges: last success time, last attempt,
+verified and failed sets, and set size. No season/race/driver/run/model/URL/job IDs or
 exception strings become labels. Add Prometheus scrape + service-owner alerts
 through the catalog; retain existing 30-day /25 GB storage. Alert on unhealthy
 container, API/DB unavailable, blocked/pending work, backup age >26 h, failed
