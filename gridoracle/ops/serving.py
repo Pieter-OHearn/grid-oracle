@@ -13,6 +13,7 @@ from sqlalchemy import text
 
 from api.database import engine
 from api.main import create_app
+from gridoracle.ops.backup import backup_metrics
 from gridoracle.ops.bundle import file_digest, verify_selection
 from gridoracle.ops.runtime import bundle_check
 
@@ -109,6 +110,7 @@ def metrics():
                 f'gridoracle_http_duration_seconds_{suffix}{{route="{route}"}} '
                 f"{latency[route, suffix]}"
             )
+    rows.extend(backup_metrics(os.getenv("GRIDORACLE_BACKUP_STATUS_FILE")))
     # Fixed-state labels only: no event, driver, job-key, model or run labels.
     with engine.connect() as conn:
         for state in ("pending", "running", "succeeded", "blocked", "superseded"):

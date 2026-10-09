@@ -350,15 +350,20 @@ class JobLedger:
                 ).scalar_one()
             )
 
-    def run_once(self, worker: str, handlers: dict[str, Callable[[Job], None]]) -> bool:
-        self.recover_expired_leases()
+    def run_once(
+        self,
+        worker: str,
+        handlers: dict[str, Callable[[Job], None]],
+        max_attempts: int = 12,
+    ) -> bool:
+        self.recover_expired_leases(max_attempts)
         job = self.claim_due(worker)
         if job is None:
             return False
         try:
             handlers[job.kind](job)
         except Exception as exc:  # provider failures become visible ledger state
-            self.finish(job, worker, exc)
+            self.finish(job, worker, exc, max_attempts)
         else:
             self.finish(job, worker)
         return True
