@@ -349,7 +349,8 @@ DB spans are not yet instrumented, so this design claims **edge traces only**.
 Do not assume that setting OTEL environment variables instruments Python.
 
 Private `/metrics` emits bounded route/status counters, duration histograms,
-five fixed ledger-state gauges and, when `GRIDORACLE_BACKUP_STATUS_FILE` names the
+five fixed ledger-state gauges, `gridoracle_jobs_overdue` (pending work more than 15
+minutes past due: a stopped worker or a held lock) and, when `GRIDORACLE_BACKUP_STATUS_FILE` names the
 sidecar's status file (mount its directory, not the file: it is replaced
 atomically), `gridoracle_backup_*` gauges: last success time, last attempt,
 verified and failed sets, and set size. No season/race/driver/run/model/URL/job IDs or

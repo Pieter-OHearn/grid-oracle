@@ -9,6 +9,7 @@ container, for pg_dump and pg_restore of the matching version).
 import json
 import os
 import subprocess
+import sys
 import uuid
 from datetime import UTC, datetime
 
@@ -277,6 +278,29 @@ def test_a_live_weekend_publishes_both_horizons_and_evaluates(deployment):
 
     # Readiness: the bundle's lineage is still bound in the database.
     verify_selection(weekend.engine, deployment["bundle"])
+
+    # The private /metrics, served as the reader: ledger, overdue and backup rows.
+    environment = {
+        **os.environ,
+        "DATABASE_URL": deployment["api"].render_as_string(hide_password=False),
+        "GRIDORACLE_BACKUP_STATUS_FILE": str(deployment["tmp"] / "no-status.json"),
+    }
+    environment.pop("DATABASE_URL_FILE", None)
+    rows = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "from gridoracle.ops.serving import metrics; "
+            "print(metrics().body.decode())",
+        ],
+        env=environment,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.splitlines()
+    assert 'gridoracle_jobs{state="succeeded"} 9' in rows
+    assert "gridoracle_jobs_overdue 0" in rows
+    assert "gridoracle_backup_status_present 0" in rows
 
     # A retried handler replays its stored inputs instead of conflicting.
     with weekend.engine.connect() as conn:

@@ -4,6 +4,7 @@ import json
 import os
 import time
 from collections import Counter
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 from alembic.config import Config
@@ -119,6 +120,18 @@ def metrics():
                 {"state": state},
             ).scalar_one()
             rows.append(f'gridoracle_jobs{{state="{state}"}} {count}')
+        # Due work nobody has claimed: a stopped worker or a held maintenance lock.
+        overdue = conn.execute(
+            text(
+                "SELECT COUNT(*) FROM orchestration_jobs "
+                "WHERE status='pending' AND due_at < :before"
+            ),
+            {"before": datetime.now(UTC) - timedelta(minutes=15)},
+        ).scalar_one()
+    rows += [
+        "# TYPE gridoracle_jobs_overdue gauge",
+        f"gridoracle_jobs_overdue {overdue}",
+    ]
     return PlainTextResponse(
         "\n".join(rows) + "\n", media_type="text/plain; version=0.0.4"
     )
