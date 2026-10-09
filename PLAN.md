@@ -86,7 +86,7 @@ flowchart LR
 
 ## Execution ledger
 
-The coordinator updates this overview when assigning or integrating work. Detailed progress lives in each linked state record. WP01–13 are integrated. WP14 is ready to assign; its start and completion prerequisites are now satisfied. WP15 waits for WP14's acceptance, review and integration. This status update does not assign dependent implementation.
+The coordinator updates this overview when assigning or integrating work. Detailed progress lives in each linked state record. WP01–14 are integrated. The owner assigned WP15 part 1 (production issuance, the first production bundle and release readiness) to Claude Code on 2026-10-09; prospective shadowing remains calendar time. This status update does not assign other dependent implementation.
 
 | Package / state record         | Status     | Start after            | Additional completion gate                           |
 | ------------------------------ | ---------- | ---------------------- | ---------------------------------------------------- |
@@ -103,8 +103,8 @@ The coordinator updates this overview when assigning or integrating work. Detail
 | [WP11](docs/workplans/WP11.md) | `complete` | WP03, WP04, WP10       | Integrated as `1994c6e` through PR #105 |
 | [WP12](docs/workplans/WP12.md) | `complete` | WP06, WP09, WP11 | Integrated as `897ff95` through PR #107 |
 | [WP13](docs/workplans/WP13.md) | `complete` | WP01 | Integrated as `6c46d7d` through PR #108 |
-| [WP14](docs/workplans/WP14.md) | `ready` | WP04, WP06, WP11 | Acceptance, review and integration |
-| [WP15](docs/workplans/WP15.md) | `waiting` | WP09, WP12–14 | WP14 acceptance, review and integration |
+| [WP14](docs/workplans/WP14.md) | `complete` | WP04, WP06, WP11 | Integrated as `36f23f1` through PR #110 |
+| [WP15](docs/workplans/WP15.md) | `active` | WP09, WP12–14 | Part 1 (production issuance) in progress; shadowing is calendar time |
 | [WP16](docs/workplans/WP16.md) | `deferred` | WP15                   | Explicitly selected extension and its own acceptance |
 
 WP13/WP14 include separate start and finish gates. Every package, including those with additional dependencies, still requires acceptance, review and integration before `complete`.
