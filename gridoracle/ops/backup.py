@@ -7,7 +7,9 @@ bundle; releases the lock; verifies the set from disk; and only then moves it
 into `sets/`, with its receipt hash beside it in `receipts/`. Older sets are
 pruned to a small local count: the backup server keeps the history.
 
-Layout under the root (one mount, so the final move is an atomic rename):
+Every folder in a set is 0755 and every file 0644, so the platform's backup
+user can read it. Layout under the root (one mount, so the final move is an
+atomic rename):
 
     sets/<UTC timestamp>/          sealed recovery sets
     receipts/<UTC timestamp>.sha256
@@ -74,6 +76,17 @@ def _dump(url: str, target: Path) -> None:
     )
 
 
+def publishable(directory: Path) -> None:
+    """Make a set readable by the platform's backup user: folders 0755, files 0644.
+
+    The artifact store writes each file through `mkstemp` (0600), and sealing
+    copies modes, so without this the off-host copy can't read the artifacts.
+    """
+    directory.chmod(0o755)
+    for path in directory.rglob("*"):
+        path.chmod(0o755 if path.is_dir() else 0o644)
+
+
 def verify_all(root: Path) -> tuple[int, int]:
     """Verify every retained set against its receipt: (verified, failed)."""
     verified = failed = 0
@@ -132,6 +145,7 @@ def backup(root: Path, *, keep: int, now: datetime | None = None) -> dict:
                 gate.execute(
                     text("SELECT pg_advisory_unlock(:key)"), {"key": MAINTENANCE_LOCK}
                 )
+        publishable(staging)
         verify_recovery_set(staging, receipt)
         os.replace(staging, root / "sets" / name)
         # Written last: a set without its receipt fails verification visibly.
