@@ -291,3 +291,46 @@ def test_a_set_is_made_readable_by_the_platform_backup_user(tmp_path):
     publishable(tmp_path / "set")
     for path in [tmp_path / "set", *(tmp_path / "set").rglob("*")]:
         assert path.stat().st_mode & 0o777 == (0o755 if path.is_dir() else 0o644), path
+
+
+@pytest.mark.parametrize(
+    ("sets", "success", "seals"),
+    [
+        # pi-node-1, 2026-10-10: the 06:33 deploy had already sealed today's set.
+        (["20261009T220241Z", "20261010T063326Z"], "2026-10-10T06:33:26", False),
+        # Today's nightly never ran.
+        (["20261009T220241Z"], "2026-10-09T22:02:41", True),
+        # A set from before 02:00 is the night before's.
+        (["20261010T013000Z"], "2026-10-10T01:30:00", True),
+        # Today's set, but no fresh success on record: seal at once.
+        (["20261010T063326Z"], None, True),
+    ],
+)
+def test_a_restart_after_the_nightly_hour_seals_only_without_todays_set(tmp_path, monkeypatch, sets, success, seals):
+    import json
+    import signal
+    import time
+
+    from gridoracle.ops import backup as backups
+
+    class Clock(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            # The v0.1.1 deploy on pi-node-1.
+            return datetime(2026, 10, 10, 10, 10, 37, tzinfo=tz)
+
+    for name in sets:
+        (tmp_path / "sets" / name).mkdir(parents=True)
+    if success:
+        (tmp_path / "status").mkdir()
+        (tmp_path / "status" / "status.json").write_text(
+            json.dumps({"last_success_at": f"{success}+00:00", "failed_sets": 0})
+        )
+    handlers, sealed = {}, []
+    monkeypatch.setattr(backups, "datetime", Clock)
+    monkeypatch.setattr(backups, "run", lambda root, keep: sealed.append(root) or True)
+    monkeypatch.setattr(signal, "signal", lambda number, handler: handlers.update({number: handler}))
+    # SIGTERM during the first wait, so the loop makes one decision.
+    monkeypatch.setattr(time, "sleep", lambda _: handlers[signal.SIGTERM]())
+    backups.loop(tmp_path, keep=2, hour=2)
+    assert sealed == ([tmp_path] if seals else [])
