@@ -40,7 +40,8 @@ Primary paths (homelab catalog must own all of them):
 Off-primary copies are the platform's job. The backup sidecar seals a
 coordinated set every night into its backup directory and keeps only the
 newest two there; it never pushes anywhere and holds no credential for another
-host. The platform copies that directory off the host (homelab: its backup
+host. Every folder in a set is 0755 and every file 0644, so the platform's
+unprivileged copy can read it. The platform copies that directory off the host (homelab: its backup
 server pulls `/srv/backups/<service>` from each Pi, then keeps a second copy on
 the NAS, with daily, weekly and monthly retention). A same-NVMe directory alone
 is not a backup: until the platform's copy exists and a restore from it has

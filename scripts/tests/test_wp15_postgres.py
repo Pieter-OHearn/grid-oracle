@@ -379,6 +379,9 @@ def test_backup_waits_for_writers_and_restores_into_a_new_database(deployment):
     status = json.loads((root / "status/status.json").read_text())
     assert status["verified_sets"] == 1 and status["failed_sets"] == 0
     name = status["last_set"]
+    # The platform's backup user reads every file of a published set.
+    for path in [root / "sets" / name, *(root / "sets" / name).rglob("*")]:
+        assert path.stat().st_mode & 0o777 == (0o755 if path.is_dir() else 0o644), path
     receipt = (root / "receipts" / f"{name}.sha256").read_text().strip()
     assert receipt == status["last_receipt_sha256"]
 

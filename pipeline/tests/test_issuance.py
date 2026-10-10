@@ -276,3 +276,18 @@ def test_role_urls_must_name_plain_roles_with_passwords():
     ):
         with pytest.raises(ValueError):
             _identity(url)
+
+
+def test_a_set_is_made_readable_by_the_platform_backup_user(tmp_path):
+    from gridoracle.ops.backup import publishable
+    from gridoracle.provenance import ContentAddressedArtifactStore
+
+    store = ContentAddressedArtifactStore(tmp_path / "set" / "artifacts")
+    ref = store.put_bytes("models/example", b"model")
+    stored = tmp_path / "set" / "artifacts" / ref.path
+    # The artifact store writes through mkstemp, so files start owner-only.
+    assert stored.stat().st_mode & 0o777 == 0o600
+    (tmp_path / "set" / "private").mkdir(mode=0o700)
+    publishable(tmp_path / "set")
+    for path in [tmp_path / "set", *(tmp_path / "set").rglob("*")]:
+        assert path.stat().st_mode & 0o777 == (0o755 if path.is_dir() else 0o644), path

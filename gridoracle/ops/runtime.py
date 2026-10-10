@@ -1,6 +1,7 @@
 """Separate HTTP, reconciliation, and bounded execution entry points."""
 
 import argparse
+import hashlib
 import json
 import os
 import signal
@@ -9,9 +10,9 @@ from contextlib import contextmanager
 from pathlib import Path
 from urllib.request import urlopen
 
-from sqlalchemy import create_engine, text
-
-from gridoracle.ops.bundle import file_digest, verify_bundle
+# `check` and `ready` import only the standard library: they run as container
+# health checks, and on a quarter of a CPU importing SQLAlchemy alone takes
+# about five seconds. Everything else imports what it needs when it runs.
 
 # A coordinated backup takes this advisory lock exclusively; every scheduler
 # and worker tick holds it shared, so a backup waits for running ticks and no
@@ -32,6 +33,8 @@ def configure() -> None:
 
 
 def bundle_check() -> dict:
+    from gridoracle.ops.bundle import verify_bundle
+
     return verify_bundle(
         Path(os.environ["GRIDORACLE_ARTIFACT_ROOT"]),
         Path(os.environ["GRIDORACLE_BUNDLE_FILE"]),
@@ -45,6 +48,8 @@ def writer_gate(engine):
     if engine.dialect.name != "postgresql":
         yield
         return
+    from sqlalchemy import text
+
     with engine.connect() as conn:
         conn.execute(
             text("SELECT pg_advisory_lock_shared(:key)"), {"key": MAINTENANCE_LOCK}
@@ -98,10 +103,9 @@ def main() -> None:
                 raise ValueError("API not ready")
         return
     if args.role == "check":
-        if (
-            file_digest(Path(os.environ["GRIDORACLE_BUNDLE_FILE"]))
-            != os.environ["GRIDORACLE_BUNDLE_SHA256"]
-        ):
+        with Path(os.environ["GRIDORACLE_BUNDLE_FILE"]).open("rb") as stream:
+            manifest_sha256 = hashlib.file_digest(stream, "sha256").hexdigest()
+        if manifest_sha256 != os.environ["GRIDORACLE_BUNDLE_SHA256"]:
             raise ValueError("model bundle manifest checksum mismatch")
         if time.time() - Path("/tmp/heartbeat").stat().st_mtime > 1800:
             raise ValueError("runtime heartbeat expired")
@@ -116,6 +120,8 @@ def main() -> None:
     if args.role == "scheduler" and args.season is None:
         parser.error("scheduler requires an explicit --season")
     bundle = bundle_check()
+    from sqlalchemy import create_engine, text
+
     engine = create_engine(os.environ["DATABASE_URL"])
     from pipeline.issuance.adapter import ProductionIssuance
 

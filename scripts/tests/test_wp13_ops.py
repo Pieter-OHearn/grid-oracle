@@ -367,3 +367,41 @@ def test_worker_runs_bundle_aware_handlers_never_the_legacy_selector(monkeypatch
     _worker, given, attempts = ledger.run_once.call_args.args
     assert given is handlers and attempts == PROVIDER_ATTEMPTS
     legacy.assert_not_called()
+
+
+def test_health_check_verifies_the_bundle_without_importing_sqlalchemy(tmp_path):
+    """Health checks run on a quarter of a CPU with a 5 s timeout."""
+    import os
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    _root, path, _sha = bundle_fixture(tmp_path)
+    code = (
+        "import runpy, sys\n"
+        "sys.argv = ['runtime', 'check']\n"
+        "try:\n"
+        "    runpy.run_module('gridoracle.ops.runtime', run_name='__main__')\n"
+        "except ValueError as error:\n"
+        "    print(error)\n"
+        "print(sorted({name.split('.')[0] for name in sys.modules}"
+        " & {'sqlalchemy', 'pipeline'}))\n"
+    )
+    env = {
+        **os.environ,
+        "DATABASE_URL": "postgresql://unused",
+        "GRIDORACLE_BUNDLE_FILE": str(path),
+        "GRIDORACLE_BUNDLE_SHA256": "0" * 64,
+    }
+    result = subprocess.run(
+        [sys.executable, "-c", code],
+        cwd=Path(__file__).resolve().parents[2],
+        env=env,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    assert result.stdout.splitlines() == [
+        "model bundle manifest checksum mismatch",
+        "[]",
+    ]
