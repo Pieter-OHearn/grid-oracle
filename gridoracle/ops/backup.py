@@ -25,7 +25,7 @@ import signal
 import subprocess
 import sys
 import time
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 
 from sqlalchemy import create_engine, text
@@ -214,8 +214,27 @@ def healthy(root: Path, now: datetime | None = None) -> bool:
     return (now or datetime.now(UTC)) - datetime.fromisoformat(success) <= MAX_AGE
 
 
+def _sealed_day(root: Path, hour: int) -> date | None:
+    """The day whose nightly set is already sealed, from the newest set's name.
+
+    A set counts for its UTC day when it was sealed at or after `hour`; one
+    sealed earlier is the night before's, so that day's nightly is still due.
+    """
+    for directory in sorted((root / "sets").glob("*"), reverse=True):
+        try:
+            sealed = datetime.strptime(directory.name[:16], "%Y%m%dT%H%M%SZ")
+        except ValueError:
+            continue
+        return sealed.date() if sealed.hour >= hour else None
+    return None
+
+
 def loop(root: Path, *, keep: int, hour: int) -> None:
-    """Run nightly at `hour` UTC, and at once when no fresh set exists."""
+    """Run nightly at `hour` UTC, and at once when no fresh set exists.
+
+    The nightly day starts from the sets on disk, so a restart later that day
+    (every deploy) doesn't seal another set and prune one not yet copied.
+    """
     stopping = False
 
     def stop(*_):
@@ -224,7 +243,7 @@ def loop(root: Path, *, keep: int, hour: int) -> None:
 
     signal.signal(signal.SIGTERM, stop)
     signal.signal(signal.SIGINT, stop)
-    last_day = last_try = None
+    last_day, last_try = _sealed_day(root, hour), None
     while not stopping:
         now = datetime.now(UTC)
         nightly = now.hour >= hour and last_day != now.date()
