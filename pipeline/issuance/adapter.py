@@ -373,11 +373,16 @@ class ProductionIssuance:
             return False
         race = races[0]
         digest = domain.classification_digest(race["Results"])
-        self._record(
-            f"production/{race_id}/results/{digest[:16]}",
-            observation.document(),
-            retrieved_at=observation.retrieved_at,
-        )
+        snapshot_id = f"production/{race_id}/results/{digest[:16]}"
+        # The scheduler's catch-up and the result job can both read the same
+        # classification; the first snapshot of it stands, so a later read
+        # (retrieved at another time) replays instead of conflicting.
+        if self._snapshot(snapshot_id) is None:
+            self._record(
+                snapshot_id,
+                observation.document(),
+                retrieved_at=observation.retrieved_at,
+            )
         with self.engine.begin() as conn:
             domain.record_results(conn, race_id, race, recorded_at=self.now())
         return True
@@ -456,7 +461,8 @@ class ProductionIssuance:
         """Sync the season and return the schedules the ledger should hold.
 
         A past race without a stored classification is caught up here, which
-        covers a new installation and a result job that ran out of retries.
+        covers a new installation and a result job that ran out of retries. It
+        can also get there before a live result job, which then replays it.
         Only events whose race is still ahead get a job graph, and only once
         their field can be opened: an event far ahead waits until the round
         before it has a classification, so its graph never changes when the
