@@ -7,11 +7,14 @@ from pipeline.orchestration import (
     EVALUATE,
     POST_PUBLISH,
     PRE_FEATURE,
+    QUALIFY_INGEST,
     RESULT_INGEST,
     EventSchedule,
     JobBlocked,
     JobLedger,
+    RetryableJobError,
     qualifying_publication_ready,
+    retry_deadline,
     select_weather_for_interval,
     weekend_graph,
 )
@@ -187,3 +190,54 @@ def test_retry_is_delayed_and_terminal_failure_cascades_to_dependents():
     ledger.finish(retry, "worker", JobBlocked("invalid field"))
     assert ledger.status(retry.key) == "blocked"
     assert ledger.status({job.kind: job for job in weekend_graph(event())}["pre_weekend.predict"].key) == "blocked"
+
+
+def test_provider_lateness_is_retried_until_the_post_qualifying_cutoff():
+    # Singapore 2026: qualifying was still unpublished nine hours after the
+    # session, and a fixed attempt budget gave up a day before the race.
+    clock = Clock(datetime(2026, 3, 14, 15, 45, tzinfo=UTC))
+    ledger = JobLedger(ledger_engine(), clock)
+    ledger.reconcile(event())
+    graph = {job.kind: job for job in weekend_graph(event())}
+    cutoff = datetime(2026, 3, 15, 13, 59, tzinfo=UTC)
+    while ledger.status(graph[QUALIFY_INGEST].key) == "pending":
+        job = ledger.claim_due("worker")
+        if job is not None:
+            assert job.kind == QUALIFY_INGEST
+            ledger.finish(job, "worker", RetryableJobError("qualifying is not published yet"), 40)
+        clock.value += timedelta(minutes=5)
+    assert ledger.attempts(graph[QUALIFY_INGEST].key) > 40
+    assert cutoff - timedelta(minutes=20) <= clock.value <= cutoff + timedelta(minutes=5)
+    assert ledger.status(graph[POST_PUBLISH].key) == "blocked"
+    assert ledger.status(graph[RESULT_INGEST].key) == "pending"
+
+
+def test_a_post_qualifying_job_cannot_start_after_its_race_cutoff():
+    ledger = ledger_at(datetime(2026, 3, 15, 13, 59, tzinfo=UTC))
+    assert ledger.claim_due("late") is None
+    graph = {job.kind: job for job in weekend_graph(event())}
+    with ledger.engine.connect() as conn:
+        reason = conn.execute(
+            text("SELECT last_error FROM orchestration_jobs WHERE job_key=:key"),
+            {"key": graph[QUALIFY_INGEST].key},
+        ).scalar_one()
+    assert reason == "post-qualifying cutoff elapsed before execution"
+    assert ledger.status(graph[POST_PUBLISH].key) == "blocked"
+
+
+def test_other_failures_keep_the_attempt_budget():
+    clock = Clock(datetime(2026, 3, 14, 15, 45, tzinfo=UTC))
+    ledger = JobLedger(ledger_engine(), clock)
+    ledger.reconcile(event())
+    for _ in range(3):
+        clock.value += timedelta(minutes=15)
+        job = ledger.claim_due("worker")
+        ledger.finish(job, "worker", RuntimeError("provider returned 500"), 3)
+    assert ledger.status(job.key) == "blocked"
+
+
+def test_each_chain_retries_lateness_until_its_own_deadline():
+    graph = {job.kind: job for job in weekend_graph(event())}
+    assert retry_deadline(graph[PRE_FEATURE]) == datetime(2026, 3, 14, 14, 59, tzinfo=UTC)
+    assert retry_deadline(graph[POST_PUBLISH]) == datetime(2026, 3, 15, 13, 59, tzinfo=UTC)
+    assert retry_deadline(graph[RESULT_INGEST]) == datetime(2026, 3, 22, 14, tzinfo=UTC)

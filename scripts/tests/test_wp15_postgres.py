@@ -11,7 +11,7 @@ import os
 import subprocess
 import sys
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 import pytest
 import requests
@@ -207,6 +207,28 @@ def _public(url, path):
         engine.dispose()
 
 
+def _metrics(deployment):
+    """The private /metrics rows, served as the API's reader role."""
+    environment = {
+        **os.environ,
+        "DATABASE_URL": deployment["api"].render_as_string(hide_password=False),
+        "GRIDORACLE_BACKUP_STATUS_FILE": str(deployment["tmp"] / "no-status.json"),
+    }
+    environment.pop("DATABASE_URL_FILE", None)
+    return subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "from gridoracle.ops.serving import metrics; "
+            "print(metrics().body.decode())",
+        ],
+        env=environment,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.splitlines()
+
+
 def test_a_live_weekend_publishes_both_horizons_and_evaluates(deployment):
     weekend = Weekend(deployment, datetime(2026, 3, 26, 12, tzinfo=UTC))
     schedules = weekend.reconcile()
@@ -280,24 +302,7 @@ def test_a_live_weekend_publishes_both_horizons_and_evaluates(deployment):
     verify_selection(weekend.engine, deployment["bundle"])
 
     # The private /metrics, served as the reader: ledger, overdue and backup rows.
-    environment = {
-        **os.environ,
-        "DATABASE_URL": deployment["api"].render_as_string(hide_password=False),
-        "GRIDORACLE_BACKUP_STATUS_FILE": str(deployment["tmp"] / "no-status.json"),
-    }
-    environment.pop("DATABASE_URL_FILE", None)
-    rows = subprocess.run(
-        [
-            sys.executable,
-            "-c",
-            "from gridoracle.ops.serving import metrics; "
-            "print(metrics().body.decode())",
-        ],
-        env=environment,
-        check=True,
-        capture_output=True,
-        text=True,
-    ).stdout.splitlines()
+    rows = _metrics(deployment)
     assert 'gridoracle_jobs{state="succeeded"} 9' in rows
     assert "gridoracle_jobs_overdue 0" in rows
     assert "gridoracle_backup_status_present 0" in rows
@@ -471,3 +476,37 @@ def test_backup_waits_for_writers_and_restores_into_a_new_database(deployment):
         with admin.connect() as conn:
             conn.execute(text(f"DROP DATABASE {restored} WITH (FORCE)"))
         weekend.engine.dispose()
+
+
+def test_qualifying_published_a_day_late_still_publishes_before_the_race(deployment):
+    # Singapore 2026: Jolpica published qualifying after a fixed attempt budget
+    # had blocked the chain. Lateness is retried until the race's cutoff.
+    weekend = Weekend(deployment, datetime(2026, 3, 26, 12, tzinfo=UTC))
+    # A day of retries is more reads than the polite request budget allows in
+    # the test's real minute; the fake provider needs no pause between them.
+    weekend.issuance.client.adapter.sleep = lambda _seconds: None
+    weekend.reconcile()
+    weekend.at(datetime(2026, 3, 27, 6, tzinfo=UTC)).drain()
+    weekend.session.published[("qualifying", 3)] = False
+    now = datetime(2026, 3, 28, 6, 45, tzinfo=UTC)
+    while now < datetime(2026, 3, 29, 2, tzinfo=UTC):
+        weekend.at(now).drain()
+        now += timedelta(minutes=15)
+    jobs = weekend.jobs()
+    assert jobs["post_qualifying.ingest"] == "pending", jobs
+    with weekend.engine.connect() as conn:
+        attempts = conn.execute(
+            text(
+                "SELECT attempts FROM orchestration_jobs "
+                "WHERE race_id=3 AND kind='post_qualifying.ingest'"
+            )
+        ).scalar_one()
+    assert attempts > 40
+    # Overdue counts only work a worker could claim, against the wall clock (long
+    # after this fake weekend): the late ingest and the result ingest. The three
+    # jobs waiting on the ingest and the evaluation waiting on its result don't.
+    assert "gridoracle_jobs_overdue 2" in _metrics(deployment)
+    weekend.session.published[("qualifying", 3)] = True
+    weekend.at(now).drain()
+    assert weekend.jobs()["post_qualifying.publish"] == "succeeded"
+    weekend.engine.dispose()

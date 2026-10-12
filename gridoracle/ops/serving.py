@@ -121,10 +121,14 @@ def metrics():
             ).scalar_one()
             rows.append(f'gridoracle_jobs{{state="{state}"}} {count}')
         # Due work nobody has claimed: a stopped worker or a held maintenance lock.
+        # A job still waiting for an earlier one (a provider that's late) isn't.
         overdue = conn.execute(
             text(
-                "SELECT COUNT(*) FROM orchestration_jobs "
-                "WHERE status='pending' AND due_at < :before"
+                "SELECT COUNT(*) FROM orchestration_jobs j "
+                "WHERE j.status='pending' AND j.due_at < :before "
+                "AND NOT EXISTS (SELECT 1 FROM orchestration_job_dependencies d "
+                "JOIN orchestration_jobs p ON p.job_key = d.dependency_key "
+                "WHERE d.job_key = j.job_key AND p.status != 'succeeded')"
             ),
             {"before": datetime.now(UTC) - timedelta(minutes=15)},
         ).scalar_one()
