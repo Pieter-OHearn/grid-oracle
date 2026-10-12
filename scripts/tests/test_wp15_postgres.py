@@ -328,6 +328,43 @@ def test_a_live_weekend_publishes_both_horizons_and_evaluates(deployment):
     weekend.engine.dispose()
 
 
+def test_a_result_the_scheduler_caught_up_still_completes_its_job(deployment):
+    # Round 17 in production: the scheduler's sync recorded the classification
+    # while the result job was still retrying, and the job's next read of the
+    # same classification must reuse that snapshot rather than conflict with it.
+    weekend = Weekend(deployment, datetime(2026, 3, 26, 12, tzinfo=UTC))
+    weekend.reconcile()
+    weekend.at(datetime(2026, 3, 27, 6, tzinfo=UTC)).drain()
+    weekend.at(datetime(2026, 3, 28, 7, 5, tzinfo=UTC)).drain()
+    weekend.at(datetime(2026, 3, 29, 8, 5, tzinfo=UTC)).reconcile()
+    with weekend.engine.connect() as conn:
+        assert conn.execute(
+            text("SELECT is_completed FROM races WHERE season=2026 AND round=3")
+        ).scalar_one()
+    weekend.at(datetime(2026, 3, 29, 8, 10, tzinfo=UTC)).drain()
+    jobs = weekend.jobs()
+    assert set(jobs.values()) == {"succeeded"}, jobs
+    with weekend.engine.connect() as conn:
+        snapshots = conn.execute(
+            text(
+                "SELECT count(*) FROM raw_provider_snapshots "
+                "WHERE snapshot_id LIKE 'production/3/results/%'"
+            )
+        ).scalar_one()
+        revisions = conn.execute(
+            text(
+                "SELECT count(*) FROM result_revisions r "
+                "JOIN races c ON c.id = r.race_id "
+                "WHERE c.season=2026 AND c.round=3"
+            )
+        ).scalar_one()
+        evaluations = conn.execute(
+            text("SELECT count(*) FROM evaluation_runs")
+        ).scalar_one()
+    assert (snapshots, revisions, evaluations) == (1, 1, 2)
+    weekend.engine.dispose()
+
+
 def test_the_reader_cannot_write_and_issued_history_is_immutable(deployment):
     weekend = Weekend(deployment, datetime(2026, 3, 26, 12, tzinfo=UTC))
     weekend.reconcile()
