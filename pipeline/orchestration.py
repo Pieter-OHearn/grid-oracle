@@ -29,6 +29,12 @@ RESULT_INGEST = "result.ingest"
 EVALUATE = "result.evaluate"
 
 
+# Provider lateness is retried while a retry can still be useful: a pre-weekend
+# forecast until its cutoff, a post-qualifying one until a minute before the
+# race, and a result for a week after the race.
+RESULT_RETRY_WINDOW = timedelta(days=7)
+
+
 class JobBlocked(RuntimeError):
     """An eligibility/contract failure that must remain visible to operators."""
 
@@ -135,6 +141,30 @@ def weekend_graph(event: EventSchedule) -> list[Job]:
     ]
 
 
+def _instant(value: str) -> datetime:
+    return datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(UTC)
+
+
+def post_cutoff(payload: dict[str, Any]) -> datetime:
+    """A post-qualifying forecast must be issued before the race starts."""
+    return _instant(payload["race_start"]) - timedelta(minutes=1)
+
+
+def _cutoff(kind: str, payload: dict[str, Any]) -> tuple[str, datetime | None]:
+    """A forecast chain's contract cutoff: no job of it may start afterwards."""
+    if kind.startswith("pre_weekend."):
+        return "pre-weekend", _instant(payload["pre_cutoff"])
+    if kind.startswith("post_qualifying."):
+        return "post-qualifying", post_cutoff(payload)
+    return "", None
+
+
+def retry_deadline(job: Job) -> datetime:
+    """The last moment a retry of provider lateness can still be useful."""
+    _chain, cutoff = _cutoff(job.kind, job.payload)
+    return cutoff or _instant(job.payload["race_start"]) + RESULT_RETRY_WINDOW
+
+
 def schedule_fingerprint(event: EventSchedule) -> str:
     material = {
         "lifecycle": event.lifecycle,
@@ -225,15 +255,14 @@ class JobLedger:
                 {"now": now},
             ).fetchone():
                 payload = json.loads(row[4]) if isinstance(row[4], str) else row[4]
-                pre_cutoff = datetime.fromisoformat(payload["pre_cutoff"].replace("Z", "+00:00"))
-                if row[2].startswith("pre_weekend.") and now >= pre_cutoff:
+                chain, cutoff = _cutoff(row[2], payload)
+                if cutoff is not None and now >= cutoff:
                     conn.execute(
                         text("""UPDATE orchestration_jobs SET status='blocked',
-                        last_error='pre-weekend cutoff elapsed before execution',
-                        updated_at=:now WHERE job_key=:job_key"""),
-                        {"now": now, "job_key": row[0]},
+                        last_error=:reason, updated_at=:now WHERE job_key=:job_key"""),
+                        {"reason": f"{chain} cutoff elapsed before execution", "now": now, "job_key": row[0]},
                     )
-                    self._cascade_blocked(conn, row[0], "dependency missed pre-weekend cutoff", now)
+                    self._cascade_blocked(conn, row[0], f"dependency missed {chain} cutoff", now)
                     continue
                 updated = conn.execute(
                     text("""UPDATE orchestration_jobs SET status='running', attempts=attempts+1,
@@ -306,15 +335,26 @@ class JobLedger:
                 raise LeaseLost(f"lease lost for {job.key}")
 
     def finish(self, job: Job, worker: str, error: Exception | None = None, max_attempts: int = 12) -> None:
+        """Record an outcome. Provider lateness (`RetryableJobError`) is retried
+        until `retry_deadline`; any other failure gets `max_attempts`."""
         now = self.now()
+        attempts = self.attempts(job.key)
+        retry_at = now + timedelta(seconds=min(900, 15 * 2 ** max(0, attempts - 1)))
         if error is None:
             status, message = "succeeded", None
-        elif isinstance(error, JobBlocked) or self.attempts(job.key) >= max_attempts:
+        elif isinstance(error, JobBlocked):
+            status, message = "blocked", str(error)
+        elif isinstance(error, RetryableJobError):
+            deadline = retry_deadline(job)
+            if retry_at < deadline:
+                status, message = "pending", str(error)
+            else:
+                status, message = "blocked", f"{error} (retried until {deadline:%Y-%m-%d %H:%M} UTC)"
+        elif attempts >= max_attempts:
             status, message = "blocked", str(error)
         else:
             status, message = "pending", str(error)
         with self.engine.begin() as conn:
-            retry_at = now + timedelta(seconds=min(900, 15 * 2 ** max(0, self.attempts(job.key) - 1)))
             updated = conn.execute(
                 text("""UPDATE orchestration_jobs SET status=:status, lease_owner=NULL, lease_until=NULL,
                 last_error=:message, completed_at=:completed_at, due_at=:due_at, updated_at=:now

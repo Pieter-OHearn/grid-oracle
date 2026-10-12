@@ -20,7 +20,9 @@ from urllib.request import urlopen
 MAINTENANCE_LOCK = 13010
 # The live calendar is read at most this often (Jolpica's hourly budget).
 CALENDAR_SECONDS = 6 * 3600
-# Provider lateness is retried for about nine hours before a job blocks.
+# A failing job (an error, not a provider that hasn't published yet) is retried
+# 40 times, about nine hours, before it blocks. Lateness is retried until the
+# job's own deadline (`pipeline.orchestration.retry_deadline`).
 PROVIDER_ATTEMPTS = 40
 
 

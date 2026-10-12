@@ -258,8 +258,11 @@ per role, and every tick holds the maintenance lock shared, so a backup waits
 for running work and holds new work back. There is no legacy scheduler
 command, automatic fit, startup schema mutation or latest-model selector;
 evaluation scores each published run of the bundle against the latest result
-revision. A provider that hasn't published yet is retried for about nine hours
-before a job blocks. Serving/restoring saved publications works independently.
+revision. A provider that hasn't published yet is retried every 15 minutes until
+the job's deadline: a pre-weekend forecast's cutoff, a minute before the race for
+a post-qualifying forecast (no post-qualifying job starts later), and a week
+after the race for a result. Any other failure blocks after 40 attempts (about
+nine hours). Serving/restoring saved publications works independently.
 
 Production networks are `serving` (internal: frontend/API), `database` (internal:
 API/DB/tools/worker/scheduler/backup), and an egress network for the scheduler
