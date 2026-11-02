@@ -15,7 +15,7 @@ and at once whenever no verified set is under 26 hours old, it:
 1. Takes the maintenance advisory lock exclusively. Every scheduler and worker
    tick holds it shared, so running ticks finish and no new tick starts until
    the set is sealed; public reads keep running.
-2. Writes `pg_dump --format=custom --no-owner --no-acl` (PostgreSQL 16 client,
+2. Writes `pg_dump --format=custom --no-owner --no-acl` (PostgreSQL 18 client,
    password from the environment) to a new staging directory's
    `database.dump`. Live PGDATA files are never copied.
 3. Seals the set (`scripts.wp13_recovery.seal`): copies the whole
@@ -88,7 +88,7 @@ step is an explicit precondition, not a behavior claimed of the deployer.
    file or symlink fails. Pull the exact saved version@digest images for the
    new host's native architecture. If registry access is unavailable, use an
    owner-maintained exported image cache with recorded OCI checksums.
-2. Create a new project and **empty** PostgreSQL 16 data directory on new
+2. Create a new project and **empty** PostgreSQL 18 data directory on new
    storage. Restore with `pg_restore --no-owner --no-acl --exit-on-error`;
    never use `--clean` on the old production database. Recreate the reader and
    worker roles with `python -m gridoracle.ops.roles` from the owner-held URL

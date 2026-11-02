@@ -27,7 +27,7 @@ for portable recovery on an alternate host and is checked by release CI.
 
 Primary paths (homelab catalog must own all of them):
 
-- `/srv/appdata/gridoracle/postgres`: PostgreSQL 16, local NVMe, UID/GID 70.
+- `/srv/appdata/gridoracle/postgresql`: PostgreSQL 18, local NVMe, UID/GID 70.
 - `/srv/appdata/gridoracle/artifacts`: complete content-addressed WP03 tree,
   including raw snapshots, datasets, features, models and calibrators. The
   scheduler and worker write it (provider snapshots and features); serving
@@ -231,7 +231,7 @@ Each step is an explicit one-shot; none runs at serving startup.
 | scheduler | 10001:10001 | 256 MiB | 0.25 | Explicit season calendar reconciliation only |
 | worker | 10001:10001 | 768 MiB | 0.75 | Single bounded durable job execution |
 | migrate/tools | 10001:10001 | 256 MiB | 0.5 | One-shot explicit operator work |
-| backup | 10001:10001 | 256 MiB | 0.25 | Nightly coordinated recovery set (worker image, `pg_dump` 16) |
+| backup | 10001:10001 | 256 MiB | 0.25 | Nightly coordinated recovery set (worker image, `pg_dump` 18) |
 
 Steady serving caps total 832 MiB; with the backup sidecar 1,088 MiB. Serving +
 jobs + backup total 2,112 MiB, with sequential
