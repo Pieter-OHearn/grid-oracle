@@ -2,7 +2,7 @@
 
 `backup` takes the maintenance lock exclusively, so running scheduler and
 worker ticks finish and no new tick starts; dumps the database with the
-PostgreSQL 16 client; seals the set with the artifact tree and the selected
+PostgreSQL 18 client; seals the set with the artifact tree and the selected
 bundle; releases the lock; verifies the set from disk; and only then moves it
 into `sets/`, with its receipt hash beside it in `receipts/`. Older sets are
 pruned to a small local count: the backup server keeps the history.

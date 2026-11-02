@@ -29,8 +29,8 @@ CMD ["api"]
 FROM runtime AS worker
 LABEL org.opencontainers.image.description="GridOracle background worker and scheduler for bounded forecast jobs."
 USER root
-# pg_dump for coordinated backups must match the PostgreSQL 16 server; Debian
-# bookworm ships 15, so the client comes from PGDG, signed by its pinned key
+# pg_dump for coordinated backups must be at least the PostgreSQL 18 server's
+# version; Debian bookworm ships 15, so the client comes from PGDG, signed by its pinned key
 # (fingerprint B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8).
 ARG PGDG_KEY_SHA256=0144068502a1eddd2a0280ede10ef607d1ec592ce819940991203941564e8e76
 RUN apt-get update \
@@ -40,7 +40,7 @@ RUN apt-get update \
     && echo "${PGDG_KEY_SHA256}  /etc/apt/keyrings/pgdg.asc" | sha256sum -c - \
     && echo "deb [signed-by=/etc/apt/keyrings/pgdg.asc] https://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
     && apt-get update \
-    && apt-get install -y --no-install-recommends postgresql-client-16 \
+    && apt-get install -y --no-install-recommends postgresql-client-18 \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=worker_dependencies /app/.venv /app/.venv
 COPY pipeline ./pipeline

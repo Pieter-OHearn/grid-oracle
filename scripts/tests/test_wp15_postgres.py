@@ -2,7 +2,7 @@
 
 Recorded 2026 Jolpica payloads stand in for the provider, released by a fake
 clock as the real API would publish them. Skipped without WP15_POSTGRES_URL
-(an empty PostgreSQL 16 superuser URL) and WP15_POSTGRES_CONTAINER (its
+(an empty PostgreSQL 18 superuser URL) and WP15_POSTGRES_CONTAINER (its
 container, for pg_dump and pg_restore of the matching version).
 """
 

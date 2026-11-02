@@ -62,7 +62,7 @@ to match the visual design, then build with properly separated components where 
 single component file exceeds ~150 lines.
 
 ## Tech stack
-- Database: PostgreSQL 16
+- Database: PostgreSQL 18
 - Backend: FastAPI + SQLAlchemy + Pydantic
 - Pipeline: Python, FastF1, XGBoost, APScheduler
 - Frontend: React + Vite + Tailwind + Recharts (package manager: **Bun**)

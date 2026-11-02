@@ -30,7 +30,7 @@ db/migrations — SQL migration files
 ### Safe sample startup
 
 The default Compose path is intentionally a read-only-in-spirit demo: it
-creates a **new `gridoracle_sample_pgdata` volume**, loads only the committed
+creates a **new `gridoracle_sample_postgresql` volume**, loads only the committed
 static fixture in `db/sample/001_static_demo.sql`, and does not start the
 pipeline scheduler. It does not call an F1, weather, or other provider.
 
