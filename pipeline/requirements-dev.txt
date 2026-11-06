@@ -3,4 +3,4 @@
 # Local and CI test/lint dependencies. Runtime images intentionally install only
 # requirements.txt.
 pytest==9.0.3
-ruff==0.9.6
+ruff==0.17.3
