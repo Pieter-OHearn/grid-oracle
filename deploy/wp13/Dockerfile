@@ -1,5 +1,5 @@
 # Registry index digests/architectures are retained in base-images.json.
-FROM python:3.12.14-slim-bookworm@sha256:392307d22300de8b5986851a12d9176dfc0fc073e65bf6523ebd7dcbeb23564e AS dependencies
+FROM python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df AS dependencies
 WORKDIR /app
 COPY pyproject.toml uv.lock ./
 RUN pip install --no-cache-dir uv==0.12.19
@@ -7,9 +7,11 @@ RUN pip install --no-cache-dir uv==0.12.19
 FROM dependencies AS api_dependencies
 RUN uv sync --frozen --no-dev --extra api
 FROM dependencies AS worker_dependencies
-RUN uv sync --frozen --no-dev --extra pipeline
+COPY deploy/wp13/worker-security-overrides.txt ./
+RUN uv sync --frozen --no-dev --extra pipeline \
+    && uv pip install --python /app/.venv/bin/python --require-hashes --no-deps -r worker-security-overrides.txt
 
-FROM python:3.12.14-slim-bookworm@sha256:392307d22300de8b5986851a12d9176dfc0fc073e65bf6523ebd7dcbeb23564e AS runtime
+FROM python:3.12.16-slim-bookworm@sha256:935c3c5b12357a7e10caa9c1e6ca5692344d97cf229832ef584be2cec9fc03df AS runtime
 RUN groupadd --gid 10001 gridoracle && useradd --uid 10001 --gid 10001 --no-create-home gridoracle
 WORKDIR /app
 COPY api ./api
@@ -55,8 +57,10 @@ RUN bun install --frozen-lockfile
 COPY dashboard ./
 RUN bun run build
 
-FROM nginx:1.28.2-alpine@sha256:5b4900b042ccfa8b0a73df622c3a60f2322faeb2be800cbee5aa7b44d241649e AS frontend
+FROM nginx:1.28.3-alpine@sha256:a8b39bd9cf0f83869a2162827a0caf6137ddf759d50a171451b335cecc87d236 AS frontend
 LABEL org.opencontainers.image.description="GridOracle web dashboard for Formula 1 forecasts, results and provenance."
+# The base image is behind Alpine's security fixes; these minimums fail the build if they aren't available.
+RUN apk add --no-cache 'libcrypto3>=3.5.6-r0' 'libssl3>=3.5.6-r0' 'brotli-libs>=1.2.1-r0'
 COPY deploy/wp13/nginx.conf /etc/nginx/nginx.conf
 COPY --from=frontend_build /app/dist /usr/share/nginx/html
 USER 101:101
