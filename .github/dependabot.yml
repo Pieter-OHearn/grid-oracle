@@ -1,0 +1,29 @@
+version: 2
+updates:
+  # The benchmark protocols lock uv.lock's hash and the selection study locks the research
+  # requirements, so Dependabot must not change either. Fixes for the images go in
+  # deploy/wp13/*-security-overrides.txt until a new protocol adopts them.
+  - package-ecosystem: uv
+    directory: /
+    schedule:
+      interval: weekly
+    exclude-paths:
+      - docs/research/wp08/**
+    ignore:
+      - dependency-name: "*"
+  - package-ecosystem: pip
+    directories:
+      - /
+      - /docs/research/wp08
+    schedule:
+      interval: weekly
+    exclude-paths:
+      - docs/research/wp08/**
+    ignore:
+      - dependency-name: "*"
+  - package-ecosystem: pip
+    directories:
+      - /api
+      - /pipeline
+    schedule:
+      interval: weekly
