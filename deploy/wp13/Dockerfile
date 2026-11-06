@@ -5,7 +5,9 @@ COPY pyproject.toml uv.lock ./
 RUN pip install --no-cache-dir uv==0.12.19
 
 FROM dependencies AS api_dependencies
-RUN uv sync --frozen --no-dev --extra api
+COPY deploy/wp13/api-security-overrides.txt ./
+RUN uv sync --frozen --no-dev --extra api \
+    && uv pip install --python /app/.venv/bin/python --require-hashes --no-deps -r api-security-overrides.txt
 FROM dependencies AS worker_dependencies
 COPY deploy/wp13/worker-security-overrides.txt ./
 RUN uv sync --frozen --no-dev --extra pipeline \
